@@ -394,33 +394,35 @@ export function ContactPage() {
         </div>
       </div>
 
-      {/* ── 3. Full-Width Dynamic Interactive Map ── */}
-      <section className="w-full h-[420px] sm:h-[480px] relative bg-neutral-200 border-t border-neutral-200">
-        <iframe
-          title="Weekend Escapes Himalayan Basecamp Location"
-          src={
-            contactInfo?.mapUrl ||
-            'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d108861.32598379051!2d77.10898544976735!3d32.2396324905322!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390487081634b2f7%3A0x7292a870d0617302!2sManali%2C%20Himachal%20Pradesh!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin'
-          }
-          width="100%"
-          height="100%"
-          style={{ border: 0 }}
-          allowFullScreen=""
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          className="w-full h-full grayscale-[15%] contrast-[1.05]"
-        />
+      {/* ── 3. Compact Interactive Location Map ── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 pt-2">
+        <div className="relative w-full h-[200px] sm:h-[240px] md:h-[260px] rounded-3xl overflow-hidden border border-neutral-200 shadow-sm bg-neutral-100">
+          <iframe
+            title="Weekend Escapes Himalayan Basecamp Location"
+            src={
+              contactInfo?.mapUrl ||
+              'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d108861.32598379051!2d77.10898544976735!3d32.2396324905322!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390487081634b2f7%3A0x7292a870d0617302!2sManali%2C%20Himachal%20Pradesh!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin'
+            }
+            width="100%"
+            height="100%"
+            style={{ border: 0 }}
+            allowFullScreen=""
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            className="w-full h-full grayscale-[10%] contrast-[1.05]"
+          />
 
-        {/* Floating Location Pill Badge */}
-        <div className="absolute top-5 left-5 sm:left-10 bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-xl border border-neutral-200 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#FF6B16] text-white flex items-center justify-center shrink-0 shadow-sm">
-            <MapPin className="w-4 h-4" />
-          </div>
-          <div>
-            <p className="text-xs font-extrabold text-[#111111]">Weekend Escapes Basecamp</p>
-            <p className="text-[11px] text-neutral-500 max-w-[200px] sm:max-w-xs truncate">
-              {contactInfo?.address || 'Manali / Dehradun Hub, India'}
-            </p>
+          {/* Compact Floating Location Pill Badge */}
+          <div className="absolute top-3.5 left-3.5 sm:left-5 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-2xl shadow-md border border-neutral-200/80 flex items-center gap-2.5">
+            <div className="w-6 h-6 rounded-full bg-[#FF6B16] text-white flex items-center justify-center shrink-0 shadow-sm">
+              <MapPin className="w-3 h-3" />
+            </div>
+            <div>
+              <p className="text-[11px] sm:text-xs font-bold text-[#111111]">Weekend Escapes Basecamp</p>
+              <p className="text-[10px] text-neutral-500 max-w-[160px] sm:max-w-xs truncate">
+                {contactInfo?.address || 'Manali / Dehradun Hub, India'}
+              </p>
+            </div>
           </div>
         </div>
       </section>
