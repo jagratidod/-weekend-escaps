@@ -2,7 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { EXPERIENCES } from '../data/experiences';
 import Container from '../components/common/Container';
-import { ArrowRight, Mountain, Compass, Heart, Users, Flame, Globe, Check } from 'lucide-react';
+import { getImageUrl } from '../utils/imageHelper';
+import { ArrowRight, Mountain, Compass, Heart, Users, Flame, Globe } from 'lucide-react';
 
 const iconMap = {
   Mountain,
@@ -10,12 +11,94 @@ const iconMap = {
   Heart,
   Users,
   Flame,
-  Globe
+  Globe,
+};
+
+// Curated visual theme for each experience matching the reference photo board style
+const EXPERIENCE_VISUALS = {
+  trekking: {
+    bg: getImageUrl('/images/gallery/gallery-4.webp'),
+    kicker: 'BEYOND THE',
+    highlight: 'TOURIST TRAPS:',
+    subheading: 'UNIQUE HIMALAYAN TREKS',
+    tagline: 'Explore the hidden trails of Uttarakhand & Kashmir.',
+    polaroids: [
+      { img: getImageUrl('/newimage/exploresection/kedarkantha.png'), alt: 'Kedarkantha Summit' },
+      { img: getImageUrl('/images/gallery/gallery-1.webp'), alt: 'Summit Ridge Push' },
+      { img: getImageUrl('/newimage/about/kedarkantha.png'), alt: 'Alpine Ridge Camp' },
+      { img: getImageUrl('/newimage/other sections image/image1.png'), alt: 'Himalayan Trekker' },
+    ],
+  },
+  adventure: {
+    bg: getImageUrl('/newimage/exploresection/manali.png'),
+    kicker: 'BEYOND THE',
+    highlight: 'ORDINARY:',
+    subheading: 'HIGH-ALTITUDE ADVENTURES',
+    tagline: 'Feel the adrenaline on snow slopes and rapids.',
+    polaroids: [
+      { img: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?q=85&w=600&auto=format&fit=crop', alt: 'Solang Skiing' },
+      { img: 'https://images.unsplash.com/photo-1502784444187-359ac186c5bb?q=85&w=600&auto=format&fit=crop', alt: 'Gulmarg Gondola' },
+      { img: 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?q=85&w=600&auto=format&fit=crop', alt: 'White Water Rafting' },
+      { img: getImageUrl('/newimage/exploresection/vally.png'), alt: 'Spiti 4x4 Expedition' },
+    ],
+  },
+  honeymoon: {
+    bg: getImageUrl('/images/gallery/gallery-2.webp'),
+    kicker: 'BEYOND THE',
+    highlight: 'TOURIST TRAPS:',
+    subheading: 'ROMANTIC MOUNTAIN ESCAPES',
+    tagline: 'Private sanctuaries crafted for intimate memories.',
+    polaroids: [
+      { img: getImageUrl('/newimage/exploresection/kashmir.png'), alt: 'Sunset Shikara' },
+      { img: 'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?q=85&w=600&auto=format&fit=crop', alt: 'Alpine Chalet Bed' },
+      { img: getImageUrl('/newimage/exploresection/bali.png'), alt: 'Bali Sunset Cliff' },
+      { img: 'https://images.unsplash.com/photo-1517824806704-9040b037703b?q=85&w=600&auto=format&fit=crop', alt: 'Stargazing Camp' },
+    ],
+  },
+  family: {
+    bg: getImageUrl('/images/gallery/gallery-5.webp'),
+    kicker: 'BEYOND THE',
+    highlight: 'ORDINARY:',
+    subheading: 'CAREFREE FAMILY CIRCUITS',
+    tagline: 'Comforting, scenic journeys for every generation.',
+    polaroids: [
+      { img: getImageUrl('/newimage/about/kashmir.png'), alt: 'Kashmir Valley' },
+      { img: getImageUrl('/newimage/about/manali.png'), alt: 'Manali Apple Orchards' },
+      { img: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?q=85&w=600&auto=format&fit=crop', alt: 'Heritage Houseboat' },
+      { img: getImageUrl('/newimage/exploresection/manali.png'), alt: 'Pine Valley' },
+    ],
+  },
+  group: {
+    bg: getImageUrl('/newimage/herosecction/heroimage.png'),
+    kicker: 'BEYOND THE',
+    highlight: 'COMMUTE:',
+    subheading: 'EPIC GROUP EXPEDITIONS',
+    tagline: 'Join fellow wanderers for stories around the bonfire.',
+    polaroids: [
+      { img: getImageUrl('/images/gallery/gallery-1.webp'), alt: 'Group Summit' },
+      { img: 'https://images.unsplash.com/photo-1659187313578-66ec5323bc2f?q=85&w=600&auto=format&fit=crop', alt: 'Acoustic Bonfire' },
+      { img: getImageUrl('/newimage/about/vally.png'), alt: 'Spiti Pass' },
+      { img: 'https://images.unsplash.com/photo-1517824806704-9040b037703b?q=85&w=600&auto=format&fit=crop', alt: 'Campfire Galaxy' },
+    ],
+  },
+  international: {
+    bg: getImageUrl('/images/gallery/gallery-6.webp'),
+    kicker: 'BEYOND THE',
+    highlight: 'USUAL HORIZONS:',
+    subheading: 'CURATED GLOBAL GETAWAYS',
+    tagline: 'Explore tropical paradises and ancient sacred culture.',
+    polaroids: [
+      { img: getImageUrl('/newimage/exploresection/bali.png'), alt: 'Nusa Penida Cliff' },
+      { img: getImageUrl('/newimage/about/bali.png'), alt: 'Bali Rice Terraces' },
+      { img: getImageUrl('/images/gallery/gallery-6.webp'), alt: 'Water Temple' },
+      { img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=85&w=600&auto=format&fit=crop', alt: 'Tropical Beach' },
+    ],
+  },
 };
 
 export function ExperiencesPage() {
   return (
-    <div className="pt-28 pb-24 bg-[#F7F7F5] min-h-screen">
+    <div className="pt-28 pb-24 bg-[#F7F7F5] min-h-screen text-[#111111]">
       <Container>
         {/* Page Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
@@ -34,56 +117,104 @@ export function ExperiencesPage() {
         </div>
 
         {/* Experience Blocks */}
-        <div className="space-y-12">
+        <div className="space-y-14">
           {EXPERIENCES.map((exp, idx) => {
             const Icon = iconMap[exp.icon] || Mountain;
             const isReversed = idx % 2 === 1;
+            const visual = EXPERIENCE_VISUALS[exp.id] || EXPERIENCE_VISUALS.trekking;
 
             return (
               <div
                 key={exp.id}
                 id={exp.id}
-                className={`bg-white rounded-3xl p-6 sm:p-10 border border-neutral-100 shadow-md flex flex-col ${
+                className={`bg-white rounded-3xl p-6 sm:p-8 lg:p-10 border border-neutral-200 shadow-md flex flex-col ${
                   isReversed ? 'lg:flex-row-reverse' : 'lg:flex-row'
-                } gap-8 items-center justify-between`}
+                } gap-8 lg:gap-12 items-center justify-between transition-all duration-300 hover:shadow-xl`}
               >
-                {/* Visual Icon Art side */}
-                <div className="w-full lg:w-5/12 aspect-[16/10] rounded-2xl bg-[#111111] flex flex-col items-center justify-center p-8 text-white relative overflow-hidden group">
-                  <div className="w-20 h-20 rounded-full bg-[#FF6B16]/20 border border-[#FF6B16]/40 flex items-center justify-center text-[#FF6B16] mb-4 group-hover:scale-110 transition-transform">
-                    <Icon className="w-10 h-10" />
+                {/* ── Visual Postcard & Polaroids Card matching Reference Image ── */}
+                <div className="w-full lg:w-1/2 aspect-[4/3] sm:aspect-[16/11] lg:aspect-[4/3] rounded-3xl relative overflow-hidden flex flex-col items-center justify-center border border-neutral-200/90 shadow-lg group">
+                  {/* Scenic Mountain Backdrop Image */}
+                  <img
+                    src={visual.bg}
+                    alt={exp.title}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  />
+                  {/* Subtle dark vignette */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/15 to-black/25" />
+
+                  {/* Centered Cream Plaque (matching reference screenshot) */}
+                  <div className="relative z-10 w-[88%] sm:w-[82%] bg-[#FAF8F5] border border-[#E3DDD1] shadow-2xl rounded-2xl p-5 sm:p-7 pt-6 sm:pt-8 text-center flex flex-col items-center select-none -translate-y-6 sm:-translate-y-8">
+                    <span className="text-[11px] sm:text-xs font-black tracking-[0.25em] uppercase text-neutral-800">
+                      {visual.kicker}
+                    </span>
+                    <h3
+                      className="text-lg sm:text-xl md:text-2xl font-serif font-black tracking-tight text-neutral-700 uppercase mt-0.5"
+                      style={{ fontFamily: 'Georgia, serif' }}
+                    >
+                      {visual.highlight}
+                    </h3>
+                    <h4 className="text-xs sm:text-sm md:text-base font-black tracking-wider text-neutral-900 uppercase mt-1">
+                      {visual.subheading}
+                    </h4>
+                    <p className="text-xs sm:text-sm text-neutral-600 mt-2 font-normal italic">
+                      {visual.tagline}
+                    </p>
                   </div>
-                  <span className="text-xs uppercase tracking-widest text-[#FF6B16] font-extrabold">
-                    {exp.tagline}
-                  </span>
-                  <h3 className="text-2xl font-black mt-1 text-center">
-                    {exp.title}
-                  </h3>
-                  <span className="mt-3 text-xs bg-white/10 px-3 py-1 rounded-full text-neutral-300">
-                    {exp.count}
-                  </span>
+
+                  {/* Overlapping 4 Polaroids fanned out at bottom */}
+                  <div className="absolute -bottom-2 left-0 right-0 z-20 flex justify-center items-end px-2 pb-3 pointer-events-none">
+                    <div className="flex items-end justify-center -space-x-3 sm:-space-x-5 pointer-events-auto">
+                      {visual.polaroids.map((p, pIdx) => {
+                        const rotations = [
+                          'transform -rotate-6 sm:-rotate-12 hover:rotate-0 hover:scale-115 hover:z-30',
+                          'transform -rotate-2 sm:-rotate-4 hover:rotate-0 hover:scale-115 hover:z-30 z-10',
+                          'transform rotate-2 sm:rotate-4 hover:rotate-0 hover:scale-115 hover:z-30 z-10',
+                          'transform rotate-6 sm:rotate-12 hover:rotate-0 hover:scale-115 hover:z-30',
+                        ];
+
+                        return (
+                          <div
+                            key={pIdx}
+                            className={`${rotations[pIdx]} transition-all duration-300 bg-white p-1.5 pb-4 sm:p-2 sm:pb-6 rounded-sm shadow-2xl border border-neutral-200/80 w-18 sm:w-24 md:w-28 shrink-0 cursor-pointer`}
+                          >
+                            <div className="aspect-square overflow-hidden bg-neutral-100 rounded-[1px]">
+                              <img
+                                src={p.img}
+                                alt={p.alt}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Details side */}
-                <div className="w-full lg:w-7/12 space-y-5">
-                  <div className="inline-block px-3 py-1 rounded-full bg-[#FF6B16]/10 text-[#FF6B16] text-xs font-bold uppercase tracking-wider">
-                    {exp.count}
+                {/* ── Details Side ── */}
+                <div className="w-full lg:w-1/2 space-y-5">
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FF6B16]/10 text-[#FF6B16] text-xs font-black uppercase tracking-wider">
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{exp.count}</span>
                   </div>
-                  <h2 className="text-3xl font-black text-[#111111]">
+
+                  <h2 className="text-3xl sm:text-4xl font-black text-[#111111] tracking-tight">
                     {exp.title} Trips
                   </h2>
-                  <p className="text-neutral-600 text-base leading-relaxed">
+
+                  <p className="text-neutral-600 text-sm sm:text-base leading-relaxed">
                     {exp.description}
                   </p>
 
                   <div>
-                    <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 mb-2">
+                    <h4 className="text-[11px] font-black uppercase tracking-wider text-neutral-400 mb-2.5">
                       Popular Trips in this Style:
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {exp.popularTrips.map((trip, i) => (
                         <span
                           key={i}
-                          className="px-3.5 py-1.5 rounded-xl bg-neutral-100 text-xs font-bold text-neutral-800"
+                          className="px-3.5 py-1.5 rounded-xl bg-[#F7F7F5] border border-neutral-200/80 text-xs font-bold text-neutral-800 hover:border-[#FF6B16] transition-colors"
                         >
                           {trip}
                         </span>
@@ -94,7 +225,7 @@ export function ExperiencesPage() {
                   <div className="pt-2">
                     <Link
                       to={`/packages?type=${exp.title}`}
-                      className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#FF6B16] hover:bg-[#e05809] text-white text-xs font-black uppercase tracking-wider shadow-md hover:shadow-lg transition-all"
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#FF6B16] hover:bg-[#ff7d33] text-white text-xs font-black uppercase tracking-wider shadow-md hover:shadow-lg transition-all"
                     >
                       <span>Explore {exp.title} Packages</span>
                       <ArrowRight className="w-4 h-4" />
