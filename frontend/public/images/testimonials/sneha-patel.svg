@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+    
+      <defs>
+        <linearGradient id="ptSneha" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#EA580C"/>
+          <stop offset="100%" stop-color="#FDE047"/>
+        </linearGradient>
+      </defs>
+      <rect width="500" height="500" fill="url(#ptSneha)"/>
+      <circle cx="250" cy="190" r="60" fill="#FDBA74"/>
+      <!-- Bucket hat / Sun hat -->
+      <ellipse cx="250" cy="160" rx="75" ry="24" fill="#D97706"/>
+      <path d="M120,300 Q250,260 380,300 L400,500 L100,500 Z" fill="#0D9488"/>
+    
+  </svg>

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+    
+      <defs>
+        <radialGradient id="fire" cx="50%" cy="80%" r="50%">
+          <stop offset="0%" stop-color="#FEF08A"/>
+          <stop offset="30%" stop-color="#FF6B16"/>
+          <stop offset="60%" stop-color="#9A3412"/>
+          <stop offset="100%" stop-color="#0F172A"/>
+        </radialGradient>
+      </defs>
+      <rect width="800" height="600" fill="url(#fire)"/>
+      <!-- Campfire logs -->
+      <line x1="360" y1="520" x2="440" y2="480" stroke="#78350F" stroke-width="12"/>
+      <line x1="440" y1="520" x2="360" y2="480" stroke="#78350F" stroke-width="12"/>
+      <!-- Flames -->
+      <polygon points="380,500 400,410 420,500" fill="#FEF08A"/>
+      <polygon points="370,510 395,430 410,510" fill="#F97316"/>
+      <polygon points="400,510 415,440 430,510" fill="#EF4444"/>
+      <!-- Friends sitting around fire -->
+      <circle cx="300" cy="460" r="16" fill="#1E293B"/><rect x="285" y="480" width="30" height="40" rx="6" fill="#1E293B"/>
+      <circle cx="500" cy="460" r="16" fill="#1E293B"/><rect x="485" y="480" width="30" height="40" rx="6" fill="#1E293B"/>
+      <!-- Tent in background -->
+      <polygon points="120,480 180,390 240,480" fill="#FF6B16"/>
+      <!-- Stars in sky -->
+      <circle cx="200" cy="120" r="2" fill="#FFF"/><circle cx="450" cy="80" r="2.5" fill="#FFF"/>
+      <circle cx="650" cy="140" r="2" fill="#FFF"/><circle cx="720" cy="90" r="2" fill="#FFF"/>
+    
+  </svg>

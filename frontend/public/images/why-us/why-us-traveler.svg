@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 700" width="800" height="700">
+    <defs>
+      <linearGradient id="whySky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#0284C7"/>
+        <stop offset="50%" stop-color="#7DD3FC"/>
+        <stop offset="100%" stop-color="#FEF08A"/>
+      </linearGradient>
+    </defs>
+    <rect width="800" height="700" fill="url(#whySky)"/>
+    <!-- Layered mountain ranges in distance -->
+    <polygon points="0,450 350,200 700,450" fill="#64748B"/>
+    <polygon points="200,480 500,260 800,480" fill="#475569"/>
+    <polygon points="0,520 400,340 800,520" fill="#334155"/>
+    <path d="M0,500 Q400,420 800,530 L800,700 L0,700 Z" fill="#1E293B"/>
+    <!-- Adventurous Traveler with backpack looking across mountains -->
+    <g transform="translate(380, 260) scale(1.6)">
+      <!-- Beanie -->
+      <circle cx="50" cy="35" r="14" fill="#0F172A"/>
+      <ellipse cx="50" cy="32" rx="12" ry="8" fill="#FF6B16"/>
+      <!-- Head / Neck -->
+      <circle cx="50" cy="42" r="11" fill="#78350F"/>
+      <!-- Orange Trekking Jacket -->
+      <path d="M25,58 L40,50 L60,50 L75,58 L80,140 L20,140 Z" fill="#FF6B16"/>
+      <!-- Big Explorer Backpack -->
+      <rect x="28" y="55" width="44" height="70" rx="10" fill="#1E293B"/>
+      <rect x="36" y="65" width="28" height="35" rx="5" fill="#334155"/>
+      <line x1="32" y1="90" x2="68" y2="90" stroke="#FF6B16" stroke-width="4"/>
+      <!-- Straps -->
+      <line x1="38" y1="55" x2="30" y2="120" stroke="#0F172A" stroke-width="5"/>
+      <line x1="62" y1="55" x2="70" y2="120" stroke="#0F172A" stroke-width="5"/>
+    </g>
+    <!-- Handwritten text: Travel. Explore. Repeat. -->
+    <text x="560" y="420" font-family="'Caveat', cursive, sans-serif" font-size="34" font-weight="700" fill="#FFFFFF" transform="rotate(-8 560 420)">
+      Travel.
+    </text>
+    <text x="575" y="460" font-family="'Caveat', cursive, sans-serif" font-size="34" font-weight="700" fill="#FFFFFF" transform="rotate(-8 575 460)">
+      Explore.
+    </text>
+    <text x="590" y="500" font-family="'Caveat', cursive, sans-serif" font-size="34" font-weight="700" fill="#FF6B16" transform="rotate(-8 590 500)">
+      Repeat.
+    </text>
+  </svg>

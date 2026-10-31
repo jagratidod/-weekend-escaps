@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+    
+      <defs>
+        <linearGradient id="cloudSea" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#C2410C"/>
+          <stop offset="35%" stop-color="#FB923C"/>
+          <stop offset="70%" stop-color="#FEF08A"/>
+          <stop offset="100%" stop-color="#CBD5E1"/>
+        </linearGradient>
+      </defs>
+      <rect width="800" height="600" fill="url(#cloudSea)"/>
+      <circle cx="400" cy="220" r="120" fill="#FFF7ED" opacity="0.9"/>
+      <!-- Billowing clouds below summit -->
+      <path d="M0,380 Q100,340 220,370 T440,360 T660,370 T800,350 L800,600 L0,600 Z" fill="#F8FAFC" opacity="0.9"/>
+      <path d="M0,420 Q160,390 320,430 T640,410 T800,430 L800,600 L0,600 Z" fill="#E2E8F0"/>
+    
+  </svg>

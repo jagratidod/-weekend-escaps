@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+    
+      <defs>
+        <linearGradient id="ptRahul" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#166534"/>
+          <stop offset="100%" stop-color="#4ADE80"/>
+        </linearGradient>
+      </defs>
+      <rect width="500" height="500" fill="url(#ptRahul)"/>
+      <!-- Two trekking friends smiling -->
+      <circle cx="180" cy="200" r="50" fill="#FDBA74"/>
+      <path d="M90,290 Q180,250 260,290 L270,500 L80,500 Z" fill="#FF6B16"/>
+      <circle cx="320" cy="210" r="50" fill="#FED7AA"/>
+      <path d="M240,300 Q320,260 410,300 L420,500 L230,500 Z" fill="#0284C7"/>
+    
+  </svg>

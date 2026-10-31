@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 750" width="600" height="750">
+    
+      <defs>
+        <linearGradient id="spSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0284C7"/>
+          <stop offset="60%" stop-color="#7DD3FC"/>
+          <stop offset="100%" stop-color="#FDE047"/>
+        </linearGradient>
+      </defs>
+      <rect width="600" height="750" fill="url(#spSky)"/>
+      <!-- Brown Stark Canyon Ridges -->
+      <polygon points="0,420 220,180 480,420" fill="#9A3412"/>
+      <polygon points="250,420 450,220 600,420" fill="#7C2D12"/>
+      <path d="M0,380 Q300,320 600,400 L600,750 L0,750 Z" fill="#C2410C"/>
+      <path d="M0,480 Q250,420 600,520 L600,750 L0,750 Z" fill="#9A3412"/>
+      <!-- Key Monastery Clifftop Architecture -->
+      <rect x="220" y="320" width="80" height="60" fill="#FFFFFF"/>
+      <rect x="240" y="290" width="40" height="30" fill="#B91C1C"/>
+      <polygon points="230,290 260,260 290,290" fill="#F59E0B"/>
+      <!-- Winding Mountain Road -->
+      <path d="M120,750 Q280,680 340,620 T420,540" fill="none" stroke="#FDBA74" stroke-width="24" stroke-linecap="round"/>
+      <path d="M120,750 Q280,680 340,620 T420,540" fill="none" stroke="#FFFFFF" stroke-dasharray="10 8" stroke-width="3"/>
+    
+    <!-- Vignette / Contrast gradient for text readability -->
+    <rect y="450" width="600" height="300" fill="url(#bottomShadow)" opacity="0.75"/>
+    <defs>
+      <linearGradient id="bottomShadow" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#000000" stop-opacity="0.8"/>
+      </linearGradient>
+    </defs>
+  </svg>

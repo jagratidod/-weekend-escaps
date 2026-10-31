@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 750" width="600" height="750">
+    
+      <defs>
+        <linearGradient id="kmSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#38BDF8"/>
+          <stop offset="50%" stop-color="#FBCFE8"/>
+          <stop offset="100%" stop-color="#FEF08A"/>
+        </linearGradient>
+        <linearGradient id="lake" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0284C7"/>
+          <stop offset="100%" stop-color="#0369A1"/>
+        </linearGradient>
+      </defs>
+      <rect width="600" height="750" fill="url(#kmSky)"/>
+      <!-- Snow Mountains in Background -->
+      <polygon points="0,380 200,160 400,380" fill="#E0F2FE"/>
+      <polygon points="250,380 440,180 600,380" fill="#F8FAFC"/>
+      <!-- Dal Lake Water -->
+      <rect y="380" width="600" height="370" fill="url(#lake)"/>
+      <path d="M0,400 Q300,420 600,400 L600,750 L0,750 Z" fill="#0284C7" opacity="0.6"/>
+      <!-- Famous Shikara Boat with Canopy -->
+      <path d="M120,560 L480,560 L440,610 L160,610 Z" fill="#78350F"/>
+      <!-- Canopy/Curtains -->
+      <path d="M180,510 L420,510 L410,560 L190,560 Z" fill="#FF6B16"/>
+      <rect x="200" y="520" width="200" height="8" fill="#FDE047"/>
+      <!-- Boatman with Heart-shaped Oar -->
+      <circle cx="450" cy="540" r="8" fill="#1E293B"/>
+      <path d="M450,548 L450,575 L430,620" stroke="#78350F" stroke-width="4"/>
+      <!-- Water Lilies & Lotus on Lake -->
+      <ellipse cx="140" cy="670" rx="30" ry="10" fill="#15803D" opacity="0.8"/>
+      <ellipse cx="280" cy="700" rx="40" ry="12" fill="#15803D" opacity="0.8"/>
+    
+    <!-- Vignette / Contrast gradient for text readability -->
+    <rect y="450" width="600" height="300" fill="url(#bottomShadow)" opacity="0.75"/>
+    <defs>
+      <linearGradient id="bottomShadow" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#000000" stop-opacity="0.8"/>
+      </linearGradient>
+    </defs>
+  </svg>

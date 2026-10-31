@@ -1,0 +1,109 @@
+import { getImageUrl } from '../utils/imageHelper';
+
+export const PACKAGES = [
+  {
+    id: "kedarkantha-trek",
+    name: "Kedarkantha Trek",
+    badge: "Best Seller",
+    badgeColor: "bg-[#FF6B16] text-white",
+    duration: "6 Days / 5 Nights",
+    location: "Uttarakhand, India",
+    price: 8999,
+    originalPrice: 12999,
+    rating: 4.9,
+    reviewsCount: 320,
+    image: getImageUrl("/newimage/exploresection/kedarkantha.png"),
+    travelType: "Trekking",
+    difficulty: "Easy to Moderate",
+    season: "Dec - Apr (Winter Snow)",
+    groupSize: "12 - 18 Explorers",
+    included: ["Meals & Camps", "Experienced Trek Leader", "Microspikes & Gaiters", "Forest Permits", "First Aid Support"],
+    itinerary: [
+      { day: "Day 1", title: "Drive from Dehradun to Sankri", desc: "Scenic mountain drive via Mussoorie and Yamuna river valley (220 km)." },
+      { day: "Day 2", title: "Trek from Sankri to Juda Ka Talab", desc: "Gradual climb through dense oak and pine forests to high altitude lake." },
+      { day: "Day 3", title: "Trek to Kedarkantha Base Camp", desc: "Emerge into open snowy meadows with arresting views of Bandarpoonch peaks." },
+      { day: "Day 4", title: "Summit Day & Descent to Hargaon", desc: "Early 3 AM push to summit for spectacular sunrise over Himalayan ranges." },
+      { day: "Day 5", title: "Trek from Hargaon to Sankri", desc: "Descent through scenic apple orchards and local villages." },
+      { day: "Day 6", title: "Drive from Sankri back to Dehradun", desc: "Return with lifetime mountain memories and certified trek badge." }
+    ]
+  },
+  {
+    id: "kashmir-getaway",
+    name: "Kashmir Getaway",
+    badge: "New",
+    badgeColor: "bg-[#FF6B16] text-white",
+    duration: "7 Days / 6 Nights",
+    location: "Jammu & Kashmir, India",
+    price: 15999,
+    originalPrice: 21999,
+    rating: 4.95,
+    reviewsCount: 450,
+    image: getImageUrl("/newimage/exploresection/kashmir.png"),
+    travelType: "Honeymoon & Leisure",
+    difficulty: "Easy",
+    season: "All Year Round",
+    groupSize: "Family / Couples / Small Groups",
+    included: ["Heritage Houseboat Stay", "Private Cab for Transfers", "Shikara Ride on Dal Lake", "All Meals", "Local Sightseeing"],
+    itinerary: [
+      { day: "Day 1", title: "Arrive Srinagar & Dal Lake Shikara Ride", desc: "Check-in to a luxury wooden houseboat with evening sunset cruise." },
+      { day: "Day 2", title: "Mughal Gardens & Old Srinagar Heritage", desc: "Explore Nishat Bagh, Shalimar Bagh, and historic Shankaracharya Temple." },
+      { day: "Day 3", title: "Gulmarg Day Trip - Meadow of Flowers", desc: "Board the world's highest operating Gondola cable car ride." },
+      { day: "Day 4", title: "Pahalgam - Valley of Shepherds", desc: "En route visit Saffron fields at Pampore and Avantipur ruins." },
+      { day: "Day 5", title: "Betaab & Aru Valley Excursion", desc: "Pristine alpine meadows, crystal clear streams, and pony rides." },
+      { day: "Day 6", title: "Sonmarg - Meadow of Gold", desc: "Gateway to Ladakh, Thajiwas Glacier pony trek and snowy landscapes." },
+      { day: "Day 7", title: "Departure with Kashmir Memories", desc: "Transfer to Srinagar airport with authentic Kashmiri saffron and tea." }
+    ]
+  },
+  {
+    id: "manali-adventure",
+    name: "Manali Adventure",
+    badge: "Popular",
+    badgeColor: "bg-[#FF6B16] text-white",
+    duration: "5 Days / 4 Nights",
+    location: "Himachal Pradesh, India",
+    price: 12500,
+    originalPrice: 17500,
+    rating: 4.85,
+    reviewsCount: 680,
+    image: getImageUrl("/newimage/exploresection/manali.png"),
+    travelType: "Adventure",
+    difficulty: "Easy to Moderate",
+    season: "March - November",
+    groupSize: "Friends & Groups",
+    included: ["Boutique Resort Stay", "River Rafting & Paragliding Pass", "Atal Tunnel Tour", "Campfire & Music", "All Breakfasts & Dinners"],
+    itinerary: [
+      { day: "Day 1", title: "Arrive Manali & Old Manali Cafes", desc: "Stroll Hadimba Temple, Mall Road, and Bohemian riverside cafes." },
+      { day: "Day 2", title: "Solang Valley Thrills & Atal Tunnel", desc: "Zipline, Zorbing, ATV rides, and traverse the world's longest highway tunnel." },
+      { day: "Day 3", title: "Jogini Waterfalls & Vashisht Hot Springs", desc: "Scenic nature trek through apple orchards leading to cascading waterfalls." },
+      { day: "Day 4", title: "White Water River Rafting in Kullu", desc: "Class III-IV rapids in the foaming Beas River followed by riverside lunch." },
+      { day: "Day 5", title: "Farewell Manali", desc: "Shopping for Tibetan handicrafts and evening Volvo bus departure." }
+    ]
+  },
+  {
+    id: "bali-escape",
+    name: "Bali Escape",
+    badge: "Trending",
+    badgeColor: "bg-[#FF6B16] text-white",
+    duration: "7 Days / 6 Nights",
+    location: "Bali, Indonesia",
+    price: 48999,
+    originalPrice: 62000,
+    rating: 4.9,
+    reviewsCount: 890,
+    image: getImageUrl("/newimage/exploresection/bali.png"),
+    travelType: "International",
+    difficulty: "Easy",
+    season: "Apr - Oct",
+    groupSize: "Couples & Small Groups",
+    included: ["4-Star Private Pool Villa", "Nusa Penida Island Speedboat", "Ubud Swings & Rice Terraces", "Floating Breakfast", "Airport Transfers"],
+    itinerary: [
+      { day: "Day 1", title: "Arrival in Denpasar & Seminyak Sunset", desc: "Welcome garlands and check-in to your private luxury pool villa." },
+      { day: "Day 2", title: "Ubud Rice Terraces & Iconic Giant Swings", desc: "Tegalalang emerald rice fields, Luwak coffee plantation, and monkey forest." },
+      { day: "Day 3", title: "Mount Batur Sunrise & Hot Springs", desc: "Early morning jeep or trek for breathtaking sunrise above caldera clouds." },
+      { day: "Day 4", title: "Nusa Penida Day Cruise", desc: "Visit Kelingking T-Rex cliff, Angel's Billabong, and Broken Beach." },
+      { day: "Day 5", title: "Ulun Danu Beratan & Handara Gate", desc: "The iconic floating lake temple and world-famous Bali stone gate." },
+      { day: "Day 6", title: "Uluwatu Sunset Temple & Kecak Fire Dance", desc: "Dramatic cliff temple overlooking the Indian Ocean with fire dance ritual." },
+      { day: "Day 7", title: "Spa Session & Flight Home", desc: "Traditional Balinese aroma massage before airport drop-off." }
+    ]
+  }
+];

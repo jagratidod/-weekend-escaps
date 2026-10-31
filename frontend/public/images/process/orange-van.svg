@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" width="200" height="120">
+    <!-- Van Body -->
+    <rect x="25" y="30" width="130" height="55" rx="12" fill="#FF6B16"/>
+    <!-- Roof Rack with Surfboard / Luggage -->
+    <line x1="35" y1="24" x2="135" y2="24" stroke="#111111" stroke-width="4" stroke-linecap="round"/>
+    <rect x="45" y="16" width="35" height="8" rx="2" fill="#F59E0B"/>
+    <rect x="90" y="18" width="30" height="6" rx="2" fill="#3B82F6"/>
+    <!-- Windows -->
+    <path d="M40,38 L75,38 L75,56 L40,56 Z" fill="#E0F2FE"/>
+    <path d="M85,38 L120,38 L142,56 L85,56 Z" fill="#E0F2FE"/>
+    <!-- White Bottom Half Stripe -->
+    <rect x="25" y="60" width="130" height="14" fill="#FFFFFF"/>
+    <circle cx="152" cy="65" r="5" fill="#FEF08A"/>
+    <!-- Wheels -->
+    <circle cx="55" cy="85" r="16" fill="#111111"/>
+    <circle cx="55" cy="85" r="7" fill="#E5E7EB"/>
+    <circle cx="125" cy="85" r="16" fill="#111111"/>
+    <circle cx="125" cy="85" r="7" fill="#E5E7EB"/>
+  </svg>

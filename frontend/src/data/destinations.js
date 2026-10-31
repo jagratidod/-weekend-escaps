@@ -1,0 +1,72 @@
+export const DESTINATIONS = [
+  {
+    id: "kedarkantha",
+    name: "Kedarkantha",
+    subtitle: "Trekking",
+    category: "Trekking",
+    image: "/newimage/exploresection/kedarkantha.png",
+    altitude: "12,500 ft",
+    duration: "6 Days",
+    rating: 4.9,
+    reviewsCount: 1420,
+    price: 8999,
+    description: "One of the most famous winter treks in the Himalayas, offering panoramic 360-degree views of snow-draped peaks, pristine campsites, and pine forests.",
+    highlights: ["Summit ridge walk", "Juda Ka Talab frozen lake", "Stargazing at night camps", "Snow camping"]
+  },
+  {
+    id: "kashmir",
+    name: "Kashmir",
+    subtitle: "Valley of Wonders",
+    category: "Honeymoon & Leisure",
+    image: "/newimage/exploresection/kashmir.png",
+    altitude: "8,825 ft",
+    duration: "7 Days",
+    rating: 4.95,
+    reviewsCount: 2180,
+    price: 15999,
+    description: "Known as Paradise on Earth, Kashmir enchants with Dal Lake shikara rides, saffron fields, Gulmarg snow meadows, and Pahalgam river valleys.",
+    highlights: ["Stay in historic Houseboat", "Gulmarg Gondola Ride", "Betaab Valley excursion", "Floating vegetable market"]
+  },
+  {
+    id: "manali",
+    name: "Manali",
+    subtitle: "Hill Station",
+    category: "Adventure & Hill Station",
+    image: "/newimage/exploresection/manali.png",
+    altitude: "6,726 ft",
+    duration: "5 Days",
+    rating: 4.85,
+    reviewsCount: 1950,
+    price: 12500,
+    description: "Nestled in the Beas river valley, Manali blends adrenaline adventure sports like paragliding and river rafting with Old Manali cafes and Solang Valley.",
+    highlights: ["Solang Valley sports", "Atal Tunnel & Sissu waterfall", "Jogini Waterfalls hike", "Old Manali vibe"]
+  },
+  {
+    id: "spiti",
+    name: "Spiti Valley",
+    subtitle: "Road Trip",
+    category: "Expedition & Desert",
+    image: "/newimage/exploresection/vally.png",
+    altitude: "14,500 ft",
+    duration: "8 Days",
+    rating: 4.92,
+    reviewsCount: 980,
+    price: 24999,
+    description: "A cold desert mountain valley renowned for dramatic canyons, ancient clifftop Buddhist monasteries, high-altitude passes, and fossil villages.",
+    highlights: ["Key Clifftop Monastery", "Chandratal Moon Lake camping", "Highest post office at Hikkim", "Kunzum Pass crossing"]
+  },
+  {
+    id: "bali",
+    name: "Bali",
+    subtitle: "International",
+    category: "International Island",
+    image: "/newimage/exploresection/bali.png",
+    altitude: "Sea Level",
+    duration: "7 Days",
+    rating: 4.9,
+    reviewsCount: 3100,
+    price: 48999,
+    description: "An Indonesian tropical paradise filled with forested volcanic mountains, iconic rice terraces, serene beaches, water temples, and vibrant nightlife.",
+    highlights: ["Pura Ulun Danu temple", "Ubud Monkey Forest & swings", "Nusa Penida Kelingking beach", "Mount Batur sunrise trek"]
+  }
+];

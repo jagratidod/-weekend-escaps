@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 750" width="600" height="750">
+    
+      <defs>
+        <linearGradient id="mnSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0EA5E9"/>
+          <stop offset="60%" stop-color="#BAE6FD"/>
+          <stop offset="100%" stop-color="#E0F2FE"/>
+        </linearGradient>
+      </defs>
+      <rect width="600" height="750" fill="url(#mnSky)"/>
+      <!-- Snow Crests -->
+      <polygon points="100,320 300,100 500,320" fill="#F8FAFC"/>
+      <polygon points="300,100 400,240 500,320 300,320" fill="#94A3B8" opacity="0.5"/>
+      <!-- Lush Green Pine Slopes -->
+      <path d="M0,320 Q250,260 600,340 L600,600 L0,600 Z" fill="#166534"/>
+      <path d="M0,420 Q300,360 600,440 L600,750 L0,750 Z" fill="#14532D"/>
+      <!-- Beas Rushing River -->
+      <path d="M350,450 Q280,560 220,750 L380,750 Q410,580 430,460 Z" fill="#38BDF8"/>
+      <path d="M310,520 Q280,620 260,750" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.8"/>
+      <!-- Pines Cluster in Foreground -->
+      <g fill="#052E16">
+        <polygon points="80,520 60,650 100,650"/><polygon points="130,490 105,640 155,640"/>
+        <polygon points="500,500 475,650 525,650"/><polygon points="540,530 520,660 560,660"/>
+      </g>
+    
+    <!-- Vignette / Contrast gradient for text readability -->
+    <rect y="450" width="600" height="300" fill="url(#bottomShadow)" opacity="0.75"/>
+    <defs>
+      <linearGradient id="bottomShadow" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#000000" stop-opacity="0.8"/>
+      </linearGradient>
+    </defs>
+  </svg>

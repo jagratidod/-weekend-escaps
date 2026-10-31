@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 600" width="1920" height="600">
+    <defs>
+      <linearGradient id="expSky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#111111"/>
+        <stop offset="30%" stop-color="#7C2D12"/>
+        <stop offset="70%" stop-color="#EA580C"/>
+        <stop offset="100%" stop-color="#FF6B16"/>
+      </linearGradient>
+      <linearGradient id="expFade" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#111111" stop-opacity="0.2"/>
+        <stop offset="100%" stop-color="#111111" stop-opacity="0.95"/>
+      </linearGradient>
+    </defs>
+    <rect width="1920" height="600" fill="url(#expSky)"/>
+    <!-- Golden sunset sun -->
+    <circle cx="500" cy="300" r="160" fill="#FFA500" opacity="0.9"/>
+    <!-- Mountain Ridges Silhouette -->
+    <polygon points="0,500 240,280 500,480" fill="#1C1917"/>
+    <polygon points="350,550 700,240 1100,550" fill="#0C0A09"/>
+    <polygon points="900,550 1350,300 1750,550" fill="#1C1917"/>
+    <polygon points="1500,550 1800,320 1920,450" fill="#0C0A09"/>
+    <!-- Two Hikers on Ridge Silhouette (matches screenshot) -->
+    <g transform="translate(340, 240) scale(0.7)" fill="#111111">
+      <!-- Hiker 1 -->
+      <circle cx="50" cy="40" r="9"/>
+      <path d="M38,50 L62,50 L66,95 L34,95 Z"/>
+      <rect x="25" y="52" width="16" height="35" rx="5"/>
+      <line x1="72" y1="58" x2="78" y2="135" stroke="#111" stroke-width="4"/>
+      <path d="M42,95 L36,135 L48,135 L52,102 L58,102 L64,135 L76,135 L68,95 Z"/>
+      <!-- Hiker 2 -->
+      <g transform="translate(90, 10)">
+        <circle cx="50" cy="40" r="9"/>
+        <path d="M38,50 L62,50 L66,95 L34,95 Z"/>
+        <rect x="25" y="52" width="16" height="35" rx="5"/>
+        <line x1="72" y1="58" x2="78" y2="135" stroke="#111" stroke-width="4"/>
+        <path d="M42,95 L36,135 L48,135 L52,102 L58,102 L64,135 L76,135 L68,95 Z"/>
+      </g>
+    </g>
+    <!-- Overlay darkness for contrast -->
+    <rect width="1920" height="600" fill="url(#expFade)"/>
+  </svg>

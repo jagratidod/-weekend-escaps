@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+    
+      <defs>
+        <linearGradient id="ptPriya" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0284C7"/>
+          <stop offset="100%" stop-color="#38BDF8"/>
+        </linearGradient>
+      </defs>
+      <rect width="500" height="500" fill="url(#ptPriya)"/>
+      <!-- Mountains behind -->
+      <polygon points="50,300 250,150 450,300" fill="#E0F2FE"/>
+      <!-- Hiker Person Avatar -->
+      <circle cx="250" cy="190" r="60" fill="#FDBA74"/>
+      <!-- Beanie -->
+      <ellipse cx="250" cy="155" rx="55" ry="30" fill="#1E293B"/>
+      <circle cx="250" cy="125" r="10" fill="#FF6B16"/>
+      <!-- Big Puffer Jacket -->
+      <path d="M120,290 Q250,240 380,290 L400,500 L100,500 Z" fill="#111111"/>
+      <path d="M220,290 L250,340 L280,290 Z" fill="#FF6B16"/>
+    
+  </svg>

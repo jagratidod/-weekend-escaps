@@ -1,0 +1,39 @@
+import fs from 'fs';
+
+const stackedWhiteLogoSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 160" width="180" height="160">
+  <defs>
+    <clipPath id="archClip">
+      <path d="M 40,80 A 50,50 0 0,1 140,80 Z" />
+    </clipPath>
+  </defs>
+
+  <!-- Orange Sun Arch -->
+  <path d="M 38,82 A 52,52 0 0,1 142,82 Z" fill="#FF6B16" />
+
+  <!-- Mountain Peaks inside the Sun -->
+  <!-- Main High Peak -->
+  <polygon points="52,82 90,32 128,82" fill="#111111" />
+  <!-- Main Peak Snowcap -->
+  <polygon points="90,32 80,48 90,54 100,48" fill="#FFFFFF" />
+  <line x1="90" y1="54" x2="90" y2="82" stroke="#FFFFFF" stroke-width="2.5" />
+
+  <!-- Left Secondary Peak -->
+  <polygon points="40,82 66,48 88,82" fill="#1C1C1C" />
+  <!-- Left Peak Snowcap -->
+  <polygon points="66,48 58,60 66,64 74,60" fill="#FFFFFF" />
+
+  <!-- Right Secondary Peak -->
+  <polygon points="96,82 118,52 138,82" fill="#1C1C1C" />
+  <!-- Right Peak Snowcap -->
+  <polygon points="118,52 110,63 118,67 125,63" fill="#FFFFFF" />
+
+  <!-- Black Mountain Ridge Base Cut -->
+  <path d="M 36,82 L 144,82 L 144,85 L 36,85 Z" fill="#111111" />
+
+  <!-- Typography matching user screenshot -->
+  <text x="90" y="114" text-anchor="middle" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="900" font-size="23" fill="#FFFFFF" letter-spacing="2">WEEKEND</text>
+  <text x="90" y="140" text-anchor="middle" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="900" font-size="21" fill="#FFFFFF" letter-spacing="4">ESCAPES</text>
+</svg>`;
+
+fs.writeFileSync('public/logo/weekend-escapes-logo-stacked-white.svg', stackedWhiteLogoSvg);
+console.log('Saved weekend-escapes-logo-stacked-white.svg!');

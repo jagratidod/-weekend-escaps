@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 750" width="600" height="750">
+    
+      <defs>
+        <linearGradient id="kkSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0284C7"/>
+          <stop offset="70%" stop-color="#BAE6FD"/>
+          <stop offset="100%" stop-color="#F0F9FF"/>
+        </linearGradient>
+      </defs>
+      <rect width="600" height="750" fill="url(#kkSky)"/>
+      <polygon points="50,500 300,120 550,500" fill="#FFFFFF"/>
+      <polygon points="300,120 420,320 550,500 300,500" fill="#93C5FD" opacity="0.7"/>
+      <path d="M0,450 Q200,400 400,440 T600,450 L600,750 L0,750 Z" fill="#E2E8F0"/>
+      <!-- Pine Trees -->
+      <g fill="#0F172A">
+        <polygon points="80,520 70,570 90,570"/><polygon points="120,500 110,560 130,560"/>
+        <polygon points="160,530 150,580 170,580"/><polygon points="460,510 450,570 470,570"/>
+        <polygon points="510,490 500,560 520,560"/>
+      </g>
+      <!-- Yellow & Orange Trekking Tents -->
+      <polygon points="260,620 290,570 320,620" fill="#FF6B16"/>
+      <polygon points="290,570 305,620 320,620" fill="#C2410C"/>
+      <polygon points="340,625 370,580 400,625" fill="#EAB308"/>
+      <!-- Hikers on Snow -->
+      <g fill="#0F172A">
+        <circle cx="210" cy="590" r="5"/><line x1="210" y1="595" x2="210" y2="615" stroke="#0F172A" stroke-width="4"/>
+        <circle cx="230" cy="592" r="5"/><line x1="230" y1="597" x2="230" y2="617" stroke="#0F172A" stroke-width="4"/>
+      </g>
+    
+    <!-- Vignette / Contrast gradient for text readability -->
+    <rect y="450" width="600" height="300" fill="url(#bottomShadow)" opacity="0.75"/>
+    <defs>
+      <linearGradient id="bottomShadow" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#000000" stop-opacity="0.8"/>
+      </linearGradient>
+    </defs>
+  </svg>

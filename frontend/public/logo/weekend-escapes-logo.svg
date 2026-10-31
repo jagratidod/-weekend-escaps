@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 100" width="320" height="100">
+  <defs>
+    <linearGradient id="sunGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#FF6B16" />
+      <stop offset="100%" stop-color="#FFA24C" />
+    </linearGradient>
+    <linearGradient id="mntnGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2D3748" />
+      <stop offset="100%" stop-color="#1A202C" />
+    </linearGradient>
+  </defs>
+  <!-- Sun Disk -->
+  <circle cx="48" cy="46" r="34" fill="url(#sunGrad)" />
+  <!-- Mountain Silhouette in Logo -->
+  <polygon points="18,74 48,26 78,74" fill="url(#mntnGrad)" />
+  <polygon points="48,26 48,74 78,74" fill="#111111" />
+  <!-- Snow Cap -->
+  <polygon points="48,26 40,39 48,44 56,39" fill="#FFFFFF" />
+  <!-- Second Peak -->
+  <polygon points="36,74 62,38 88,74" fill="#3A475C" opacity="0.8" />
+  <polygon points="62,38 56,48 62,52 68,48" fill="#FFFFFF" />
+  <!-- Base Ground Curve -->
+  <ellipse cx="48" cy="74" rx="38" ry="4" fill="#111111" />
+  <!-- Typography -->
+  <text x="96" y="44" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="900" font-size="25" fill="#111111" letter-spacing="1.5">WEEKEND</text>
+  <text x="96" y="70" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="20" fill="#FF6B16" letter-spacing="4">ESCAPES</text>
+  <text x="96" y="84" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="500" font-size="8.5" fill="#777777" letter-spacing="2">CRAFTING ADVENTURES</text>
+</svg>

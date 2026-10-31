@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 750" width="600" height="750">
+    
+      <defs>
+        <linearGradient id="baliSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#FB923C"/>
+          <stop offset="40%" stop-color="#FDE047"/>
+          <stop offset="80%" stop-color="#A7F3D0"/>
+          <stop offset="100%" stop-color="#0284C7"/>
+        </linearGradient>
+      </defs>
+      <rect width="600" height="750" fill="url(#baliSky)"/>
+      <!-- Volcanic Tropical Hills in Mist -->
+      <path d="M0,420 Q300,260 600,400 L600,550 L0,550 Z" fill="#065F46" opacity="0.75"/>
+      <!-- Calm Lake Water -->
+      <rect y="440" width="600" height="310" fill="#0369A1"/>
+      <!-- Iconic Balinese Meru Pagoda Roofs -->
+      <g fill="#1F2937">
+        <!-- Roof 1 (bottom) -->
+        <polygon points="200,480 300,440 400,480"/>
+        <!-- Roof 2 -->
+        <polygon points="220,445 300,410 380,445"/>
+        <!-- Roof 3 -->
+        <polygon points="240,415 300,385 360,415"/>
+        <!-- Roof 4 -->
+        <polygon points="255,390 300,365 345,390"/>
+        <!-- Roof 5 (top) -->
+        <polygon points="270,368 300,345 330,368"/>
+        <!-- Spire tip -->
+        <line x1="300" y1="345" x2="300" y2="320" stroke="#F59E0B" stroke-width="4"/>
+      </g>
+      <!-- Base Temple Platform -->
+      <rect x="230" y="475" width="140" height="35" fill="#B45309"/>
+      <!-- Water Reflection & Lilies -->
+      <ellipse cx="300" cy="540" rx="90" ry="12" fill="#047857" opacity="0.6"/>
+      <ellipse cx="160" cy="620" rx="40" ry="8" fill="#10B981" opacity="0.7"/>
+    
+    <!-- Vignette / Contrast gradient for text readability -->
+    <rect y="450" width="600" height="300" fill="url(#bottomShadow)" opacity="0.75"/>
+    <defs>
+      <linearGradient id="bottomShadow" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#000000" stop-opacity="0.8"/>
+      </linearGradient>
+    </defs>
+  </svg>

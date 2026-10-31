@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 85" width="100%" height="100%" preserveAspectRatio="none">
+  <!-- 1. Solid Painted Anchor Base -->
+  <rect x="0" y="0" width="1920" height="22" fill="#F7F7F5"/>
+
+  <!-- 2. Main Paint Body with Paper-Tooth Edge -->
+  <path d="M 0,0 L 1920,0 L 1920,30.4 L 1908,31.1 L 1896,31.8 L 1884,31.2 L 1872,32.7 L 1860,31.8 L 1848,33.1 L 1836,32.8 L 1824,33.1 L 1812,34.2 L 1800,35.6 L 1788,36.1 L 1776,34.6 L 1764,35.4 L 1752,36.2 L 1740,35.2 L 1728,37.2 L 1716,35.3 L 1704,37.8 L 1692,35.9 L 1680,37.9 L 1668,37 L 1656,37.5 L 1644,38.5 L 1632,36.7 L 1620,37.4 L 1608,38.3 L 1596,39.7 L 1584,39.5 L 1572,39.5 L 1560,40.2 L 1548,39.7 L 1536,40.4 L 1524,40.4 L 1512,40.1 L 1500,38.5 L 1488,39.3 L 1476,40 L 1464,41 L 1452,39 L 1440,39.3 L 1428,41.5 L 1416,40.1 L 1404,41.4 L 1392,40.3 L 1380,41.7 L 1368,40.1 L 1356,42.5 L 1344,42.5 L 1332,40.8 L 1320,41.3 L 1308,42.5 L 1296,42.7 L 1284,41.6 L 1272,40.6 L 1260,41.3 L 1248,41 L 1236,41.4 L 1224,40.9 L 1212,42 L 1200,43.3 L 1188,43 L 1176,42.3 L 1164,41.5 L 1152,43.8 L 1140,43.5 L 1128,41.8 L 1116,42.9 L 1104,42.4 L 1092,42.9 L 1080,42.4 L 1068,43.3 L 1056,42 L 1044,44.2 L 1032,44.2 L 1020,42.5 L 1008,42.8 L 996,44.4 L 984,44 L 972,43.7 L 960,44.7 L 948,43.5 L 936,44.9 L 924,43.8 L 912,44.7 L 900,44.6 L 888,44 L 876,42.8 L 864,42.8 L 852,44.6 L 840,44.1 L 828,43.8 L 816,44.9 L 804,43.5 L 792,45.3 L 780,43.7 L 768,45.2 L 756,44.4 L 744,44.6 L 732,45.6 L 720,43.5 L 708,44.2 L 696,44.9 L 684,46.3 L 672,45.8 L 660,45.9 L 648,46.3 L 636,46 L 624,46.2 L 612,46.6 L 600,45.6 L 588,44.6 L 576,44.6 L 564,46.1 L 552,46 L 540,45.1 L 528,47 L 516,44.5 L 504,44.4 L 492,47.4 L 480,47.3 L 468,44.8 L 456,46.8 L 444,45.6 L 432,45.7 L 420,46.9 L 408,47 L 396,45.7 L 384,44.9 L 372,44.9 L 360,45.3 L 348,44.6 L 336,45.1 L 324,44.7 L 312,44.4 L 300,45.3 L 288,46.2 L 276,46.4 L 264,44.4 L 252,44.9 L 240,45.2 L 228,43.9 L 216,45.4 L 204,43.3 L 192,45 L 180,43.2 L 168,44.2 L 156,43.5 L 144,42.8 L 132,44.3 L 120,43.8 L 108,42.5 L 96,41.4 L 84,41.2 L 72,41.4 L 60,40.4 L 48,40.9 L 36,40 L 24,39.8 L 12,40.1 L 0,41.2 Z" fill="#F7F7F5"/>
+
+  <!-- 3. Frayed Dry Bristle Tips -->
+  <g>
+    <path d="M 35,36 Q 42.2,56 51,36 Q 42.2,44 35,36 Z" fill="#F7F7F5" opacity="0.95"/>
+    <path d="M 90,36 Q 99.9,62 112,36 Q 99.9,46.4 90,36 Z" fill="#F7F7F5" opacity="0.95"/>
+    <path d="M 165,36 Q 173.1,59 183,36 Q 173.1,45.2 165,36 Z" fill="#F7F7F5" opacity="0.95"/>
+    <path d="M 250,36 Q 260.8,66 274,36 Q 260.8,48 250,36 Z" fill="#F7F7F5" opacity="0.95"/>
+    <path d="M 340,36 Q 349,63 360,36 Q 349,46.8 340,36 Z" fill="#F7F7F5" opacity="0.95"/>
+    <path d="M 435,36 Q 446.7,70 461,36 Q 446.7,49.6 435,36 Z" fill="#F7F7F5" opacity="0.95"/>
+    <path d="M 530,36 Q 540.8,72 554,36 Q 540.8,50.4 530,36 Z" fill="#F7F7F5" opacity="0.95"/>
+    <path d="M 630,36 Q 642.6,76 658,36 Q 642.6,52 630,36 Z" fill="#F7F7F5" opacity="0.95"/>
+    <path d="M 735,36 Q 744.9,69 757,36 Q 744.9,49.2 735,36 Z" fill="#F7F7F5" opacity="0.95"/>
+    <path d="M 840,36 Q 851.7,73 866,36 Q 851.7,50.8 840,36 Z" fill="#F7F7F5" opacity="0.95"/>
+    <path d="M 945,36 Q 954,67 965,36 Q 954,48.4 945,36 Z" fill="#F7F7F5" opacity="0.95"/>
+    <path d="M 1055,36 Q 1065.8,70 1079,36 Q 1065.8,49.6 1055,36 Z" fill="#F7F7F5" opacity="0.95"/>
+    <path d="M 1165,36 Q 1174.9,65 1187,36 Q 1174.9,47.6 1165,36 Z" fill="#F7F7F5" opacity="0.95"/>
+    <path d="M 1280,36 Q 1291.7,68 1306,36 Q 1291.7,48.8 1280,36 Z" fill="#F7F7F5" opacity="0.95"/>
+    <path d="M 1400,36 Q 1409,62 1420,36 Q 1409,46.4 1400,36 Z" fill="#F7F7F5" opacity="0.95"/>
+    <path d="M 1515,36 Q 1525.8,64 1539,36 Q 1525.8,47.2 1515,36 Z" fill="#F7F7F5" opacity="0.95"/>
+    <path d="M 1625,36 Q 1633.1,58 1643,36 Q 1633.1,44.8 1625,36 Z" fill="#F7F7F5" opacity="0.95"/>
+    <path d="M 1730,36 Q 1739.9,56 1752,36 Q 1739.9,44 1730,36 Z" fill="#F7F7F5" opacity="0.95"/>
+    <path d="M 1835,36 Q 1842.2,52 1851,36 Q 1842.2,42.4 1835,36 Z" fill="#F7F7F5" opacity="0.95"/>
+  </g>
+
+  <!-- 4. Real Dry-Brush Bristle Drag Filaments -->
+  <g>
+    <path d="M 10,42 Q 130,45.5 250,45" stroke="#F7F7F5" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.9"/>
+    <path d="M 50,46 Q 205,47 360,44" stroke="#F7F7F5" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.85"/>
+    <path d="M 120,40 Q 210,42.5 300,41" stroke="#F7F7F5" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.75"/>
+    <path d="M 180,52 Q 325,56 470,56" stroke="#F7F7F5" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.85"/>
+    <path d="M 260,45 Q 430,45.5 600,42" stroke="#F7F7F5" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <path d="M 320,54 Q 430,57 540,56" stroke="#F7F7F5" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.9"/>
+    <path d="M 410,50 Q 600,53.5 790,53" stroke="#F7F7F5" stroke-width="2.2" stroke-linecap="round" fill="none" opacity="0.85"/>
+    <path d="M 490,58 Q 630,58 770,54" stroke="#F7F7F5" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <path d="M 570,52 Q 745,55.5 920,55" stroke="#F7F7F5" stroke-width="2.6" stroke-linecap="round" fill="none" opacity="0.9"/>
+    <path d="M 660,62 Q 790,63 920,60" stroke="#F7F7F5" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.75"/>
+    <path d="M 730,53 Q 925,57 1120,57" stroke="#F7F7F5" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.85"/>
+    <path d="M 840,48 Q 1000,48.5 1160,45" stroke="#F7F7F5" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <path d="M 920,56 Q 1065,59.5 1210,59" stroke="#F7F7F5" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.75"/>
+    <path d="M 1010,49 Q 1190,49.5 1370,46" stroke="#F7F7F5" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.9"/>
+    <path d="M 1100,44 Q 1235,47 1370,46" stroke="#F7F7F5" stroke-width="1.4" stroke-linecap="round" fill="none" opacity="0.7"/>
+    <path d="M 1180,52 Q 1350,56 1520,56" stroke="#F7F7F5" stroke-width="2.2" stroke-linecap="round" fill="none" opacity="0.85"/>
+    <path d="M 1270,46 Q 1415,47 1560,44" stroke="#F7F7F5" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <path d="M 1350,50 Q 1515,53 1680,52" stroke="#F7F7F5" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.9"/>
+    <path d="M 1440,42 Q 1570,42.5 1700,39" stroke="#F7F7F5" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.75"/>
+    <path d="M 1520,48 Q 1675,51.5 1830,51" stroke="#F7F7F5" stroke-width="2.3" stroke-linecap="round" fill="none" opacity="0.85"/>
+    <path d="M 1610,44 Q 1730,45 1850,42" stroke="#F7F7F5" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <path d="M 1690,40 Q 1795,43 1900,42" stroke="#F7F7F5" stroke-width="1.9" stroke-linecap="round" fill="none" opacity="0.85"/>
+    <path d="M 1770,38 Q 1845,39.5 1920,37" stroke="#F7F7F5" stroke-width="1.4" stroke-linecap="round" fill="none" opacity="0.75"/>
+  </g>
+
+  <!-- 5. Paint Splatters & Bristle Droplets -->
+  <g>
+    <circle cx="70" cy="64" r="1.8" fill="#F7F7F5" opacity="0.8"/>
+    <circle cx="145" cy="60" r="1.4" fill="#F7F7F5" opacity="0.8"/>
+    <circle cx="230" cy="67" r="2" fill="#F7F7F5" opacity="0.8"/>
+    <circle cx="315" cy="62" r="1.5" fill="#F7F7F5" opacity="0.8"/>
+    <circle cx="405" cy="71" r="1.9" fill="#F7F7F5" opacity="0.8"/>
+    <circle cx="500" cy="75" r="1.7" fill="#F7F7F5" opacity="0.8"/>
+    <circle cx="605" cy="78" r="2.2" fill="#F7F7F5" opacity="0.8"/>
+    <circle cx="705" cy="73" r="1.4" fill="#F7F7F5" opacity="0.8"/>
+    <circle cx="810" cy="75" r="2" fill="#F7F7F5" opacity="0.8"/>
+    <circle cx="915" cy="70" r="1.6" fill="#F7F7F5" opacity="0.8"/>
+    <circle cx="1020" cy="72" r="2.1" fill="#F7F7F5" opacity="0.8"/>
+    <circle cx="1125" cy="67" r="1.5" fill="#F7F7F5" opacity="0.8"/>
+    <circle cx="1235" cy="69" r="1.9" fill="#F7F7F5" opacity="0.8"/>
+    <circle cx="1345" cy="64" r="1.4" fill="#F7F7F5" opacity="0.8"/>
+    <circle cx="1455" cy="66" r="2" fill="#F7F7F5" opacity="0.8"/>
+    <circle cx="1565" cy="61" r="1.6" fill="#F7F7F5" opacity="0.8"/>
+    <circle cx="1675" cy="59" r="1.8" fill="#F7F7F5" opacity="0.8"/>
+    <circle cx="1785" cy="55" r="1.3" fill="#F7F7F5" opacity="0.8"/>
+  </g>
+</svg>

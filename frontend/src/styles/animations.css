@@ -1,0 +1,78 @@
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes dashRoute {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 6s ease-in-out infinite;
+}
+
+.draw-route {
+  stroke-dasharray: 8 6;
+  animation: dashRoute 20s linear infinite;
+}
+
+@keyframes shimmerSweep {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(250%) skewX(-20deg);
+  }
+}
+
+.animate-shimmer-sweep {
+  animation: shimmerSweep 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes pinPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 22, 0.5), 0 8px 24px rgba(255, 107, 22, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(255, 107, 22, 0), 0 12px 30px rgba(255, 107, 22, 0.4);
+  }
+}
+
+.animate-pin-pulse {
+  animation: pinPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes kenBurns {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.08);
+  }
+}
+
+.animate-kenBurns {
+  animation: kenBurns 5s ease-out forwards;
+  will-change: transform;
+}

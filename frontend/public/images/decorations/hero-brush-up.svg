@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 90" width="100%" height="100%" preserveAspectRatio="none">
+  <!-- 1. Solid Painted Anchor Base -->
+  <rect x="0" y="68" width="1920" height="22" fill="#111111"/>
+
+  <!-- 2. Main Paint Body with Paper-Tooth Edge -->
+  <path d="M 0,90 L 1920,90 L 1920,59.6 L 1908,58.9 L 1896,58.2 L 1884,58.8 L 1872,57.3 L 1860,58.2 L 1848,56.9 L 1836,57.2 L 1824,56.9 L 1812,55.8 L 1800,54.4 L 1788,53.9 L 1776,55.4 L 1764,54.6 L 1752,53.8 L 1740,54.8 L 1728,52.8 L 1716,54.7 L 1704,52.2 L 1692,54.1 L 1680,52.1 L 1668,53 L 1656,52.5 L 1644,51.5 L 1632,53.3 L 1620,52.6 L 1608,51.7 L 1596,50.3 L 1584,50.5 L 1572,50.5 L 1560,49.8 L 1548,50.3 L 1536,49.6 L 1524,49.6 L 1512,49.9 L 1500,51.5 L 1488,50.7 L 1476,50 L 1464,49 L 1452,51 L 1440,50.7 L 1428,48.5 L 1416,49.9 L 1404,48.6 L 1392,49.7 L 1380,48.3 L 1368,49.9 L 1356,47.5 L 1344,47.5 L 1332,49.2 L 1320,48.7 L 1308,47.5 L 1296,47.3 L 1284,48.4 L 1272,49.4 L 1260,48.7 L 1248,49 L 1236,48.6 L 1224,49.1 L 1212,48 L 1200,46.7 L 1188,47 L 1176,47.7 L 1164,48.5 L 1152,46.2 L 1140,46.5 L 1128,48.2 L 1116,47.1 L 1104,47.6 L 1092,47.1 L 1080,47.6 L 1068,46.7 L 1056,48 L 1044,45.8 L 1032,45.8 L 1020,47.5 L 1008,47.2 L 996,45.6 L 984,46 L 972,46.3 L 960,45.3 L 948,46.5 L 936,45.1 L 924,46.2 L 912,45.3 L 900,45.4 L 888,46 L 876,47.2 L 864,47.2 L 852,45.4 L 840,45.9 L 828,46.2 L 816,45.1 L 804,46.5 L 792,44.7 L 780,46.3 L 768,44.8 L 756,45.6 L 744,45.4 L 732,44.4 L 720,46.5 L 708,45.8 L 696,45.1 L 684,43.7 L 672,44.2 L 660,44.1 L 648,43.7 L 636,44 L 624,43.8 L 612,43.4 L 600,44.4 L 588,45.4 L 576,45.4 L 564,43.9 L 552,44 L 540,44.9 L 528,43 L 516,45.5 L 504,45.6 L 492,42.6 L 480,42.7 L 468,45.2 L 456,43.2 L 444,44.4 L 432,44.3 L 420,43.1 L 408,43 L 396,44.3 L 384,45.1 L 372,45.1 L 360,44.7 L 348,45.4 L 336,44.9 L 324,45.3 L 312,45.6 L 300,44.7 L 288,43.8 L 276,43.6 L 264,45.6 L 252,45.1 L 240,44.8 L 228,46.1 L 216,44.6 L 204,46.7 L 192,45 L 180,46.8 L 168,45.8 L 156,46.5 L 144,47.2 L 132,45.7 L 120,46.2 L 108,47.5 L 96,48.6 L 84,48.8 L 72,48.6 L 60,49.6 L 48,49.1 L 36,50 L 24,50.2 L 12,49.9 L 0,48.8 Z" fill="#111111"/>
+
+  <!-- 3. Frayed Dry Bristle Tips -->
+  <g>
+    <path d="M 35,54 Q 42.2,34 51,54 Q 42.2,46 35,54 Z" fill="#111111" opacity="0.95"/>
+    <path d="M 90,54 Q 99.9,28 112,54 Q 99.9,43.6 90,54 Z" fill="#111111" opacity="0.95"/>
+    <path d="M 165,54 Q 173.1,31 183,54 Q 173.1,44.8 165,54 Z" fill="#111111" opacity="0.95"/>
+    <path d="M 250,54 Q 260.8,24 274,54 Q 260.8,42 250,54 Z" fill="#111111" opacity="0.95"/>
+    <path d="M 340,54 Q 349,27 360,54 Q 349,43.2 340,54 Z" fill="#111111" opacity="0.95"/>
+    <path d="M 435,54 Q 446.7,20 461,54 Q 446.7,40.4 435,54 Z" fill="#111111" opacity="0.95"/>
+    <path d="M 530,54 Q 540.8,18 554,54 Q 540.8,39.6 530,54 Z" fill="#111111" opacity="0.95"/>
+    <path d="M 630,54 Q 642.6,14 658,54 Q 642.6,38 630,54 Z" fill="#111111" opacity="0.95"/>
+    <path d="M 735,54 Q 744.9,21 757,54 Q 744.9,40.8 735,54 Z" fill="#111111" opacity="0.95"/>
+    <path d="M 840,54 Q 851.7,17 866,54 Q 851.7,39.2 840,54 Z" fill="#111111" opacity="0.95"/>
+    <path d="M 945,54 Q 954,23 965,54 Q 954,41.6 945,54 Z" fill="#111111" opacity="0.95"/>
+    <path d="M 1055,54 Q 1065.8,20 1079,54 Q 1065.8,40.4 1055,54 Z" fill="#111111" opacity="0.95"/>
+    <path d="M 1165,54 Q 1174.9,25 1187,54 Q 1174.9,42.4 1165,54 Z" fill="#111111" opacity="0.95"/>
+    <path d="M 1280,54 Q 1291.7,22 1306,54 Q 1291.7,41.2 1280,54 Z" fill="#111111" opacity="0.95"/>
+    <path d="M 1400,54 Q 1409,28 1420,54 Q 1409,43.6 1400,54 Z" fill="#111111" opacity="0.95"/>
+    <path d="M 1515,54 Q 1525.8,26 1539,54 Q 1525.8,42.8 1515,54 Z" fill="#111111" opacity="0.95"/>
+    <path d="M 1625,54 Q 1633.1,32 1643,54 Q 1633.1,45.2 1625,54 Z" fill="#111111" opacity="0.95"/>
+    <path d="M 1730,54 Q 1739.9,34 1752,54 Q 1739.9,46 1730,54 Z" fill="#111111" opacity="0.95"/>
+    <path d="M 1835,54 Q 1842.2,38 1851,54 Q 1842.2,47.6 1835,54 Z" fill="#111111" opacity="0.95"/>
+  </g>
+
+  <!-- 4. Real Dry-Brush Bristle Drag Filaments -->
+  <g>
+    <path d="M 10,48 Q 130,48.5 250,45" stroke="#111111" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.9"/>
+    <path d="M 50,44 Q 205,47 360,46" stroke="#111111" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.85"/>
+    <path d="M 120,50 Q 210,51.5 300,49" stroke="#111111" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.75"/>
+    <path d="M 180,38 Q 325,38 470,34" stroke="#111111" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.85"/>
+    <path d="M 260,45 Q 430,48.5 600,48" stroke="#111111" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <path d="M 320,36 Q 430,37 540,34" stroke="#111111" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.9"/>
+    <path d="M 410,40 Q 600,40.5 790,37" stroke="#111111" stroke-width="2.2" stroke-linecap="round" fill="none" opacity="0.85"/>
+    <path d="M 490,32 Q 630,36 770,36" stroke="#111111" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <path d="M 570,38 Q 745,38.5 920,35" stroke="#111111" stroke-width="2.6" stroke-linecap="round" fill="none" opacity="0.9"/>
+    <path d="M 660,28 Q 790,31 920,30" stroke="#111111" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.75"/>
+    <path d="M 730,37 Q 925,37 1120,33" stroke="#111111" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.85"/>
+    <path d="M 840,42 Q 1000,45.5 1160,45" stroke="#111111" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <path d="M 920,34 Q 1065,34.5 1210,31" stroke="#111111" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.75"/>
+    <path d="M 1010,41 Q 1190,44.5 1370,44" stroke="#111111" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.9"/>
+    <path d="M 1100,46 Q 1235,47 1370,44" stroke="#111111" stroke-width="1.4" stroke-linecap="round" fill="none" opacity="0.7"/>
+    <path d="M 1180,38 Q 1350,38 1520,34" stroke="#111111" stroke-width="2.2" stroke-linecap="round" fill="none" opacity="0.85"/>
+    <path d="M 1270,44 Q 1415,47 1560,46" stroke="#111111" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <path d="M 1350,40 Q 1515,41 1680,38" stroke="#111111" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.9"/>
+    <path d="M 1440,48 Q 1570,51.5 1700,51" stroke="#111111" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.75"/>
+    <path d="M 1520,42 Q 1675,42.5 1830,39" stroke="#111111" stroke-width="2.3" stroke-linecap="round" fill="none" opacity="0.85"/>
+    <path d="M 1610,46 Q 1730,49 1850,48" stroke="#111111" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <path d="M 1690,50 Q 1795,51 1900,48" stroke="#111111" stroke-width="1.9" stroke-linecap="round" fill="none" opacity="0.85"/>
+    <path d="M 1770,52 Q 1845,54.5 1920,53" stroke="#111111" stroke-width="1.4" stroke-linecap="round" fill="none" opacity="0.75"/>
+  </g>
+
+  <!-- 5. Paint Splatters & Bristle Droplets -->
+  <g>
+    <circle cx="70" cy="26" r="1.8" fill="#111111" opacity="0.8"/>
+    <circle cx="145" cy="30" r="1.4" fill="#111111" opacity="0.8"/>
+    <circle cx="230" cy="23" r="2" fill="#111111" opacity="0.8"/>
+    <circle cx="315" cy="28" r="1.5" fill="#111111" opacity="0.8"/>
+    <circle cx="405" cy="19" r="1.9" fill="#111111" opacity="0.8"/>
+    <circle cx="500" cy="15" r="1.7" fill="#111111" opacity="0.8"/>
+    <circle cx="605" cy="12" r="2.2" fill="#111111" opacity="0.8"/>
+    <circle cx="705" cy="17" r="1.4" fill="#111111" opacity="0.8"/>
+    <circle cx="810" cy="15" r="2" fill="#111111" opacity="0.8"/>
+    <circle cx="915" cy="20" r="1.6" fill="#111111" opacity="0.8"/>
+    <circle cx="1020" cy="18" r="2.1" fill="#111111" opacity="0.8"/>
+    <circle cx="1125" cy="23" r="1.5" fill="#111111" opacity="0.8"/>
+    <circle cx="1235" cy="21" r="1.9" fill="#111111" opacity="0.8"/>
+    <circle cx="1345" cy="26" r="1.4" fill="#111111" opacity="0.8"/>
+    <circle cx="1455" cy="24" r="2" fill="#111111" opacity="0.8"/>
+    <circle cx="1565" cy="29" r="1.6" fill="#111111" opacity="0.8"/>
+    <circle cx="1675" cy="31" r="1.8" fill="#111111" opacity="0.8"/>
+    <circle cx="1785" cy="35" r="1.3" fill="#111111" opacity="0.8"/>
+  </g>
+</svg>
