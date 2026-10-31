@@ -1,19 +1,42 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { BLOGS } from '../data/blogs';
 import Container from '../components/common/Container';
-import { Calendar, Clock, User, ArrowLeft, ArrowRight, Share2, BookOpen } from 'lucide-react';
+import { getImageUrl } from '../utils/imageHelper';
+import { Calendar, Clock, User, ArrowLeft, ArrowRight, Sparkles, Search, Compass } from 'lucide-react';
 
 export function BlogsPage() {
   const { id } = useParams();
   const selectedBlog = id ? BLOGS.find((b) => b.id === id) : null;
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Primary featured blog for Left Card
+  const featuredBlog = BLOGS[0];
+  // Next 4 latest posts for Right Column list
+  const latestPosts = BLOGS.slice(1, 5);
+
+  const categories = ['All', 'Trek Guide', 'Travel Tips', 'Adventure', 'Expedition', 'International'];
+
+  const filteredBlogs = BLOGS.filter((b) => {
+    const matchesCategory = selectedCategory === 'All' || b.category === selectedCategory;
+    const matchesSearch =
+      searchQuery === '' ||
+      b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      b.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      b.category.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   return (
-    <div className="pt-28 pb-24 bg-[#F7F7F5] min-h-screen">
+    <div className="pt-28 pb-24 bg-[#F7F7F5] min-h-screen text-[#111111]">
       <Container>
         {selectedBlog ? (
-          /* Single Blog Article View */
-          <article className="max-w-4xl mx-auto bg-white rounded-3xl p-6 sm:p-12 border border-neutral-100 shadow-md">
+          /* ============================================================== */
+          /* ── SINGLE BLOG ARTICLE VIEW ── */
+          /* ============================================================== */
+          <article className="max-w-4xl mx-auto bg-white rounded-3xl p-6 sm:p-12 border border-neutral-200/80 shadow-md">
             <Link
               to="/blogs"
               className="inline-flex items-center gap-2 text-xs font-bold text-neutral-500 hover:text-[#FF6B16] mb-6 transition-colors"
@@ -48,9 +71,9 @@ export function BlogsPage() {
             </div>
 
             {/* Featured Image */}
-            <div className="rounded-2xl overflow-hidden aspect-[16/9] mb-8 bg-neutral-900">
+            <div className="rounded-2xl overflow-hidden aspect-[16/9] mb-8 bg-neutral-900 border border-neutral-200 shadow-sm">
               <img
-                src={selectedBlog.image}
+                src={getImageUrl(selectedBlog.image)}
                 alt={selectedBlog.title}
                 className="w-full h-full object-cover"
               />
@@ -74,39 +97,166 @@ export function BlogsPage() {
               </div>
               <Link
                 to="/plan-trip"
-                className="px-6 py-3 rounded-full bg-[#FF6B16] hover:bg-[#e05809] text-white text-xs font-black uppercase tracking-wider shadow-md"
+                className="px-6 py-3 rounded-full bg-[#FF6B16] hover:bg-[#e05809] text-white text-xs font-black uppercase tracking-wider shadow-md transition-all"
               >
                 Plan My Trip
               </Link>
             </div>
           </article>
         ) : (
-          /* All Blogs Index View */
+          /* ============================================================== */
+          /* ── ALL BLOGS INDEX VIEW (HERO MATCHING REFERENCE IMAGE) ── */
+          /* ============================================================== */
           <div>
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <div className="inline-flex items-center gap-2 mb-3">
-                <span className="w-2 h-2 rounded-full bg-[#FF6B16]"></span>
-                <span className="text-[#FF6B16] font-bold text-xs uppercase tracking-widest">
-                  TRAVEL STORIES & INSIGHTS
-                </span>
+            {/* Top Page Sub-Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+              <div>
+                <div className="inline-flex items-center gap-2 mb-2">
+                  <span className="w-2 h-2 rounded-full bg-[#FF6B16]"></span>
+                  <span className="text-[#FF6B16] font-black text-[11px] uppercase tracking-[0.25em]">
+                    WEEKEND ESCAPES JOURNAL
+                  </span>
+                </div>
+                <h1 className="text-3xl sm:text-4xl font-black text-[#111111] tracking-tight">
+                  Travel Stories & Guides
+                </h1>
               </div>
-              <h1 className="text-4xl sm:text-5xl font-black text-[#111111] tracking-tight">
-                Latest Travel Stories
-              </h1>
-              <p className="mt-3 text-neutral-600 text-base sm:text-lg">
-                Expert tips, detailed trail guides, and breathtaking expedition updates from our on-ground leaders.
-              </p>
+
+              {/* Quick Search Input */}
+              <div className="relative w-full sm:w-72">
+                <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search stories, passes, gear..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-white border border-neutral-200/90 rounded-full pl-10 pr-4 py-2 text-xs font-semibold text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-[#FF6B16] transition-colors shadow-sm"
+                />
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {BLOGS.map((blog) => (
+            {/* ── HERO SECTION MATCHING USER'S SCREENSHOT ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch mb-16">
+              {/* Left Column: Big Featured Editorial Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="lg:col-span-7 xl:col-span-8 flex"
+              >
+                <Link
+                  to={`/blogs/${featuredBlog.id}`}
+                  className="group relative w-full rounded-3xl overflow-hidden aspect-[16/10] sm:aspect-[16/9] lg:aspect-auto lg:min-h-[460px] bg-neutral-900 border border-neutral-200 shadow-md hover:shadow-2xl transition-all duration-300 flex flex-col justify-end"
+                >
+                  {/* Background Image */}
+                  <img
+                    src={getImageUrl(featuredBlog.image)}
+                    alt={featuredBlog.title}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  />
+
+                  {/* Gradient Overlay matching reference */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent transition-opacity" />
+
+                  {/* Bottom Content Card matching reference */}
+                  <div className="relative z-10 p-6 sm:p-8 flex flex-col justify-end">
+                    {/* Category Pill with Orange Dot */}
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/95 backdrop-blur-md text-neutral-900 text-xs font-bold shadow-sm w-fit mb-3">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#FF6B16]"></span>
+                      <span>{featuredBlog.category}</span>
+                    </div>
+
+                    {/* Headline Title */}
+                    <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight group-hover:text-[#FF6B16] transition-colors line-clamp-2 sm:line-clamp-3">
+                      {featuredBlog.title}
+                    </h2>
+
+                    {/* Date & Read Time */}
+                    <p className="text-xs text-white/80 mt-3 font-semibold tracking-wide">
+                      {featuredBlog.date} • {featuredBlog.readTime}
+                    </p>
+                  </div>
+                </Link>
+              </motion.div>
+
+              {/* Right Column: "Latest post" List */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.15 }}
+                className="lg:col-span-5 xl:col-span-4 flex flex-col justify-between"
+              >
+                <div>
+                  <h3 className="text-2xl font-bold text-neutral-900 mb-5 tracking-tight">
+                    Latest post
+                  </h3>
+
+                  <div className="flex flex-col gap-3.5 sm:gap-4">
+                    {latestPosts.map((post) => (
+                      <Link
+                        key={post.id}
+                        to={`/blogs/${post.id}`}
+                        className="group flex items-center gap-4 p-2.5 rounded-2xl bg-white/60 hover:bg-white border border-transparent hover:border-neutral-200/80 shadow-none hover:shadow-md transition-all duration-200 cursor-pointer"
+                      >
+                        {/* Rounded Square Thumbnail */}
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden shrink-0 bg-neutral-100 border border-neutral-200/80">
+                          <img
+                            src={getImageUrl(post.image)}
+                            alt={post.title}
+                            className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500 ease-out"
+                          />
+                        </div>
+
+                        {/* Title & Metadata */}
+                        <div className="flex-1 min-w-0 pr-1">
+                          <h4 className="text-sm font-bold text-neutral-900 group-hover:text-[#FF6B16] transition-colors line-clamp-2 leading-snug">
+                            {post.title}
+                          </h4>
+                          <span className="text-xs text-neutral-500 mt-1.5 block font-medium">
+                            {post.date} • {post.readTime}
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* ── CATEGORY FILTER NAVIGATION ── */}
+            <div className="flex items-center justify-between flex-wrap gap-4 border-t border-b border-neutral-200/80 py-4 mb-10">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
+                      selectedCategory === cat
+                        ? 'bg-[#111111] text-white shadow-sm'
+                        : 'bg-white text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 border border-neutral-200'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              <span className="text-xs font-bold text-neutral-500">
+                Showing {filteredBlogs.length} {filteredBlogs.length === 1 ? 'article' : 'articles'}
+              </span>
+            </div>
+
+            {/* ── EXPEDITION STORIES GRID ── */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredBlogs.map((blog) => (
                 <article
                   key={blog.id}
-                  className="group flex flex-col rounded-3xl overflow-hidden bg-white p-4 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 border border-neutral-100"
+                  className="group flex flex-col rounded-3xl overflow-hidden bg-white p-4 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 border border-neutral-200/80"
                 >
                   <div className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden bg-neutral-100">
                     <img
-                      src={blog.image}
+                      src={getImageUrl(blog.image)}
                       alt={blog.title}
                       loading="lazy"
                       className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-108"
