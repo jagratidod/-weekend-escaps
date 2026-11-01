@@ -16,12 +16,12 @@ const startServer = async () => {
   try {
     await connectDB();
 
-    const server = app.listen(PORT, () => {
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`===============================================`);
       console.log(`🚀 Weekend Escapes Server started on port ${PORT}`);
       console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`📡 URL: http://localhost:${PORT}`);
-      console.log(`🩺 Health: http://localhost:${PORT}/api/health`);
+      console.log(`📡 URL: http://0.0.0.0:${PORT}`);
+      console.log(`🩺 Health: /api/health`);
       console.log(`===============================================`);
     });
 
