@@ -6,10 +6,19 @@ import {
   Phone,
   Send,
   CheckCircle2,
-  Heart
+  Heart,
+  MessageCircle,
 } from 'lucide-react';
 import { BRAND } from '../../utils/constants';
 import { useSettings } from '../../context/SettingsContext';
+
+function WhatsAppIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" {...props}>
+      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2M12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 14.99 3.8 13.47 3.8 11.91C3.81 7.37 7.5 3.67 12.05 3.67M9.53 7.03C9.36 7.03 9.09 7.1 8.87 7.33C8.64 7.57 8 8.17 8 9.4C8 10.62 8.89 11.8 9.01 11.97C9.14 12.13 10.74 14.6 13.21 15.66C13.8 15.92 14.25 16.07 14.61 16.19C15.21 16.38 15.75 16.35 16.18 16.29C16.66 16.22 17.65 15.69 17.86 15.11C18.06 14.54 18.06 14.04 18 13.94C17.94 13.85 17.8 13.79 17.58 13.69C17.36 13.58 16.28 13.05 16.08 12.98C15.88 12.9 15.74 12.87 15.6 13.09C15.45 13.31 15.05 13.79 14.92 13.94C14.8 14.08 14.68 14.1 14.46 13.99C14.24 13.88 13.54 13.65 12.71 12.91C12.06 12.33 11.63 11.62 11.5 11.41C11.38 11.19 11.49 11.07 11.6 10.96C11.7 10.86 11.82 10.7 11.93 10.57C12.05 10.44 12.09 10.34 12.16 10.2C12.23 10.05 12.2 9.93 12.14 9.82C12.09 9.71 11.65 8.62 11.46 8.18C11.29 7.75 11.11 7.81 10.97 7.8C10.84 7.8 10.69 7.79 10.55 7.79C10.4 7.79 10.16 7.85 9.96 8.07C9.75 8.29 9.53 7.03 9.53 7.03Z"/>
+    </svg>
+  );
+}
 
 function InstagramIcon(props) {
   return (
@@ -50,7 +59,7 @@ export function Footer() {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
   const [error, setError] = useState('');
-  const { logoUrl } = useSettings();
+  const { logoUrl, footerLogoUrl, contactInfo, whatsappUrl, whatsappNumber } = useSettings();
 
   const handleSubscribe = (e) => {
     e.preventDefault();
@@ -75,9 +84,13 @@ export function Footer() {
               {/* Logo with light styling */}
               <div className="flex items-center gap-3">
                 <img
-                  src={logoUrl || "/logo/weekend-escapes-logo.svg"}
+                  src={footerLogoUrl || logoUrl || "/logo/weekend-escapes-logo.svg"}
                   alt="Weekend Escapes"
-                  className="h-12 w-auto invert brightness-200"
+                  className={`h-12 w-auto object-contain max-w-[220px] ${
+                    (footerLogoUrl || logoUrl)?.includes('/logo/weekend-escapes-logo.svg')
+                      ? 'invert brightness-200'
+                      : ''
+                  }`}
                 />
               </div>
             </Link>
@@ -143,7 +156,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/contact#cancellation" className="text-neutral-400 hover:text-[#FF6B16] transition-colors">
+                <Link to="/cancellation-policy" className="text-neutral-400 hover:text-[#FF6B16] transition-colors">
                   Cancellation Policy
                 </Link>
               </li>
@@ -153,7 +166,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/contact#terms" className="text-neutral-400 hover:text-[#FF6B16] transition-colors">
+                <Link to="/terms" className="text-neutral-400 hover:text-[#FF6B16] transition-colors">
                   Terms & Conditions
                 </Link>
               </li>
@@ -168,26 +181,44 @@ export function Footer() {
             <div className="space-y-2.5 text-xs text-neutral-400">
               <p className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-[#FF6B16] shrink-0 mt-0.5" />
-                <span>{BRAND.address}</span>
+                <span>{contactInfo?.address || BRAND.address}</span>
               </p>
               <p className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-[#FF6B16] shrink-0" />
-                <a href={`mailto:${BRAND.email}`} className="hover:text-white transition-colors">
-                  {BRAND.email}
+                <a href={`mailto:${contactInfo?.emailPrimary || BRAND.email}`} className="hover:text-white transition-colors">
+                  {contactInfo?.emailPrimary || BRAND.email}
                 </a>
               </p>
               <p className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-[#FF6B16] shrink-0" />
-                <a href={`tel:${BRAND.phone}`} className="hover:text-white transition-colors">
-                  {BRAND.phone}
+                <a href={`tel:${contactInfo?.phone || BRAND.phone}`} className="hover:text-white transition-colors">
+                  {contactInfo?.phone || BRAND.phone}
                 </a>
               </p>
+              {whatsappNumber && (
+                <p className="flex items-center gap-2.5">
+                  <MessageCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 transition-colors">
+                    {whatsappNumber}
+                  </a>
+                </p>
+              )}
             </div>
 
             {/* Social Icons */}
             <div className="flex items-center gap-2.5 pt-2">
               <a
-                href={BRAND.socials.instagram}
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="WhatsApp"
+                title="Chat on WhatsApp"
+                className="w-8 h-8 rounded-full bg-neutral-800 hover:bg-emerald-600 text-neutral-300 hover:text-white flex items-center justify-center transition-all duration-200"
+              >
+                <WhatsAppIcon />
+              </a>
+              <a
+                href={(contactInfo?.socials && contactInfo.socials.instagram) || BRAND.socials.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
@@ -196,7 +227,7 @@ export function Footer() {
                 <InstagramIcon />
               </a>
               <a
-                href={BRAND.socials.facebook}
+                href={(contactInfo?.socials && contactInfo.socials.facebook) || BRAND.socials.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
@@ -205,7 +236,7 @@ export function Footer() {
                 <FacebookIcon />
               </a>
               <a
-                href={BRAND.socials.youtube}
+                href={(contactInfo?.socials && contactInfo.socials.youtube) || BRAND.socials.youtube}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="YouTube"
@@ -214,7 +245,7 @@ export function Footer() {
                 <YoutubeIcon />
               </a>
               <a
-                href={BRAND.socials.twitter}
+                href={(contactInfo?.socials && contactInfo.socials.twitter) || BRAND.socials.twitter}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Twitter"

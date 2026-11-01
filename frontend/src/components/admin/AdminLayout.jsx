@@ -20,6 +20,12 @@ import {
   ExternalLink,
   Loader2,
   MessageSquareQuote,
+  FileText,
+  ChevronDown,
+  CalendarCheck,
+  CreditCard,
+  ShieldCheck,
+  BookOpen,
 } from 'lucide-react';
 
 export default function AdminLayout({
@@ -34,12 +40,35 @@ export default function AdminLayout({
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [pagesOpen, setPagesOpen] = useState(true);
+
+  const pageSubItems = [
+    { id: 'pages', label: 'Terms & Conditions', icon: FileText },
+    { id: 'cancellation_policy', label: 'Cancellation Policy', icon: ShieldCheck },
+    { id: 'testimonials', label: 'Testimonials', icon: MessageSquareQuote },
+    { id: 'contact_editor', label: 'Contact Page Info', icon: HelpCircle },
+  ];
+
+  const otherNavItems = [
+    { id: 'leads', label: 'Inquiries & Leads', icon: ShoppingCart },
+    { id: 'destinations', label: 'Destinations', icon: Compass },
+    { id: 'packages', label: 'Tour Packages', icon: Package },
+    { id: 'settings', label: 'Settings & WhatsApp', icon: SettingsIcon },
+  ];
+
+  const isPageSubActive = pageSubItems.some((sub) => sub.id === activeTab);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       navigate('/admin/login');
     }
   }, [isAuthenticated, loading, navigate]);
+
+  useEffect(() => {
+    if (isPageSubActive) {
+      setPagesOpen(true);
+    }
+  }, [activeTab]);
 
   if (loading) {
     return (
@@ -57,16 +86,6 @@ export default function AdminLayout({
     logout();
     navigate('/admin/login');
   };
-
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'testimonials', label: 'Testimonials & Reviews', icon: MessageSquareQuote },
-    { id: 'leads', label: 'Inquiries & Leads', icon: ShoppingCart },
-    { id: 'contact_editor', label: 'Contact Page Info', icon: HelpCircle },
-    { id: 'destinations', label: 'Destinations', icon: Compass },
-    { id: 'packages', label: 'Tour Packages', icon: Package },
-    { id: 'settings', label: 'Branding & Logo', icon: SettingsIcon },
-  ];
 
   const adminName = admin?.name || 'Nirmal Kumar P';
   const adminEmail = admin?.email || 'admin@weekendescapes.com';
@@ -118,7 +137,194 @@ export default function AdminLayout({
 
           {/* Navigation Links with Reference Curved Active Tab Styling */}
           <nav className="mt-4 flex-1 space-y-1.5 pl-4 pr-0">
-            {navItems.map((item) => {
+            {/* 1. Dashboard Tab */}
+            <button
+              onClick={() => {
+                if (onTabChange) onTabChange('dashboard');
+                setMobileSidebarOpen(false);
+              }}
+              className={`w-full flex items-center gap-3.5 px-4 py-3 text-sm font-semibold transition-all relative text-left cursor-pointer ${
+                activeTab === 'dashboard'
+                  ? 'bg-[#EBF2F7] text-[#1A384C] font-extrabold rounded-l-2xl shadow-sm'
+                  : 'text-white/80 hover:text-white hover:bg-white/5 rounded-l-xl'
+              }`}
+            >
+              <LayoutDashboard
+                className={`w-4 h-4 flex-shrink-0 ${
+                  activeTab === 'dashboard' ? 'text-[#FF6B16]' : 'text-white/70'
+                }`}
+              />
+              <span className="truncate">Dashboard</span>
+
+              {/* Active Indicator dot */}
+              {activeTab === 'dashboard' && (
+                <span className="absolute right-3 w-1.5 h-1.5 rounded-full bg-[#FF6B16]" />
+              )}
+            </button>
+
+            {/* 2. Bookings Management Tab */}
+            <button
+              onClick={() => {
+                if (onTabChange) onTabChange('bookings');
+                setMobileSidebarOpen(false);
+              }}
+              className={`w-full flex items-center gap-3.5 px-4 py-3 text-sm font-semibold transition-all relative text-left cursor-pointer ${
+                activeTab === 'bookings'
+                  ? 'bg-[#EBF2F7] text-[#1A384C] font-extrabold rounded-l-2xl shadow-sm'
+                  : 'text-white/80 hover:text-white hover:bg-white/5 rounded-l-xl'
+              }`}
+            >
+              <CalendarCheck
+                className={`w-4 h-4 flex-shrink-0 ${
+                  activeTab === 'bookings' ? 'text-[#FF6B16]' : 'text-white/70'
+                }`}
+              />
+              <span className="truncate">Bookings</span>
+
+              {/* Active Indicator dot */}
+              {activeTab === 'bookings' && (
+                <span className="absolute right-3 w-1.5 h-1.5 rounded-full bg-[#FF6B16]" />
+              )}
+            </button>
+
+            {/* 2b. PhonePe Payments Management Tab */}
+            <button
+              type="button"
+              onClick={() => {
+                if (onTabChange) onTabChange('payments');
+                setMobileSidebarOpen(false);
+              }}
+              className={`w-full flex items-center gap-3.5 px-4 py-3 text-sm font-semibold transition-all relative text-left cursor-pointer ${
+                activeTab === 'payments'
+                  ? 'bg-[#EBF2F7] text-[#1A384C] font-extrabold rounded-l-2xl shadow-sm'
+                  : 'text-white/80 hover:text-white hover:bg-white/5 rounded-l-xl'
+              }`}
+            >
+              <CreditCard
+                className={`w-4 h-4 flex-shrink-0 ${
+                  activeTab === 'payments' ? 'text-[#FF6B16]' : 'text-white/70'
+                }`}
+              />
+              <span className="truncate">Payments</span>
+
+              {/* Active Indicator dot */}
+              {activeTab === 'payments' && (
+                <span className="absolute right-3 w-1.5 h-1.5 rounded-full bg-[#FF6B16]" />
+              )}
+            </button>
+
+            {/* 1c. Blogs & Travel Stories Nav Item */}
+            <button
+              type="button"
+              onClick={() => {
+                if (onTabChange) onTabChange('blogs');
+                setMobileSidebarOpen(false);
+              }}
+              className={`w-full flex items-center gap-3.5 px-4 py-3 text-sm font-semibold transition-all relative text-left cursor-pointer ${
+                activeTab === 'blogs'
+                  ? 'bg-[#EBF2F7] text-[#1A384C] font-extrabold rounded-l-2xl shadow-sm'
+                  : 'text-white/80 hover:text-white hover:bg-white/5 rounded-l-xl'
+              }`}
+            >
+              <BookOpen
+                className={`w-4 h-4 flex-shrink-0 ${
+                  activeTab === 'blogs' ? 'text-[#FF6B16]' : 'text-white/70'
+                }`}
+              />
+              <span className="truncate">Blogs & Journal</span>
+
+              {/* Active Indicator dot */}
+              {activeTab === 'blogs' && (
+                <span className="absolute right-3 w-1.5 h-1.5 rounded-full bg-[#FF6B16]" />
+              )}
+            </button>
+
+            {/* 2. Pages Menu with Subpages (Expandable) */}
+            <div className="space-y-1">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!pagesOpen) {
+                    setPagesOpen(true);
+                    if (!isPageSubActive && onTabChange) {
+                      onTabChange('pages');
+                    }
+                  } else {
+                    setPagesOpen(false);
+                  }
+                }}
+                className={`w-full flex items-center justify-between gap-3 px-4 py-3 text-sm font-semibold transition-all relative text-left cursor-pointer ${
+                  isPageSubActive && !pagesOpen
+                    ? 'bg-[#EBF2F7] text-[#1A384C] font-extrabold rounded-l-2xl shadow-sm'
+                    : isPageSubActive
+                    ? 'text-white font-bold bg-white/10 rounded-l-xl'
+                    : 'text-white/80 hover:text-white hover:bg-white/5 rounded-l-xl'
+                }`}
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <FileText
+                    className={`w-4 h-4 flex-shrink-0 ${
+                      isPageSubActive ? 'text-[#FF6B16]' : 'text-white/70'
+                    }`}
+                  />
+                  <span className="truncate">Pages</span>
+                </div>
+
+                <div className="flex items-center gap-2 pr-3">
+                  {isPageSubActive && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B16]" />
+                  )}
+                  <ChevronDown
+                    className={`w-4 h-4 text-white/60 transition-transform duration-200 ${
+                      pagesOpen ? 'rotate-180 text-white' : ''
+                    }`}
+                  />
+                </div>
+              </button>
+
+              {/* Expandable Subpages List */}
+              {pagesOpen && (
+                <div className="ml-4 pl-2 border-l border-white/15 space-y-1 my-1">
+                  {pageSubItems.map((sub) => {
+                    const SubIcon = sub.icon;
+                    const isSubActive = activeTab === sub.id;
+
+                    return (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        onClick={() => {
+                          if (onTabChange) onTabChange(sub.id);
+                          setMobileSidebarOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between gap-2.5 px-3.5 py-2.5 text-xs font-semibold transition-all relative text-left cursor-pointer ${
+                          isSubActive
+                            ? 'bg-[#EBF2F7] text-[#1A384C] font-extrabold rounded-l-2xl shadow-sm'
+                            : 'text-white/70 hover:text-white hover:bg-white/5 rounded-l-xl'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <SubIcon
+                            className={`w-3.5 h-3.5 flex-shrink-0 ${
+                              isSubActive ? 'text-[#FF6B16]' : 'text-white/60'
+                            }`}
+                          />
+                          <span className="truncate">{sub.label}</span>
+                        </div>
+
+                        {/* Active Indicator dot */}
+                        {isSubActive && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B16] flex-shrink-0 mr-1" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* 3. Other Navigation Items */}
+            {otherNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
 

@@ -12,6 +12,10 @@ const settingSchema = new mongoose.Schema(
       type: String,
       default: '/logo/weekend-escapes-logo.svg',
     },
+    footerLogoUrl: {
+      type: String,
+      default: '/logo/weekend-escapes-logo.svg',
+    },
     siteName: {
       type: String,
       default: 'Weekend Escapes',
@@ -19,6 +23,14 @@ const settingSchema = new mongoose.Schema(
     tagline: {
       type: String,
       default: 'Crafting Adventures',
+    },
+    whatsappNumber: {
+      type: String,
+      default: '+91 98765 43210',
+    },
+    whatsappMessage: {
+      type: String,
+      default: 'Hi Weekend Escapes! I would like to plan my next adventure.',
     },
     contactInfo: {
       heroTitle: {
@@ -50,6 +62,10 @@ const settingSchema = new mongoose.Schema(
         type: String,
         default: '+91 91234 56789',
       },
+      whatsapp: {
+        type: String,
+        default: '+91 98765 43210',
+      },
       mapUrl: {
         type: String,
         default:
@@ -72,6 +88,28 @@ const settingSchema = new mongoose.Schema(
           type: String,
           default: 'https://youtube.com/@weekendescapes',
         },
+      },
+    },
+    blogHero: {
+      tagline: {
+        type: String,
+        default: 'WEEKEND ESCAPES JOURNAL',
+      },
+      title: {
+        type: String,
+        default: 'Travel Stories & Guides',
+      },
+      subtitle: {
+        type: String,
+        default: 'Inspiring trail notes, high-altitude pass guides, and gear tips',
+      },
+      featuredImage: {
+        type: String,
+        default: '/newimage/exploresection/kedarkantha.png',
+      },
+      featuredBlogId: {
+        type: String,
+        default: '',
       },
     },
     updatedBy: {

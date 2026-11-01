@@ -15,9 +15,44 @@ const app = express();
 app.use(helmet());
 
 // Cross-Origin Resource Sharing
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+];
+
+if (process.env.CLIENT_URL) {
+  process.env.CLIENT_URL.split(',').forEach((url) => {
+    const trimmed = url.trim();
+    if (trimmed && !allowedOrigins.includes(trimmed)) {
+      allowedOrigins.push(trimmed);
+    }
+  });
+}
+
+if (process.env.FRONTEND_URL) {
+  process.env.FRONTEND_URL.split(',').forEach((url) => {
+    const trimmed = url.trim();
+    if (trimmed && !allowedOrigins.includes(trimmed)) {
+      allowedOrigins.push(trimmed);
+    }
+  });
+}
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, PhonePe webhooks)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      // Allow localhost ports in development
+      if (process.env.NODE_ENV !== 'production' && /^http:\/\/localhost:\d+$/.test(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
   })
 );
@@ -43,12 +78,20 @@ import settingRoutes from './routes/settingRoutes.js';
 import leadRoutes from './routes/leadRoutes.js';
 import testimonialRoutes from './routes/testimonialRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import pageRoutes from './routes/pageRoutes.js';
+import bookingRoutes from './routes/bookingRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
+import blogRoutes from './routes/blogRoutes.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/settings', settingRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/testimonials', testimonialRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/pages', pageRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/blogs', blogRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

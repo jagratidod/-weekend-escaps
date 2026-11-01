@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { PACKAGES } from '../data/packages';
 import Container from '../components/common/Container';
 import {
@@ -17,20 +17,29 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '../utils/helpers';
 import { BRAND } from '../utils/constants';
+import { useSettings } from '../context/SettingsContext';
 import ItineraryTimeline from '../components/packages/ItineraryTimeline';
 
 export function PackageDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const pkg = PACKAGES.find((p) => p.id === id) || PACKAGES[0];
+  const { whatsappUrl, getCustomWhatsAppUrl } = useSettings();
+  const packageWaUrl = getCustomWhatsAppUrl
+    ? getCustomWhatsAppUrl(`Hi Weekend Escapes! I would like to inquire about the package: ${pkg.name || pkg.title}`)
+    : whatsappUrl;
 
   const [activeTab, setActiveTab] = useState('itinerary');
   const [selectedDate, setSelectedDate] = useState('');
   const [travelersCount, setTravelersCount] = useState(2);
-  const [bookingConfirmed, setBookingConfirmed] = useState(false);
 
-  const handleBookingEnquiry = (e) => {
+  const handleCheckAvailability = (e) => {
     e.preventDefault();
-    setBookingConfirmed(true);
+    const query = new URLSearchParams();
+    if (selectedDate) query.append('date', selectedDate);
+    query.append('travelers', String(travelersCount));
+    query.append('step', '1');
+    navigate(`/book/${pkg.id}?${query.toString()}`);
   };
 
   return (
@@ -208,99 +217,82 @@ export function PackageDetails() {
           {/* Right Column: Pricing & Booking Card */}
           <div className="lg:col-span-4">
             <div className="sticky top-28 bg-white rounded-3xl p-6 sm:p-8 border border-neutral-200/80 shadow-xl space-y-6">
-              <div className="flex items-baseline justify-between border-b border-neutral-100 pb-4">
+              {/* Price Row (Matches Image 1) */}
+              <div className="flex items-center justify-between pb-6 border-b border-neutral-100">
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
-                    Starting from
+                  <span className="block text-[11px] font-extrabold uppercase tracking-wider text-neutral-400">
+                    STARTING FROM
                   </span>
-                  <div className="flex items-baseline gap-2">
+                  <div className="flex items-baseline gap-2.5 mt-0.5">
                     <span className="text-3xl font-black text-[#111111]">
                       {formatCurrency(pkg.price)}
                     </span>
-                    <span className="text-xs text-neutral-500 font-semibold line-through">
-                      {formatCurrency(pkg.originalPrice)}
+                    <span className="text-sm text-neutral-400 font-semibold line-through">
+                      {formatCurrency(pkg.originalPrice || Math.round(pkg.price * 1.4))}
                     </span>
                   </div>
                 </div>
-                <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold">
+                <span className="px-3 py-1 rounded-full bg-[#FFF4EE] text-[#FF6B16] border border-[#FED7AA] text-xs font-black">
                   Save 30%
                 </span>
               </div>
 
-              {bookingConfirmed ? (
-                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 text-center space-y-3">
-                  <div className="w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto">
-                    <CheckCircle className="w-6 h-6" />
-                  </div>
-                  <h4 className="text-base font-black text-emerald-900">
-                    Enquiry Received!
-                  </h4>
-                  <p className="text-xs text-emerald-700">
-                    Our travel specialist will reach out to you within 2 hours with customized slots and discounts.
-                  </p>
-                  <button
-                    onClick={() => setBookingConfirmed(false)}
-                    className="text-xs text-[#FF6B16] font-bold underline"
-                  >
-                    Modify Request
-                  </button>
+              {/* Booking Availability Form (Image 1) */}
+              <form onSubmit={handleCheckAvailability} className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-black text-neutral-600 uppercase tracking-wider mb-1.5">
+                    SELECT TRAVEL DATE
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-neutral-200 text-sm font-medium focus:outline-none focus:border-[#FF6B16] focus:ring-2 focus:ring-[#FF6B16]/10 transition-all cursor-pointer"
+                  />
                 </div>
-              ) : (
-                <form onSubmit={handleBookingEnquiry} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-1.5">
-                      Select Travel Date
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      value={selectedDate}
-                      onChange={(e) => setSelectedDate(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-neutral-200 text-sm focus:outline-none focus:border-[#FF6B16]"
-                    />
-                  </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-1.5">
-                      Number of Travelers
-                    </label>
-                    <select
-                      value={travelersCount}
-                      onChange={(e) => setTravelersCount(Number(e.target.value))}
-                      className="w-full px-4 py-3 rounded-xl border border-neutral-200 text-sm focus:outline-none focus:border-[#FF6B16]"
-                    >
-                      <option value={1}>1 Traveler (Solo)</option>
-                      <option value={2}>2 Travelers (Pair/Couple)</option>
-                      <option value={3}>3-4 Travelers (Small Group)</option>
-                      <option value={5}>5+ Travelers (Group Batch)</option>
-                    </select>
-                  </div>
-
-                  <div className="pt-2">
-                    <div className="flex justify-between text-sm font-bold text-neutral-800 pb-2">
-                      <span>Total Estimated Cost</span>
-                      <span className="text-[#FF6B16] text-lg">
-                        {formatCurrency(pkg.price * travelersCount)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-4 rounded-full bg-[#FF6B16] hover:bg-[#e05809] text-white font-black text-sm uppercase tracking-wider shadow-lg shadow-[#FF6B16]/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                <div>
+                  <label className="block text-[11px] font-black text-neutral-600 uppercase tracking-wider mb-1.5">
+                    NUMBER OF TRAVELERS
+                  </label>
+                  <select
+                    value={travelersCount}
+                    onChange={(e) => setTravelersCount(Number(e.target.value))}
+                    className="w-full px-4 py-3 rounded-xl border border-neutral-200 text-sm font-medium focus:outline-none focus:border-[#FF6B16] focus:ring-2 focus:ring-[#FF6B16]/10 transition-all cursor-pointer"
                   >
-                    <span>Check Availability</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </form>
-              )}
+                    <option value={1}>1 Traveler (Solo)</option>
+                    <option value={2}>2 Travelers (Pair/Couple)</option>
+                    <option value={3}>3 Travelers (Small Group)</option>
+                    <option value={4}>4 Travelers (Group)</option>
+                    <option value={5}>5+ Travelers (Group Batch)</option>
+                  </select>
+                </div>
+
+                <div className="pt-2">
+                  <div className="flex justify-between items-center text-sm font-bold text-neutral-800 pb-2">
+                    <span className="text-neutral-900 font-bold">Total Estimated Cost</span>
+                    <span className="text-[#FF6B16] text-xl font-black">
+                      {formatCurrency(pkg.price * travelersCount)}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-4 rounded-full bg-[#FF6B16] hover:bg-[#e05809] active:scale-[0.99] text-white font-black text-sm uppercase tracking-wider shadow-xl shadow-[#FF6B16]/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>CHECK AVAILABILITY</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </form>
 
               <div className="pt-4 border-t border-neutral-100 flex items-center justify-center gap-3">
                 <a
-                  href={BRAND.whatsappUrl}
+                  href={packageWaUrl || BRAND.whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-3 rounded-full border border-neutral-300 hover:border-emerald-500 hover:bg-emerald-50/50 text-neutral-800 text-xs font-bold flex items-center justify-center gap-2 transition-all"
+                  className="w-full py-3 rounded-full border border-neutral-300 hover:border-emerald-500 hover:bg-emerald-50/50 text-neutral-800 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
                   <MessageCircle className="w-4 h-4 text-emerald-600" />
                   <span>Talk on WhatsApp</span>

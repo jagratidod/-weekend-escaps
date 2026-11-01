@@ -10,6 +10,7 @@ import {
   Phone,
   Share2,
   Globe,
+  MessageCircle,
 } from 'lucide-react';
 import { useSettings, DEFAULT_CONTACT_INFO } from '../../context/SettingsContext';
 import { useAuth } from '../../context/AuthContext';
@@ -26,6 +27,7 @@ export default function ContactInfoManager() {
     emailSupport: '',
     phone: '',
     helpline: '',
+    whatsapp: '',
     mapUrl: '',
     facebook: '',
     instagram: '',
@@ -47,6 +49,7 @@ export default function ContactInfoManager() {
         emailSupport: contactInfo.emailSupport || DEFAULT_CONTACT_INFO.emailSupport,
         phone: contactInfo.phone || DEFAULT_CONTACT_INFO.phone,
         helpline: contactInfo.helpline || DEFAULT_CONTACT_INFO.helpline,
+        whatsapp: contactInfo.whatsapp || DEFAULT_CONTACT_INFO.whatsapp,
         mapUrl: contactInfo.mapUrl || DEFAULT_CONTACT_INFO.mapUrl,
         facebook: contactInfo.socials?.facebook || DEFAULT_CONTACT_INFO.socials.facebook,
         instagram: contactInfo.socials?.instagram || DEFAULT_CONTACT_INFO.socials.instagram,
@@ -75,6 +78,7 @@ export default function ContactInfoManager() {
         emailSupport: form.emailSupport,
         phone: form.phone,
         helpline: form.helpline,
+        whatsapp: form.whatsapp,
         mapUrl: form.mapUrl,
         socials: {
           facebook: form.facebook,
@@ -123,6 +127,7 @@ export default function ContactInfoManager() {
       emailSupport: DEFAULT_CONTACT_INFO.emailSupport,
       phone: DEFAULT_CONTACT_INFO.phone,
       helpline: DEFAULT_CONTACT_INFO.helpline,
+      whatsapp: DEFAULT_CONTACT_INFO.whatsapp,
       mapUrl: DEFAULT_CONTACT_INFO.mapUrl,
       facebook: DEFAULT_CONTACT_INFO.socials.facebook,
       instagram: DEFAULT_CONTACT_INFO.socials.instagram,
@@ -302,6 +307,37 @@ export default function ContactInfoManager() {
                   className="w-full h-11 px-3.5 rounded-xl border border-neutral-200 bg-white text-xs sm:text-sm text-neutral-800 focus:border-[#FF6B16] focus:ring-2 focus:ring-[#FF6B16]/10 outline-none"
                 />
               </div>
+            </div>
+
+            {/* WhatsApp Integration Field */}
+            <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200/80">
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <label className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-900">
+                  <MessageCircle className="w-4 h-4 text-emerald-600" />
+                  <span>WhatsApp Chat Number (Floating Icon & Contact Page)</span>
+                </label>
+                {form.whatsapp && (
+                  <a
+                    href={`https://wa.me/${form.whatsapp.replace(/\D/g, '').length === 10 ? '91' + form.whatsapp.replace(/\D/g, '') : form.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent('Hi Weekend Escapes! Testing WhatsApp connection.')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] font-bold text-emerald-700 hover:text-emerald-900 underline flex items-center gap-1"
+                  >
+                    Test WhatsApp Number &rarr;
+                  </a>
+                )}
+              </div>
+              <input
+                type="text"
+                name="whatsapp"
+                value={form.whatsapp}
+                onChange={handleChange}
+                placeholder="+91 98765 43210 or 9876543210"
+                className="w-full h-11 px-3.5 rounded-xl border border-emerald-300 bg-white text-xs sm:text-sm text-neutral-800 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 outline-none font-medium"
+              />
+              <p className="text-[11px] text-emerald-700/80 mt-1.5">
+                This number is used whenever a traveler clicks the WhatsApp floating button or WhatsApp contact links across the site.
+              </p>
             </div>
           </div>
         </div>

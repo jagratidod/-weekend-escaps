@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import Container from '../components/common/Container';
 import { DESTINATIONS } from '../data/destinations';
 import { BRAND } from '../utils/constants';
+import { useSettings } from '../context/SettingsContext';
 import { Sparkles, Check, ArrowRight, MessageCircle, CheckCircle } from 'lucide-react';
 
 export function PlanTripPage() {
+  const { whatsappUrl, getCustomWhatsAppUrl } = useSettings();
   const [step, setStep] = useState(1);
   const [plan, setPlan] = useState({
     destination: 'Kedarkantha',
@@ -84,7 +86,13 @@ export function PlanTripPage() {
 
             <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
               <a
-                href={BRAND.whatsappUrl}
+                href={
+                  getCustomWhatsAppUrl
+                    ? getCustomWhatsAppUrl(
+                        `Hi Weekend Escapes! I just customized a trip to ${plan.destination} (${plan.travelType}, ${plan.duration}) for ${plan.travelers} persons. Please expedite!`
+                      )
+                    : whatsappUrl || BRAND.whatsappUrl
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-6 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-md"

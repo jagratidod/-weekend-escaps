@@ -4,6 +4,10 @@ import LogoManager from '../../components/admin/LogoManager';
 import ContactInfoManager from '../../components/admin/ContactInfoManager';
 import LeadManager from '../../components/admin/LeadManager';
 import TestimonialManager from '../../components/admin/TestimonialManager';
+import PagesManager from '../../components/admin/PagesManager';
+import BookingManager from '../../components/admin/BookingManager';
+import PaymentManager from '../../components/admin/PaymentManager';
+import BlogManager from '../../components/admin/BlogManager';
 import {
   Package,
   CalendarCheck,
@@ -27,8 +31,14 @@ export default function AdminDashboardPage() {
           onGoToLeads={() => setActiveTab('leads')}
           onGoToContact={() => setActiveTab('contact_editor')}
           onGoToTestimonials={() => setActiveTab('testimonials')}
+          onGoToBookings={() => setActiveTab('bookings')}
         />
       )}
+      {activeTab === 'bookings' && <BookingManager />}
+      {activeTab === 'payments' && <PaymentManager />}
+      {activeTab === 'blogs' && <BlogManager />}
+      {activeTab === 'pages' && <PagesManager initialSlug="terms-and-conditions" />}
+      {activeTab === 'cancellation_policy' && <PagesManager initialSlug="cancellation-policy" />}
       {activeTab === 'testimonials' && <TestimonialManager />}
       {activeTab === 'leads' && <LeadManager />}
       {activeTab === 'contact_editor' && <ContactInfoManager />}
@@ -40,7 +50,7 @@ export default function AdminDashboardPage() {
 }
 
 // ── Main Dashboard View (Reference UI Match) ──
-function DashboardView({ onGoToLeads, onGoToContact }) {
+function DashboardView({ onGoToLeads, onGoToContact, onGoToTestimonials, onGoToBookings }) {
   // Top 10 destinations ranking (from reference "Top 10 Stores by sales")
   const topDestinations = [
     { name: 'Kashmir Valley', value: '874k', pct: 92 },
@@ -73,13 +83,16 @@ function DashboardView({ onGoToLeads, onGoToContact }) {
           </div>
 
           {/* Card 2: Bookings (Teal box) */}
-          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-neutral-200/80 shadow-xs flex items-center gap-4 hover:shadow-md transition-shadow">
+          <div
+            onClick={onGoToBookings}
+            className="bg-white rounded-2xl p-4 sm:p-5 border border-neutral-200/80 shadow-xs flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer"
+          >
             <div className="w-12 h-12 rounded-xl bg-[#E2F3F5] text-[#298F9A] flex items-center justify-center flex-shrink-0">
               <CalendarCheck className="w-6 h-6" />
             </div>
             <div>
               <p className="text-2xl font-black text-[#1A384C] leading-none">2859</p>
-              <p className="text-xs font-semibold text-neutral-400 mt-1">Bookings</p>
+              <p className="text-xs font-semibold text-neutral-400 mt-1">Bookings Management</p>
             </div>
           </div>
 

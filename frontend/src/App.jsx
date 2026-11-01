@@ -7,11 +7,12 @@ import ScrollToTop from './components/common/ScrollToTop';
 import { MessageCircle } from 'lucide-react';
 import { BRAND } from './utils/constants';
 import { AuthProvider } from './context/AuthContext';
-import { SettingsProvider } from './context/SettingsContext';
+import { SettingsProvider, useSettings } from './context/SettingsContext';
 
 function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const { whatsappUrl } = useSettings();
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F7F7F5] text-[#111111]">
@@ -29,7 +30,7 @@ function AppContent() {
       {/* Floating WhatsApp Action Button (hidden on /admin routes) */}
       {!isAdminRoute && (
         <a
-          href={BRAND.whatsappUrl}
+          href={whatsappUrl || BRAND.whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Chat with travel guide on WhatsApp"

@@ -52,3 +52,9 @@ pids
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Agent, Scratch & Temporary files
+.gemini/
+.system_generated/
+*.tmp
+scratch/
