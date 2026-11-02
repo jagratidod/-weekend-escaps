@@ -70,13 +70,6 @@ export function Hero() {
               <span>Explore Destinations</span>
               <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
-
-            <Link
-              to="/plan-trip"
-              className="inline-flex items-center gap-2 px-6 sm:px-7 py-3 rounded-full font-bold text-xs sm:text-sm bg-white hover:bg-neutral-50 text-neutral-800 border border-neutral-300 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 cursor-pointer"
-            >
-              <span>Plan My Trip</span>
-            </Link>
           </motion.div>
 
           {/* Social Proof Stack (matches screenshot) */}
