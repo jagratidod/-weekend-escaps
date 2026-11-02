@@ -8,14 +8,23 @@ import { MessageCircle } from 'lucide-react';
 import { BRAND } from './utils/constants';
 import { AuthProvider } from './context/AuthContext';
 import { SettingsProvider, useSettings } from './context/SettingsContext';
+import { usePushNotifications } from './hooks/usePushNotifications';
+import PushNotificationToast from './components/common/PushNotificationToast';
 
 function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
   const { whatsappUrl } = useSettings();
+  const { foregroundNotification, dismissForegroundNotification } = usePushNotifications();
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F7F7F5] text-[#111111]">
+      {/* Global In-App Push Notification Toast (Foreground) */}
+      <PushNotificationToast
+        notification={foregroundNotification}
+        onDismiss={dismissForegroundNotification}
+      />
+
       {/* Sticky Header Navbar (hidden on /admin routes) */}
       {!isAdminRoute && <Header />}
 

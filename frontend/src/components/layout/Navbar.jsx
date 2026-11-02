@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { ChevronDown, Menu, X, User } from 'lucide-react';
 import { NAV_LINKS } from '../../utils/constants';
 import { useSettings } from '../../context/SettingsContext';
+import NotificationBell from '../common/NotificationBell';
 
 export function Navbar({
   mobileMenuOpen = false,
@@ -106,7 +107,10 @@ export function Navbar({
           </nav>
 
           {/* Right CTAs */}
-          <div className="hidden sm:flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-3">
+            {/* Push Notification Toggle Bell */}
+            <NotificationBell />
+
             {/* Profile icon */}
             <button
               type="button"
@@ -127,7 +131,8 @@ export function Navbar({
           </div>
 
           {/* Mobile Hamburger Toggle */}
-          <div className="flex lg:hidden items-center gap-3">
+          <div className="flex lg:hidden items-center gap-2">
+            <NotificationBell />
             <Link
               to="/plan-trip"
               className="sm:hidden px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#FF6B16] text-white"

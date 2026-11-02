@@ -26,6 +26,7 @@ import {
   CreditCard,
   ShieldCheck,
   BookOpen,
+  Radio,
 } from 'lucide-react';
 
 export default function AdminLayout({
@@ -50,6 +51,7 @@ export default function AdminLayout({
   ];
 
   const otherNavItems = [
+    { id: 'broadcast', label: 'Push & Broadcast', icon: Radio },
     { id: 'leads', label: 'Inquiries & Leads', icon: ShoppingCart },
     { id: 'destinations', label: 'Destinations', icon: Compass },
     { id: 'packages', label: 'Tour Packages', icon: Package },

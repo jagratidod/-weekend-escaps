@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams, useLocation, Link } from 'reac
 import { PACKAGES } from '../data/packages';
 import { formatCurrency } from '../utils/helpers';
 import { useSettings } from '../context/SettingsContext';
+import { getVisitorId } from '../hooks/usePushNotifications';
 import {
   ArrowLeft,
   ArrowRight,
@@ -247,6 +248,7 @@ export function BookingPage() {
     const bookingData = {
       packageId: pkg?.id || 'tour-package',
       packageName: tripTitle,
+      visitorId: getVisitorId(),
       travelDate,
       friendlyTravelDate: formatFriendlyDate(travelDate),
       totalPersons,

@@ -32,6 +32,14 @@ const adminSchema = new mongoose.Schema(
       enum: ['admin', 'superadmin'],
       default: 'admin',
     },
+    fcmTokens: {
+      type: [String],
+      default: [],
+    },
+    fcmTokenMobile: {
+      type: [String],
+      default: [],
+    },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
   },

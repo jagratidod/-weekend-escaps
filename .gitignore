@@ -17,6 +17,8 @@ out/
 *.env
 !*.env.example
 !.env.example
+*firebase-service-account*.json
+*service*.json
 
 # Logs
 logs

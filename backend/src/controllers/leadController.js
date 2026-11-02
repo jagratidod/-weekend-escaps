@@ -1,4 +1,5 @@
 import Lead from '../models/Lead.js';
+import { notifyAdmins } from '../services/firebaseNotificationService.js';
 
 // @desc    Create / Submit a new Lead from Contact Form
 // @route   POST /api/leads
@@ -25,6 +26,18 @@ export const createLead = async (req, res) => {
     });
 
     console.log(`[New Lead Received] From: ${name} (${email}) | Subject: ${subject}`);
+
+    // Trigger Duplicate-Safe FCM Push Notification to Admins
+    notifyAdmins({
+      title: '📬 New Contact Inquiry!',
+      body: `From ${name}: "${subject || 'General Inquiry'}" - ${message.substring(0, 80)}${message.length > 80 ? '...' : ''}`,
+      data: {
+        type: 'admin_lead',
+        id: lead._id.toString(),
+        link: '/admin',
+      },
+      notificationId: `lead_${lead._id}_admin`,
+    }).catch((fcmErr) => console.error('[FCM Admin Lead Push Error]:', fcmErr.message));
 
     res.status(201).json({
       success: true,

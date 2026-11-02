@@ -9,6 +9,7 @@
     "build": "node api.js && echo 'Backend build completed successfully'",
     "dev": "node api.js && nodemon src/server.js",
     "test:db": "node src/utils/testDb.js",
+    "test:notifications": "node src/utils/testNotifications.js",
     "migrate:images": "node src/utils/migrateImagesToCloudinary.js",
     "seed:testimonials": "node src/utils/seedTestimonials.js"
   },
@@ -20,6 +21,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "firebase-admin": "^14.5.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.10.0",

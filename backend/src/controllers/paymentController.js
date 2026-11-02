@@ -8,6 +8,7 @@ import {
   envMode,
 } from '../config/phonepe.js';
 import { sendBookingConfirmationEmail } from '../services/emailService.js';
+import { notifyAdmins, notifyCustomer } from '../services/firebaseNotificationService.js';
 
 // Helper to calculate paise from rupees safely
 const toPaise = (rupees) => Math.round(Number(rupees) * 100);
@@ -247,6 +248,30 @@ export const getPaymentStatus = async (req, res) => {
       sendBookingConfirmationEmail(booking, payment).catch((err) =>
         console.error('Email trigger error:', err)
       );
+
+      // Trigger Duplicate-Safe FCM Push Notifications (Customer + Admins)
+      notifyCustomer({
+        email: booking.primaryContact.email,
+        title: '💳 Payment Received!',
+        body: `Payment of ₹${payment.amount.toLocaleString('en-IN')} confirmed for ${booking.packageName} (Ref: ${booking.bookingRef}).`,
+        data: {
+          type: 'payment_success',
+          id: booking.bookingRef,
+          link: '/destinations',
+        },
+        notificationId: `payment_${payment.merchantOrderId}_customer`,
+      }).catch((err) => console.error('[FCM Customer Payment Push Error]:', err.message));
+
+      notifyAdmins({
+        title: '💰 Payment Received!',
+        body: `₹${payment.amount.toLocaleString('en-IN')} paid by ${booking.primaryContact.name} for ${booking.packageName} (Ref: ${booking.bookingRef})`,
+        data: {
+          type: 'admin_payment',
+          id: booking.bookingRef,
+          link: '/admin',
+        },
+        notificationId: `payment_${payment.merchantOrderId}_admin`,
+      }).catch((err) => console.error('[FCM Admin Payment Push Error]:', err.message));
     } else if (orderState === 'FAILED') {
       payment.paymentStatus = 'FAILED';
       payment.gatewayResponse = rawResponse;
@@ -322,6 +347,30 @@ export const handleWebhook = async (req, res) => {
         sendBookingConfirmationEmail(booking, payment).catch((err) =>
           console.error('Webhook email trigger error:', err)
         );
+
+        // Trigger Duplicate-Safe FCM Push Notifications (Customer + Admins)
+        notifyCustomer({
+          email: booking.primaryContact.email,
+          title: '💳 Payment Received!',
+          body: `Payment of ₹${payment.amount.toLocaleString('en-IN')} confirmed for ${booking.packageName} (Ref: ${booking.bookingRef}).`,
+          data: {
+            type: 'payment_success',
+            id: booking.bookingRef,
+            link: '/destinations',
+          },
+          notificationId: `payment_${payment.merchantOrderId}_customer`,
+        }).catch((err) => console.error('[FCM Webhook Customer Payment Push Error]:', err.message));
+
+        notifyAdmins({
+          title: '💰 Payment Received!',
+          body: `₹${payment.amount.toLocaleString('en-IN')} paid by ${booking.primaryContact.name} for ${booking.packageName} (Ref: ${booking.bookingRef})`,
+          data: {
+            type: 'admin_payment',
+            id: booking.bookingRef,
+            link: '/admin',
+          },
+          notificationId: `payment_${payment.merchantOrderId}_admin`,
+        }).catch((err) => console.error('[FCM Webhook Admin Payment Push Error]:', err.message));
       }
     } else if (state === 'FAILED' && payment.paymentStatus === 'PENDING') {
       payment.paymentStatus = 'FAILED';

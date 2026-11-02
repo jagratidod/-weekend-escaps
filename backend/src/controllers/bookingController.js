@@ -1,5 +1,6 @@
 import Booking from '../models/Booking.js';
 import Lead from '../models/Lead.js';
+import { notifyAdmins, notifyCustomer } from '../services/firebaseNotificationService.js';
 
 // Helper to generate a unique human-friendly booking reference
 const generateBookingRef = () => {
@@ -134,6 +135,32 @@ export const createBooking = async (req, res) => {
     } catch (leadErr) {
       console.warn('[createBooking] Could not mirror to Leads collection:', leadErr.message);
     }
+
+    // Trigger Duplicate-Safe FCM Push Notifications (Customer + Admins)
+    const visitorId = req.body.visitorId || null;
+    notifyCustomer({
+      email: primaryContact.email,
+      visitorId,
+      title: '🎉 Booking Confirmed!',
+      body: `Your expedition to ${packageName} is confirmed (Ref: ${bookingRef}). Travel date: ${friendlyTravelDate || travelDate}.`,
+      data: {
+        type: 'booking',
+        id: bookingRef,
+        link: '/destinations',
+      },
+      notificationId: `booking_${bookingRef}_customer`,
+    }).catch((fcmErr) => console.error('[FCM Customer Booking Push Error]:', fcmErr.message));
+
+    notifyAdmins({
+      title: '🛎️ New Tour Booking Alert!',
+      body: `${primaryContact.name} booked ${packageName} (${personsCount} travelers) - Ref: ${bookingRef}`,
+      data: {
+        type: 'admin_booking',
+        id: bookingRef,
+        link: '/admin',
+      },
+      notificationId: `booking_${bookingRef}_admin`,
+    }).catch((fcmErr) => console.error('[FCM Admin Booking Push Error]:', fcmErr.message));
 
     res.status(201).json({
       success: true,

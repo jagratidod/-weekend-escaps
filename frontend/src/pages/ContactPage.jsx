@@ -10,6 +10,7 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
+import { getVisitorId } from '../hooks/usePushNotifications';
 
 // Social Icon SVGs
 function WhatsAppIcon(props) {
@@ -82,7 +83,7 @@ export function ContactPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, visitorId: getVisitorId() }),
       });
 
       const data = await res.json();

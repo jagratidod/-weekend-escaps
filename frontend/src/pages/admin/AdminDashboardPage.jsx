@@ -8,6 +8,7 @@ import PagesManager from '../../components/admin/PagesManager';
 import BookingManager from '../../components/admin/BookingManager';
 import PaymentManager from '../../components/admin/PaymentManager';
 import BlogManager from '../../components/admin/BlogManager';
+import BroadcastManager from '../../components/admin/BroadcastManager';
 import {
   Package,
   CalendarCheck,
@@ -36,6 +37,7 @@ export default function AdminDashboardPage() {
       )}
       {activeTab === 'bookings' && <BookingManager />}
       {activeTab === 'payments' && <PaymentManager />}
+      {activeTab === 'broadcast' && <BroadcastManager />}
       {activeTab === 'blogs' && <BlogManager />}
       {activeTab === 'pages' && <PagesManager initialSlug="terms-and-conditions" />}
       {activeTab === 'cancellation_policy' && <PagesManager initialSlug="cancellation-policy" />}
