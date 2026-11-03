@@ -195,6 +195,14 @@ export function PackageDetails() {
     else if (tier.name.toLowerCase().includes('triple')) count = 3;
     else if (tier.name.toLowerCase().includes('quad')) count = 4;
     setTravelersCount(count);
+
+    if (pkg?.isPrivateTrek) {
+      const waMsg = `Hi Weekend Escapes! I would like to book a Private Trek for *${pkg.name}* with *${tier.name}* option (${formatCurrency(tier.price)}/person). Group size: ${count} travelers, Date: ${selectedDate || 'Flexible'}. Please guide us!`;
+      const waUrl = getCustomWhatsAppUrl ? getCustomWhatsAppUrl(waMsg) : (whatsappUrl || 'https://wa.me/917983695277');
+      window.open(waUrl, '_blank');
+      return;
+    }
+
     handleCheckAvailability(null, tier, count);
   };
 
@@ -714,22 +722,40 @@ export function PackageDetails() {
                 </div>
 
                 {/* Primary CTA */}
-                <button
-                  type="submit"
-                  disabled={availabilityResult && availabilityResult.available === false}
-                  className={`w-full py-4 rounded-full font-black text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg ${
-                    availabilityResult && availabilityResult.available === false
-                      ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed shadow-none'
-                      : 'bg-[#FF6B16] hover:bg-[#e05809] active:scale-[0.99] text-white shadow-[#FF6B16]/30'
-                  }`}
-                >
-                  <span>
-                    {availabilityResult && availabilityResult.available === false
-                      ? 'SELECT ANOTHER DATE'
-                      : 'PROCEED TO BOOKING'}
-                  </span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                {pkg?.isPrivateTrek ? (
+                  <a
+                    href={
+                      getCustomWhatsAppUrl
+                        ? getCustomWhatsAppUrl(
+                            `Hi Weekend Escapes! I would like to book an exclusive Private Trek for *${pkg.name}* (${travelersCount} travelers, Date: ${selectedDate || 'Flexible'}). Please share custom batch pricing & confirmation!`
+                          )
+                        : whatsappUrl || 'https://wa.me/917983695277'
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-4 rounded-full font-black text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg bg-[#25D366] hover:bg-[#20ba5a] text-white shadow-[#25D366]/30 active:scale-[0.99]"
+                  >
+                    <MessageCircle className="w-4 h-4 fill-white" />
+                    <span>Inquire on WhatsApp</span>
+                  </a>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={availabilityResult && availabilityResult.available === false}
+                    className={`w-full py-4 rounded-full font-black text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg ${
+                      availabilityResult && availabilityResult.available === false
+                        ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed shadow-none'
+                        : 'bg-[#FF6B16] hover:bg-[#e05809] active:scale-[0.99] text-white shadow-[#FF6B16]/30'
+                    }`}
+                  >
+                    <span>
+                      {availabilityResult && availabilityResult.available === false
+                        ? 'SELECT ANOTHER DATE'
+                        : 'PROCEED TO BOOKING'}
+                    </span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                )}
               </form>
 
               {/* WhatsApp Support Button */}

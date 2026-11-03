@@ -25,6 +25,8 @@ export const DEFAULT_PACKAGES = [
     groupSize: '12 - 18 Explorers',
     isTrending: true,
     isFeatured: true,
+    isPrivateTrek: true,
+    privateTrekNote: 'Direct WhatsApp Booking • Custom Batches',
     isActive: true,
     order: 1,
     included: [
@@ -66,6 +68,8 @@ export const DEFAULT_PACKAGES = [
     groupSize: 'Family / Couples / Small Groups',
     isTrending: true,
     isFeatured: true,
+    isPrivateTrek: true,
+    privateTrekNote: 'Direct WhatsApp Booking • Custom Batches',
     isActive: true,
     order: 2,
     included: [
@@ -113,6 +117,8 @@ export const DEFAULT_PACKAGES = [
     groupSize: 'Friends & Groups',
     isTrending: true,
     isFeatured: true,
+    isPrivateTrek: true,
+    privateTrekNote: 'Direct WhatsApp Booking • Custom Batches',
     isActive: true,
     order: 3,
     included: [
@@ -153,6 +159,8 @@ export const DEFAULT_PACKAGES = [
     groupSize: 'Couples & Small Groups',
     isTrending: true,
     isFeatured: true,
+    isPrivateTrek: true,
+    privateTrekNote: 'Direct WhatsApp Booking • Custom Batches',
     isActive: true,
     order: 4,
     included: [

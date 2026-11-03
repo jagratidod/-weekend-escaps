@@ -31,6 +31,8 @@ import {
   ChevronDown,
   ChevronUp,
   FolderTree,
+  MessageCircle,
+  Shield,
 } from 'lucide-react';
 
 const DIFFICULTY_LEVELS = [
@@ -156,6 +158,8 @@ export function PackageManager() {
     pricingTiers: [],
     isFeatured: false,
     isTrending: true,
+    isPrivateTrek: false,
+    privateTrekNote: 'Direct WhatsApp Booking • Custom Batches',
     isActive: true,
     order: 0,
   };
@@ -194,11 +198,14 @@ export function PackageManager() {
   }, [refreshPackages, refreshCategories]);
 
   // Open Add Package Modal
-  const handleOpenAddModal = () => {
+  const handleOpenAddModal = (isPrivate = false) => {
     setEditingPackage(null);
     setFormData({
       ...initialFormData,
       travelType: categories[0]?.name || 'Trekking',
+      isPrivateTrek: isPrivate,
+      badge: isPrivate ? 'Private Trek' : '',
+      badgeColor: isPrivate ? 'bg-emerald-600 text-white' : 'bg-[#FF6B16] text-white',
     });
     setActiveFormTab('basic');
     setShowQuickAddCat(false);
@@ -251,6 +258,8 @@ export function PackageManager() {
       pricingTiers: Array.isArray(pkg.pricingTiers) ? [...pkg.pricingTiers] : [],
       isFeatured: !!pkg.isFeatured,
       isTrending: pkg.isTrending !== undefined ? !!pkg.isTrending : true,
+      isPrivateTrek: !!pkg.isPrivateTrek,
+      privateTrekNote: pkg.privateTrekNote || 'Direct WhatsApp Booking • Custom Batches',
       isActive: pkg.isActive !== undefined ? !!pkg.isActive : true,
       order: pkg.order || 0,
     });
@@ -757,7 +766,8 @@ export function PackageManager() {
     const matchesStatus =
       selectedStatusFilter === 'All' ||
       (selectedStatusFilter === 'Active' && pkg.isActive !== false) ||
-      (selectedStatusFilter === 'Inactive' && pkg.isActive === false);
+      (selectedStatusFilter === 'Inactive' && pkg.isActive === false) ||
+      (selectedStatusFilter === 'Private' && pkg.isPrivateTrek === true);
 
     return matchesSearch && matchesType && matchesStatus;
   });
@@ -766,6 +776,7 @@ export function PackageManager() {
   const totalCount = packages.length;
   const activeCount = packages.filter((p) => p.isActive !== false).length;
   const trendingCount = packages.filter((p) => p.isTrending !== false).length;
+  const privateCount = packages.filter((p) => p.isPrivateTrek === true).length;
   const typesCount = categories.length;
 
   return (
@@ -827,7 +838,16 @@ export function PackageManager() {
                 </button>
 
                 <button
-                  onClick={handleOpenAddModal}
+                  onClick={() => handleOpenAddModal(true)}
+                  className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+                  title="Create a package specifically for Private Treks section (Direct WhatsApp Booking)"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>+ Private Trek</span>
+                </button>
+
+                <button
+                  onClick={() => handleOpenAddModal(false)}
                   className="px-4 py-2 rounded-xl bg-[#FF6B16] hover:bg-[#E55A0B] text-white text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
@@ -846,8 +866,8 @@ export function PackageManager() {
           </div>
         </div>
 
-        {/* 4 Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {/* 5 Stats Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           <div className="bg-white p-4 rounded-2xl border border-neutral-100 shadow-xs">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-neutral-500">Total Packages</span>
@@ -870,7 +890,7 @@ export function PackageManager() {
 
           <div className="bg-white p-4 rounded-2xl border border-neutral-100 shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-neutral-500">Trending on Home</span>
+              <span className="text-xs font-bold text-neutral-500">Trending</span>
               <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
                 <Flame className="w-4 h-4" />
               </div>
@@ -880,7 +900,17 @@ export function PackageManager() {
 
           <div className="bg-white p-4 rounded-2xl border border-neutral-100 shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-neutral-500">Travel Categories</span>
+              <span className="text-xs font-bold text-neutral-500">Private Treks</span>
+              <div className="w-8 h-8 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
+                <MessageCircle className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-2xl font-black text-teal-600 mt-2">{privateCount}</div>
+          </div>
+
+          <div className="bg-white p-4 rounded-2xl border border-neutral-100 shadow-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-neutral-500">Categories</span>
               <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
                 <Compass className="w-4 h-4" />
               </div>
@@ -962,6 +992,7 @@ export function PackageManager() {
                 <option value="All">All Status</option>
                 <option value="Active">Active Only</option>
                 <option value="Inactive">Inactive / Draft</option>
+                <option value="Private">Private Treks (WhatsApp)</option>
               </select>
             </div>
           </div>
@@ -976,6 +1007,7 @@ export function PackageManager() {
                     <th className="py-3 px-4">Category</th>
                     <th className="py-3 px-4">Price / Person</th>
                     <th className="py-3 px-4">Rating</th>
+                    <th className="py-3 px-4 text-center">Private Trek</th>
                     <th className="py-3 px-4 text-center">Trending</th>
                     <th className="py-3 px-4 text-center">Status</th>
                     <th className="py-3 px-4 text-right">Actions</th>
@@ -984,7 +1016,7 @@ export function PackageManager() {
                 <tbody className="divide-y divide-neutral-100 text-xs">
                   {filteredPackages.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-12 text-center text-neutral-400">
+                      <td colSpan={8} className="py-12 text-center text-neutral-400">
                         <Package className="w-8 h-8 mx-auto mb-2 opacity-40" />
                         <p className="font-bold">No packages found</p>
                         <p className="text-[11px]">Try adjusting your search or filters</p>
@@ -1056,6 +1088,27 @@ export function PackageManager() {
                               ({pkg.reviewsCount || 100})
                             </span>
                           </div>
+                        </td>
+
+                        {/* Private Trek Toggle */}
+                        <td className="py-3 px-4 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStatus(pkg, 'isPrivateTrek')}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+                              pkg.isPrivateTrek === true
+                                ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300'
+                                : 'bg-neutral-100 text-neutral-400 hover:bg-neutral-200'
+                            }`}
+                            title={
+                              pkg.isPrivateTrek
+                                ? 'Private Trek Active: Direct WhatsApp booking'
+                                : 'Click to enable as Private Trek (WhatsApp)'
+                            }
+                          >
+                            <MessageCircle className="w-3 h-3" />
+                            <span>{pkg.isPrivateTrek ? 'WhatsApp' : 'Regular'}</span>
+                          </button>
                         </td>
 
                         {/* Trending Toggle */}
@@ -1473,6 +1526,31 @@ export function PackageManager() {
                         Feature in "Trending Tour Packages" Section
                       </span>
                     </label>
+
+                    {/* Private Trek Direct WhatsApp Toggle */}
+                    <div className="w-full">
+                      <label className="flex items-start gap-3 p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200 cursor-pointer hover:bg-emerald-50 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={formData.isPrivateTrek}
+                          onChange={(e) => setFormData({ ...formData, isPrivateTrek: e.target.checked })}
+                          className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 mt-0.5 shrink-0"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-black text-emerald-950">
+                              Show in "Private Treks & Custom Batches" Section
+                            </span>
+                            <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-600 text-white">
+                              Direct WhatsApp Only
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-emerald-800 font-medium mt-0.5">
+                            When enabled, online checkout is replaced with a direct WhatsApp booking and custom batch inquiry button, allowing your team to consult and quote custom prices directly.
+                          </p>
+                        </div>
+                      </label>
+                    </div>
                   </div>
                 </div>
               )}

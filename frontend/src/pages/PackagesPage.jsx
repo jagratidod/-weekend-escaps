@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useLocation, Link } from 'react-router-dom';
 import { usePackages } from '../context/PackageContext';
+import { useSettings } from '../context/SettingsContext';
 import { EXPERIENCES } from '../data/experiences';
 import { getImageUrl } from '../utils/imageHelper';
+import { formatCurrency } from '../utils/helpers';
 import PackageCard from '../components/home/PackageCard';
 import Container from '../components/common/Container';
 import {
@@ -15,6 +17,12 @@ import {
   Users,
   Flame,
   Globe,
+  MessageCircle,
+  Shield,
+  Calendar,
+  Clock,
+  Star,
+  MapPin,
 } from 'lucide-react';
 
 const iconMap = {
@@ -110,6 +118,7 @@ const EXPERIENCE_VISUALS = {
 
 export function PackagesPage({ scrollToExperiences = false }) {
   const { packages, categories, loading } = usePackages();
+  const { whatsappUrl, getCustomWhatsAppUrl } = useSettings();
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
 
@@ -119,6 +128,26 @@ export function PackagesPage({ scrollToExperiences = false }) {
   const [searchTerm, setSearchTerm] = useState(initialDestination);
   const [selectedType, setSelectedType] = useState(initialType);
   const [maxPrice, setMaxPrice] = useState(80000);
+
+  // Private Treks (Custom batches with WhatsApp direct booking)
+  const privateTrekPackages = packages.filter((pkg) => {
+    if (pkg.isActive === false) return false;
+    return pkg.isPrivateTrek === true;
+  });
+
+  // If admin has not yet marked any package as private, provide curated defaults
+  const displayPrivateTreks =
+    privateTrekPackages.length > 0
+      ? privateTrekPackages
+      : packages
+          .filter(
+            (pkg) =>
+              pkg.isActive !== false &&
+              (pkg.travelType === 'Trekking' ||
+                pkg.name?.toLowerCase().includes('trek') ||
+                pkg.price >= 5000)
+          )
+          .slice(0, 4);
 
   // Dynamic travel types from active categories & packages
   const activeCategoryNames = Array.isArray(categories)
@@ -222,6 +251,29 @@ export function PackagesPage({ scrollToExperiences = false }) {
             <p className="mt-3 text-neutral-600 text-base sm:text-lg">
               Discover handcrafted travel packages with experienced trip marshals, top-rated stays, and all-inclusive logistics.
             </p>
+
+            {/* Quick Section Switcher Pills */}
+            <div className="flex items-center justify-center gap-2.5 mt-5 flex-wrap">
+              <a
+                href="#packages-grid-top"
+                className="px-4 py-1.5 rounded-full bg-white border border-neutral-200 text-xs font-bold text-neutral-800 hover:border-[#FF6B16] hover:text-[#FF6B16] transition-all shadow-xs"
+              >
+                Group Expeditions ({filteredPackages.length})
+              </a>
+              <a
+                href="#private-treks"
+                className="px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-300 text-xs font-black text-emerald-800 hover:bg-emerald-100 transition-all shadow-xs flex items-center gap-1.5"
+              >
+                <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Private Treks ({displayPrivateTreks.length})</span>
+              </a>
+              <a
+                href="#experiences"
+                className="px-4 py-1.5 rounded-full bg-white border border-neutral-200 text-xs font-bold text-neutral-600 hover:border-[#FF6B16] hover:text-[#FF6B16] transition-all shadow-xs"
+              >
+                Curated Experiences
+              </a>
+            </div>
           </div>
 
           {/* Filter & Search Bar */}
@@ -306,7 +358,212 @@ export function PackagesPage({ scrollToExperiences = false }) {
           )}
         </div>
 
-        {/* ── SECTION 2: CURATED EXPERIENCES (MERGED FROM /experiences) ── */}
+        {/* ── SECTION 2: PRIVATE TREKS & CUSTOM BATCHES (DIRECT WHATSAPP INQUIRY) ── */}
+        <div id="private-treks" className="pt-24 mt-24 border-t border-neutral-200/90 scroll-mt-28">
+          {/* Header */}
+          <div className="text-center max-w-3xl mx-auto mb-14">
+            <div className="inline-flex items-center gap-2 mb-3 px-3.5 py-1 rounded-full bg-emerald-100/90 text-emerald-800 text-xs font-black uppercase tracking-wider">
+              <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+              <span>CUSTOM BATCHES • DIRECT WHATSAPP INQUIRY</span>
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-black text-[#111111] tracking-tight">
+              Private Treks for Your Group
+            </h2>
+            <p className="mt-3 text-neutral-600 text-base sm:text-lg">
+              Want to trek exclusively with your friends, family, or corporate team? Pick any date, trek at your own pace with a dedicated trek leader, and get instant custom quotes directly on WhatsApp.
+            </p>
+
+            {/* 4 Feature Badges */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 text-left">
+              <div className="bg-white p-3.5 rounded-2xl border border-neutral-200/80 shadow-xs flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Shield className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-black text-neutral-900">100% Private</div>
+                  <div className="text-[10px] text-neutral-500 font-semibold">No outside strangers</div>
+                </div>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-2xl border border-neutral-200/80 shadow-xs flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Calendar className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-black text-neutral-900">Your Own Dates</div>
+                  <div className="text-[10px] text-neutral-500 font-semibold">365 Days availability</div>
+                </div>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-2xl border border-neutral-200/80 shadow-xs flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Users className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-black text-neutral-900">Dedicated Guide</div>
+                  <div className="text-[10px] text-neutral-500 font-semibold">Custom pace & safety</div>
+                </div>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-2xl border border-neutral-200/80 shadow-xs flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <MessageCircle className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-black text-neutral-900">WhatsApp Connect</div>
+                  <div className="text-[10px] text-neutral-500 font-semibold">Direct custom quote</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Private Treks Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {displayPrivateTreks.map((pkg) => {
+              const waMessage = `Hi Weekend Escapes! I would like to inquire about booking a *Private Trek* for *${pkg.name}*. We have our own group and want to discuss custom departure dates and pricing.`;
+              const waUrl = getCustomWhatsAppUrl ? getCustomWhatsAppUrl(waMessage) : (whatsappUrl || 'https://wa.me/917983695277');
+
+              return (
+                <div
+                  key={pkg._id || pkg.id}
+                  className="group flex flex-col rounded-3xl overflow-hidden bg-white p-3 shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1.5 border border-emerald-100 hover:border-emerald-300"
+                >
+                  {/* Image with Private Badges */}
+                  <div className="relative aspect-[16/10.5] w-full rounded-2xl overflow-hidden bg-neutral-100">
+                    <img
+                      src={getImageUrl(pkg.image)}
+                      alt={pkg.name}
+                      loading="lazy"
+                      className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
+                    />
+
+                    {/* Top Left: Private Trek Badge */}
+                    <div className="absolute top-2.5 left-2.5">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide shadow-md bg-emerald-600 text-white flex items-center gap-1">
+                        <Shield className="w-3 h-3" />
+                        <span>Private Trek</span>
+                      </span>
+                    </div>
+
+                    {/* Top Right: WhatsApp Direct Badge */}
+                    <div className="absolute top-2.5 right-2.5">
+                      <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-emerald-400 text-[10px] font-black border border-emerald-500/30">
+                        <MessageCircle className="w-3 h-3 text-emerald-400" />
+                        <span>WhatsApp Only</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Body Content */}
+                  <div className="pt-3 pb-1 px-1 flex flex-col flex-1 justify-between">
+                    <div>
+                      {/* Duration & Location */}
+                      <div className="flex items-center justify-between text-[11px] text-neutral-500 font-bold mb-1.5">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-emerald-600" />
+                          {pkg.duration}
+                        </span>
+                        <span className="truncate max-w-[120px] text-neutral-600">
+                          {pkg.location ? pkg.location.split(',')[0] : 'Uttarakhand'}
+                        </span>
+                      </div>
+
+                      {/* Trek Title */}
+                      <Link
+                        to={`/packages/${pkg.id || pkg._id}`}
+                        className="text-base font-black text-[#111111] group-hover:text-emerald-700 transition-colors line-clamp-1 leading-snug block"
+                      >
+                        {pkg.name}
+                      </Link>
+
+                      {/* Custom Inclusions Pill */}
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-600">
+                          Dedicated Guide
+                        </span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700">
+                          Custom Dates
+                        </span>
+                      </div>
+
+                      {/* Pricing */}
+                      <div className="mt-3 flex items-baseline justify-between border-t border-neutral-100 pt-2">
+                        <div>
+                          <span className="text-[10px] font-extrabold uppercase text-neutral-400 block">
+                            Starting from
+                          </span>
+                          <span className="text-lg sm:text-xl font-black text-neutral-900">
+                            {formatCurrency(pkg.price)}
+                          </span>
+                          <span className="text-[10px] font-semibold text-neutral-400 ml-1">
+                            / person
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-emerald-100 text-emerald-800">
+                          Custom Group
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* WhatsApp Action Button (NO ONLINE BOOKING, DIRECT WHATSAPP) */}
+                    <div className="mt-4 space-y-2">
+                      <a
+                        href={waUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-xs sm:text-[13px] shadow-md shadow-[#25D366]/25 hover:shadow-lg hover:shadow-[#25D366]/35 transition-all duration-200 cursor-pointer text-center"
+                      >
+                        <MessageCircle className="w-4 h-4 fill-white" />
+                        <span>Connect on WhatsApp</span>
+                      </a>
+
+                      <Link
+                        to={`/packages/${pkg.id || pkg._id}`}
+                        className="w-full block text-center py-1 text-[11px] font-bold text-neutral-500 hover:text-emerald-700 transition-colors"
+                      >
+                        View Trek Itinerary & Details →
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Custom Private Trek Callout Banner */}
+          <div className="mt-12 bg-gradient-to-r from-emerald-900 to-[#1A384C] rounded-3xl p-6 sm:p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+            <div className="space-y-1.5 text-center md:text-left">
+              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-black uppercase tracking-wider">
+                <Shield className="w-3 h-3" />
+                <span>Custom Mountain Expeditions</span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-black">
+                Have a Custom Route, Peak or College / Corporate Group?
+              </h3>
+              <p className="text-xs sm:text-sm text-neutral-300 max-w-2xl">
+                We craft bespoke private expeditions across Uttarakhand, Himachal, Kashmir, and Ladakh tailored precisely to your team size, fitness level, and budget.
+              </p>
+            </div>
+
+            <a
+              href={
+                getCustomWhatsAppUrl
+                  ? getCustomWhatsAppUrl(
+                      'Hi Weekend Escapes! I would like to design a Custom Private Expedition for our group. Please connect us with a senior trek leader.'
+                    )
+                  : whatsappUrl || 'https://wa.me/917983695277'
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-6 py-3.5 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-xs uppercase tracking-wider shadow-lg flex items-center gap-2 whitespace-nowrap active:scale-95 transition-all cursor-pointer shrink-0"
+            >
+              <MessageCircle className="w-4 h-4 fill-white" />
+              <span>Chat with Trek Leader</span>
+            </a>
+          </div>
+        </div>
+
+        {/* ── SECTION 3: CURATED EXPERIENCES (MERGED FROM /experiences) ── */}
         <div id="experiences" className="pt-24 mt-24 border-t border-neutral-200/90 scroll-mt-28">
           {/* Experiences Section Header */}
           <div className="text-center max-w-3xl mx-auto mb-16">

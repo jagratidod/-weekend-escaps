@@ -414,6 +414,8 @@ export const createPackage = async (req, res) => {
       description: description || '',
       isFeatured: Boolean(isFeatured),
       isTrending: isTrending !== undefined ? Boolean(isTrending) : true,
+      isPrivateTrek: Boolean(req.body.isPrivateTrek),
+      privateTrekNote: req.body.privateTrekNote || 'Direct WhatsApp Booking • Custom Batches',
       isActive: isActive !== undefined ? Boolean(isActive) : true,
       order: order !== undefined ? Number(order) : 0,
     });
@@ -483,6 +485,8 @@ export const updatePackage = async (req, res) => {
       'description',
       'isFeatured',
       'isTrending',
+      'isPrivateTrek',
+      'privateTrekNote',
       'isActive',
       'order',
     ];

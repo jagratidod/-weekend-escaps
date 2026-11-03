@@ -204,6 +204,16 @@ const packageSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    isPrivateTrek: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    privateTrekNote: {
+      type: String,
+      default: 'Direct WhatsApp Booking • Custom Batches',
+      trim: true,
+    },
     isActive: {
       type: Boolean,
       default: true,
