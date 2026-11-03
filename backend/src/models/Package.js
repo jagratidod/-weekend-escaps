@@ -10,6 +10,71 @@ const itineraryDaySchema = new mongoose.Schema(
   { _id: false }
 );
 
+const batchSchema = new mongoose.Schema(
+  {
+    startDate: { type: String, required: true }, // "YYYY-MM-DD"
+    endDate: { type: String, default: '' }, // "YYYY-MM-DD"
+    totalSeats: { type: Number, default: 16, min: 1 },
+    bookedSeats: { type: Number, default: 0, min: 0 },
+    priceOverride: { type: Number, default: null },
+    status: {
+      type: String,
+      enum: ['auto', 'available', 'filling_fast', 'sold_out'],
+      default: 'auto',
+    },
+    note: { type: String, default: '', trim: true }, // e.g. "Weekend Special", "Long Weekend Batch"
+  },
+  { _id: true }
+);
+
+const blackoutDateSchema = new mongoose.Schema(
+  {
+    date: { type: String, required: true }, // "YYYY-MM-DD"
+    reason: { type: String, default: 'Operational closure / Maintenance', trim: true },
+  },
+  { _id: false }
+);
+
+const pricingTierSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true }, // e.g. "Quad Sharing" or "Manali to Manali"
+    subtext: { type: String, default: '', trim: true }, // e.g. "Camp in Kedarnath" or "Reporting at Basecamp"
+    price: { type: Number, required: true, min: 0 },
+    originalPrice: { type: Number, default: null },
+    isDefault: { type: Boolean, default: false },
+  },
+  { _id: true }
+);
+
+const availabilitySchema = new mongoose.Schema(
+  {
+    scheduleType: {
+      type: String,
+      enum: ['daily', 'weekends', 'batches', 'custom'],
+      default: 'daily',
+    },
+    defaultSeatsPerBatch: {
+      type: Number,
+      default: 16,
+      min: 1,
+    },
+    minAdvanceNoticeDays: {
+      type: Number,
+      default: 1,
+      min: 0,
+    },
+    batches: {
+      type: [batchSchema],
+      default: [],
+    },
+    blackoutDates: {
+      type: [blackoutDateSchema],
+      default: [],
+    },
+  },
+  { _id: false }
+);
+
 const packageSchema = new mongoose.Schema(
   {
     id: {
@@ -50,6 +115,15 @@ const packageSchema = new mongoose.Schema(
     originalPrice: {
       type: Number,
       default: null,
+    },
+    pricingType: {
+      type: String,
+      enum: ['standard', 'sharing', 'distance', 'custom'],
+      default: 'standard',
+    },
+    pricingTiers: {
+      type: [pricingTierSchema],
+      default: [],
     },
     rating: {
       type: Number,
@@ -102,6 +176,16 @@ const packageSchema = new mongoose.Schema(
     itinerary: {
       type: [itineraryDaySchema],
       default: [],
+    },
+    availability: {
+      type: availabilitySchema,
+      default: () => ({
+        scheduleType: 'daily',
+        defaultSeatsPerBatch: 16,
+        minAdvanceNoticeDays: 1,
+        batches: [],
+        blackoutDates: [],
+      }),
     },
     highlights: {
       type: [String],

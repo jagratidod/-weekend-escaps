@@ -1,5 +1,6 @@
 import Package from '../models/Package.js';
 import PackageCategory from '../models/PackageCategory.js';
+import Booking from '../models/Booking.js';
 import mongoose from 'mongoose';
 import { DEFAULT_PACKAGES, seedDefaultPackages } from '../utils/seedPackages.js';
 
@@ -389,6 +390,8 @@ export const createPackage = async (req, res) => {
       location,
       price: Number(price),
       originalPrice: originalPrice ? Number(originalPrice) : null,
+      pricingType: req.body.pricingType || 'standard',
+      pricingTiers: Array.isArray(req.body.pricingTiers) ? req.body.pricingTiers : [],
       rating: rating ? Number(rating) : 4.9,
       reviewsCount: reviewsCount ? Number(reviewsCount) : 100,
       image,
@@ -400,6 +403,13 @@ export const createPackage = async (req, res) => {
       included: Array.isArray(included) ? included : [],
       excluded: Array.isArray(excluded) ? excluded : [],
       itinerary: Array.isArray(itinerary) ? itinerary : [],
+      availability: req.body.availability || {
+        scheduleType: 'daily',
+        defaultSeatsPerBatch: 16,
+        minAdvanceNoticeDays: 1,
+        batches: [],
+        blackoutDates: [],
+      },
       highlights: Array.isArray(highlights) ? highlights : [],
       description: description || '',
       isFeatured: Boolean(isFeatured),
@@ -455,6 +465,8 @@ export const updatePackage = async (req, res) => {
       'location',
       'price',
       'originalPrice',
+      'pricingType',
+      'pricingTiers',
       'rating',
       'reviewsCount',
       'image',
@@ -466,6 +478,7 @@ export const updatePackage = async (req, res) => {
       'included',
       'excluded',
       'itinerary',
+      'availability',
       'highlights',
       'description',
       'isFeatured',
@@ -566,3 +579,392 @@ export const resetToDefaultPackages = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Check package availability for a specific date and group size
+ * @route   GET /api/packages/:id/availability?date=YYYY-MM-DD&travelers=N
+ * @access  Public
+ */
+export const checkPackageAvailability = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { date, travelers = 1 } = req.query;
+
+    const numTravelers = Math.max(1, parseInt(travelers, 10) || 1);
+
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        message: 'Travel date is required (YYYY-MM-DD)',
+      });
+    }
+
+    let pkg = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      pkg = await Package.findById(id);
+    }
+    if (!pkg) {
+      pkg = await Package.findOne({ id: id });
+    }
+
+    if (!pkg) {
+      return res.status(404).json({
+        success: false,
+        message: 'Package not found',
+      });
+    }
+
+    if (!pkg.isActive) {
+      return res.status(200).json({
+        success: true,
+        available: false,
+        status: 'sold_out',
+        reason: 'This package is currently not taking new bookings',
+      });
+    }
+
+    const avail = pkg.availability || {
+      scheduleType: 'daily',
+      defaultSeatsPerBatch: 16,
+      minAdvanceNoticeDays: 1,
+      batches: [],
+      blackoutDates: [],
+    };
+
+    // 1. Date Validation: Past date or minimum notice check
+    const selectedDate = new Date(`${date}T00:00:00`);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (isNaN(selectedDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format. Use YYYY-MM-DD.',
+      });
+    }
+
+    if (selectedDate < today) {
+      return res.status(200).json({
+        success: true,
+        available: false,
+        status: 'past_date',
+        reason: 'Cannot select a past date',
+      });
+    }
+
+    const minNoticeDays = avail.minAdvanceNoticeDays ?? 1;
+    const noticeCutoff = new Date(today);
+    noticeCutoff.setDate(noticeCutoff.getDate() + minNoticeDays);
+
+    if (selectedDate < noticeCutoff) {
+      return res.status(200).json({
+        success: true,
+        available: false,
+        status: 'notice_required',
+        reason: `Requires at least ${minNoticeDays} day(s) advance booking notice`,
+      });
+    }
+
+    // 2. Blackout Dates check
+    const isBlackedOut = avail.blackoutDates?.find((b) => b.date === date);
+    if (isBlackedOut) {
+      return res.status(200).json({
+        success: true,
+        available: false,
+        status: 'blackout',
+        reason: isBlackedOut.reason || 'Operational closure / holiday on this date',
+      });
+    }
+
+    // 3. Specific Batch Check (Explicit batch matches date)
+    const matchingBatch = avail.batches?.find((b) => b.startDate === date);
+
+    if (matchingBatch) {
+      const totalSeats = matchingBatch.totalSeats || avail.defaultSeatsPerBatch || 16;
+      const bookedSeats = matchingBatch.bookedSeats || 0;
+      const seatsLeft = Math.max(0, totalSeats - bookedSeats);
+
+      if (matchingBatch.status === 'sold_out' || seatsLeft <= 0) {
+        return res.status(200).json({
+          success: true,
+          available: false,
+          seatsLeft: 0,
+          status: 'sold_out',
+          reason: 'This batch is completely Sold Out',
+          batch: matchingBatch,
+        });
+      }
+
+      if (seatsLeft < numTravelers) {
+        return res.status(200).json({
+          success: true,
+          available: false,
+          seatsLeft,
+          status: 'insufficient_seats',
+          reason: `Only ${seatsLeft} seat(s) remaining for this batch (Requested ${numTravelers})`,
+          batch: matchingBatch,
+        });
+      }
+
+      const finalStatus =
+        matchingBatch.status === 'filling_fast' || seatsLeft <= 4
+          ? 'filling_fast'
+          : 'available';
+
+      return res.status(200).json({
+        success: true,
+        available: true,
+        seatsLeft,
+        status: finalStatus,
+        batch: matchingBatch,
+        message:
+          finalStatus === 'filling_fast'
+            ? `Hurry! Only ${seatsLeft} seats left for this departure`
+            : `Guaranteed Departure - ${seatsLeft} seats available`,
+      });
+    }
+
+    // 4. If No Explicit Batch, check Schedule Type
+    const scheduleType = avail.scheduleType || 'daily';
+
+    // If strictly 'batches', and this date has no batch:
+    if (scheduleType === 'batches') {
+      return res.status(200).json({
+        success: true,
+        available: false,
+        status: 'no_batch',
+        reason: 'This tour operates on fixed departure batches only. Please choose an upcoming batch or contact us for a private trip.',
+      });
+    }
+
+    // If 'weekends', check if day of week is Fri (5), Sat (6), or Sun (0)
+    if (scheduleType === 'weekends') {
+      const dayOfWeek = selectedDate.getDay();
+      const isWeekend = dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0;
+      if (!isWeekend) {
+        return res.status(200).json({
+          success: true,
+          available: false,
+          status: 'weekend_only',
+          reason: 'This trip operates on weekends (Friday, Saturday, Sunday) only. You can also pick an upcoming weekend batch.',
+        });
+      }
+    }
+
+    // 5. Daily or Valid Weekend or Custom Day: Check DB Bookings count for capacity
+    const defaultCapacity = avail.defaultSeatsPerBatch || 16;
+    let bookedCount = 0;
+
+    try {
+      const existingBookings = await Booking.find({
+        packageId: { $in: [pkg.id, pkg._id.toString()] },
+        travelDate: date,
+        bookingStatus: { $ne: 'cancelled' },
+      });
+      bookedCount = existingBookings.reduce((acc, b) => acc + (b.totalPersons || 1), 0);
+    } catch (e) {
+      console.warn('[PackageController] Error querying existing bookings:', e.message);
+    }
+
+    const seatsLeft = Math.max(0, defaultCapacity - bookedCount);
+
+    if (seatsLeft <= 0) {
+      return res.status(200).json({
+        success: true,
+        available: false,
+        seatsLeft: 0,
+        status: 'sold_out',
+        reason: 'All slots booked for this date',
+      });
+    }
+
+    if (seatsLeft < numTravelers) {
+      return res.status(200).json({
+        success: true,
+        available: false,
+        seatsLeft,
+        status: 'insufficient_seats',
+        reason: `Only ${seatsLeft} seat(s) left on this date (Requested ${numTravelers})`,
+      });
+    }
+
+    const finalStatus = seatsLeft <= 4 ? 'filling_fast' : 'available';
+
+    return res.status(200).json({
+      success: true,
+      available: true,
+      seatsLeft,
+      status: finalStatus,
+      message:
+        finalStatus === 'filling_fast'
+          ? `High demand date! Only ${seatsLeft} seats left`
+          : `Departure available! ${seatsLeft} seats open`,
+    });
+  } catch (error) {
+    console.error('[PackageController] checkPackageAvailability error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to check package availability',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @desc    Get upcoming departure slots and batches for a package
+ * @route   GET /api/packages/:id/slots
+ * @access  Public
+ */
+export const getUpcomingSlots = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    let pkg = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      pkg = await Package.findById(id);
+    }
+    if (!pkg) {
+      pkg = await Package.findOne({ id: id });
+    }
+
+    if (!pkg) {
+      return res.status(404).json({
+        success: false,
+        message: 'Package not found',
+      });
+    }
+
+    const avail = pkg.availability || {
+      scheduleType: 'daily',
+      defaultSeatsPerBatch: 16,
+      minAdvanceNoticeDays: 1,
+      batches: [],
+      blackoutDates: [],
+    };
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const scheduleType = avail.scheduleType || 'daily';
+    const slots = [];
+
+    // Helper formatters
+    const formatNiceDate = (dateStr) => {
+      try {
+        const d = new Date(`${dateStr}T00:00:00`);
+        return d.toLocaleDateString('en-IN', {
+          weekday: 'short',
+          day: '2-digit',
+          month: 'short',
+        });
+      } catch {
+        return dateStr;
+      }
+    };
+
+    // 1. Explicit upcoming batches
+    if (avail.batches && avail.batches.length > 0) {
+      const upcomingBatches = avail.batches
+        .filter((b) => b.startDate >= todayStr)
+        .sort((a, b) => a.startDate.localeCompare(b.startDate));
+
+      upcomingBatches.forEach((b) => {
+        const total = b.totalSeats || avail.defaultSeatsPerBatch || 16;
+        const booked = b.bookedSeats || 0;
+        const left = Math.max(0, total - booked);
+        slots.push({
+          date: b.startDate,
+          endDate: b.endDate || '',
+          label: formatNiceDate(b.startDate),
+          totalSeats: total,
+          seatsLeft: left,
+          status:
+            b.status === 'sold_out' || left <= 0
+              ? 'sold_out'
+              : b.status === 'filling_fast' || left <= 4
+              ? 'filling_fast'
+              : 'available',
+          note: b.note || '',
+          isBatch: true,
+        });
+      });
+    }
+
+    // 2. If schedule is 'weekends' and not enough batches defined, auto-generate upcoming weekends
+    if (scheduleType === 'weekends' && slots.length < 8) {
+      const existingDates = new Set(slots.map((s) => s.date));
+      const blackoutSet = new Set((avail.blackoutDates || []).map((b) => b.date));
+
+      const cursor = new Date();
+      cursor.setDate(cursor.getDate() + (avail.minAdvanceNoticeDays || 1));
+
+      for (let i = 0; i < 45 && slots.length < 10; i++) {
+        const dayOfWeek = cursor.getDay();
+        const dateStr = cursor.toISOString().split('T')[0];
+
+        if (
+          (dayOfWeek === 5 || dayOfWeek === 6) &&
+          !existingDates.has(dateStr) &&
+          !blackoutSet.has(dateStr)
+        ) {
+          slots.push({
+            date: dateStr,
+            endDate: '',
+            label: formatNiceDate(dateStr),
+            totalSeats: avail.defaultSeatsPerBatch || 16,
+            seatsLeft: avail.defaultSeatsPerBatch || 16,
+            status: 'available',
+            note: dayOfWeek === 5 ? 'Friday Weekend Departure' : 'Saturday Weekend Departure',
+            isBatch: false,
+          });
+          existingDates.add(dateStr);
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    }
+
+    // 3. If schedule is 'daily' and not enough slots, auto-generate next 14 daily slots
+    if ((scheduleType === 'daily' || scheduleType === 'custom') && slots.length < 10) {
+      const existingDates = new Set(slots.map((s) => s.date));
+      const blackoutSet = new Set((avail.blackoutDates || []).map((b) => b.date));
+
+      const cursor = new Date();
+      cursor.setDate(cursor.getDate() + (avail.minAdvanceNoticeDays || 1));
+
+      for (let i = 0; i < 30 && slots.length < 14; i++) {
+        const dateStr = cursor.toISOString().split('T')[0];
+        if (!existingDates.has(dateStr) && !blackoutSet.has(dateStr)) {
+          slots.push({
+            date: dateStr,
+            endDate: '',
+            label: formatNiceDate(dateStr),
+            totalSeats: avail.defaultSeatsPerBatch || 16,
+            seatsLeft: avail.defaultSeatsPerBatch || 16,
+            status: 'available',
+            note: 'Daily Departure',
+            isBatch: false,
+          });
+          existingDates.add(dateStr);
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    }
+
+    // Sort final slots chronologically
+    slots.sort((a, b) => a.date.localeCompare(b.date));
+
+    res.status(200).json({
+      success: true,
+      scheduleType,
+      defaultSeats: avail.defaultSeatsPerBatch || 16,
+      minAdvanceNoticeDays: avail.minAdvanceNoticeDays || 1,
+      slots,
+    });
+  } catch (error) {
+    console.error('[PackageController] getUpcomingSlots error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch upcoming slots',
+      error: error.message,
+    });
+  }
+};
+

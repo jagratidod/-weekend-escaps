@@ -10,6 +10,8 @@ import {
   createPackageCategory,
   updatePackageCategory,
   deletePackageCategory,
+  checkPackageAvailability,
+  getUpcomingSlots,
 } from '../controllers/packageController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
@@ -26,6 +28,8 @@ router.post('/seed', protect, resetToDefaultPackages);
 
 // ── Package Public & Admin Routes ──
 router.get('/', getPackages);
+router.get('/:id/availability', checkPackageAvailability);
+router.get('/:id/slots', getUpcomingSlots);
 router.get('/:id', getPackageById);
 router.post('/', protect, createPackage);
 router.put('/:id', protect, updatePackage);

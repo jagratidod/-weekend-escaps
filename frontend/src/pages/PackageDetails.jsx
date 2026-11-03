@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { usePackages } from '../context/PackageContext';
 import { getImageUrl } from '../utils/imageHelper';
@@ -14,6 +14,10 @@ import {
   ShieldCheck,
   ArrowRight,
   MessageCircle,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Zap,
 } from 'lucide-react';
 import { formatCurrency } from '../utils/helpers';
 import { BRAND } from '../utils/constants';
@@ -23,7 +27,7 @@ import ItineraryTimeline from '../components/packages/ItineraryTimeline';
 export function PackageDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getPackageById } = usePackages();
+  const { getPackageById, checkAvailability, getUpcomingSlots } = usePackages();
   const pkg = getPackageById(id);
 
   const { whatsappUrl, getCustomWhatsAppUrl } = useSettings();
@@ -35,13 +39,105 @@ export function PackageDetails() {
   const [selectedDate, setSelectedDate] = useState('');
   const [travelersCount, setTravelersCount] = useState(2);
 
-  const handleCheckAvailability = (e) => {
-    e.preventDefault();
+  // Dynamic Pricing Tiers State (Sharing & Distance based)
+  const tiers = Array.isArray(pkg?.pricingTiers) && pkg.pricingTiers.length > 0 ? pkg.pricingTiers : [];
+  const [selectedTier, setSelectedTier] = useState(null);
+
+  useEffect(() => {
+    if (tiers.length > 0) {
+      setSelectedTier(tiers.find((t) => t.isDefault) || tiers[0]);
+    } else {
+      setSelectedTier(null);
+    }
+  }, [pkg?.id, pkg?._id]);
+
+  const effectivePrice = selectedTier ? Number(selectedTier.price) : (pkg?.price || 8999);
+  const effectiveOriginalPrice = selectedTier?.originalPrice || pkg?.originalPrice || Math.round(effectivePrice * 1.4);
+
+  // Availability & Slots State
+  const [upcomingSlots, setUpcomingSlots] = useState([]);
+  const [scheduleType, setScheduleType] = useState('daily');
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [availabilityResult, setAvailabilityResult] = useState(null);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+
+  // Minimum date selectable (tomorrow)
+  const tomorrowStr = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
+  })();
+
+  // Fetch upcoming departure slots
+  useEffect(() => {
+    let isMounted = true;
+    const loadSlots = async () => {
+      const targetId = pkg?.id || pkg?._id || id;
+      if (!targetId) return;
+      setLoadingSlots(true);
+      const res = await getUpcomingSlots(targetId);
+      if (isMounted && res?.slots) {
+        setUpcomingSlots(res.slots);
+        setScheduleType(res.scheduleType || 'daily');
+        // Pre-select first available slot if not selected
+        if (!selectedDate && res.slots.length > 0) {
+          const firstOpen = res.slots.find((s) => s.status !== 'sold_out') || res.slots[0];
+          if (firstOpen?.date) {
+            setSelectedDate(firstOpen.date);
+          }
+        }
+      }
+      if (isMounted) setLoadingSlots(false);
+    };
+
+    loadSlots();
+    return () => {
+      isMounted = false;
+    };
+  }, [pkg?.id, pkg?._id, id]);
+
+  // Live availability check whenever date or traveler count changes
+  useEffect(() => {
+    let isMounted = true;
+    const targetId = pkg?.id || pkg?._id || id;
+    if (!selectedDate || !targetId) {
+      setAvailabilityResult(null);
+      return;
+    }
+
+    const check = async () => {
+      setCheckingAvailability(true);
+      const res = await checkAvailability(targetId, selectedDate, travelersCount);
+      if (isMounted) {
+        setAvailabilityResult(res);
+        setCheckingAvailability(false);
+      }
+    };
+
+    const timer = setTimeout(check, 200);
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [selectedDate, travelersCount, pkg?.id, pkg?._id, id]);
+
+  const handleCheckAvailability = (e, tierToUse = selectedTier) => {
+    if (e?.preventDefault) e.preventDefault();
     const query = new URLSearchParams();
     if (selectedDate) query.append('date', selectedDate);
     query.append('travelers', String(travelersCount));
+    if (tierToUse?.name) {
+      query.append('tier', tierToUse.name);
+      query.append('tierPrice', String(tierToUse.price));
+      if (tierToUse.subtext) query.append('tierSubtext', tierToUse.subtext);
+    }
     query.append('step', '1');
     navigate(`/book/${pkg.id || pkg._id}?${query.toString()}`);
+  };
+
+  const handleSelectTierAndBook = (tier) => {
+    setSelectedTier(tier);
+    handleCheckAvailability(null, tier);
   };
 
   const includedItems = Array.isArray(pkg.included) && pkg.included.length > 0
@@ -228,23 +324,95 @@ export function PackageDetails() {
                 </p>
               </div>
             )}
+
+            {/* ── DYNAMIC PACKAGE PRICING SECTION (SHARING & DISTANCE BASED) ── */}
+            {tiers.length > 0 && (
+              <div id="package-pricing-section" className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-100 shadow-sm space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
+                  <div>
+                    <h3 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight">
+                      Package Pricing
+                    </h3>
+                    <p className="text-xs text-neutral-500 mt-0.5">
+                      {pkg.pricingType === 'sharing'
+                        ? 'Select room & camp occupancy sharing basis'
+                        : pkg.pricingType === 'distance'
+                        ? 'Select boarding point & departure route'
+                        : 'Choose your desired package option'}
+                    </p>
+                  </div>
+                  <span className="text-xs font-bold text-neutral-400">
+                    {tiers.length} Options Available
+                  </span>
+                </div>
+
+                <div className="space-y-3 pt-1">
+                  {tiers.map((tier, idx) => {
+                    const isSelected = selectedTier?.name === tier.name;
+
+                    return (
+                      <div
+                        key={idx}
+                        className={`rounded-2xl p-4 sm:p-5 border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                          isSelected
+                            ? 'border-emerald-500 bg-emerald-50/20 shadow-xs ring-1 ring-emerald-400'
+                            : 'border-neutral-200 hover:border-neutral-300 bg-white'
+                        }`}
+                      >
+                        {/* Left: Option Title & Subtext */}
+                        <div>
+                          <div className="font-bold text-base sm:text-lg text-neutral-900">
+                            {tier.name}
+                          </div>
+                          {tier.subtext && (
+                            <div className="text-xs sm:text-sm text-neutral-400 font-medium mt-0.5">
+                              {tier.subtext}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Right: Price & Book Now Button */}
+                        <div className="flex items-center justify-between sm:justify-end gap-6 sm:gap-8 border-t sm:border-t-0 pt-2 sm:pt-0 border-neutral-100">
+                          <div className="text-left sm:text-right">
+                            <div className="text-xl sm:text-2xl font-black text-[#0E9F6E]">
+                              {formatCurrency(tier.price)}
+                            </div>
+                            <div className="text-[11px] text-neutral-400 font-semibold">
+                              per person
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleSelectTierAndBook(tier)}
+                            className="px-6 py-2.5 rounded-full bg-[#ECFDF5] hover:bg-[#D1FAE5] text-[#0E9F6E] font-bold text-sm border border-[#A7F3D0] transition-all shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5"
+                          >
+                            <span>Book Now</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Right Column: Pricing & Booking Card */}
+          {/* Right Column: Pricing & Smart Availability Booking Card */}
           <div className="lg:col-span-4">
-            <div className="sticky top-28 bg-white rounded-3xl p-6 sm:p-8 border border-neutral-200/80 shadow-xl space-y-6">
+            <div className="sticky top-28 bg-white rounded-3xl p-6 sm:p-7 border border-neutral-200/80 shadow-xl space-y-5">
               {/* Price Row */}
-              <div className="flex items-center justify-between pb-6 border-b border-neutral-100">
+              <div className="flex items-center justify-between pb-4 border-b border-neutral-100">
                 <div>
                   <span className="block text-[11px] font-extrabold uppercase tracking-wider text-neutral-400">
-                    STARTING FROM
+                    {selectedTier ? selectedTier.name : 'STARTING FROM'}
                   </span>
                   <div className="flex items-baseline gap-2.5 mt-0.5">
                     <span className="text-3xl font-black text-[#111111]">
-                      {formatCurrency(pkg.price)}
+                      {formatCurrency(effectivePrice)}
                     </span>
                     <span className="text-sm text-neutral-400 font-semibold line-through">
-                      {formatCurrency(pkg.originalPrice || Math.round(pkg.price * 1.4))}
+                      {formatCurrency(effectiveOriginalPrice)}
                     </span>
                   </div>
                 </div>
@@ -253,65 +421,252 @@ export function PackageDetails() {
                 </span>
               </div>
 
+              {/* Schedule Type Info Banner */}
+              <div className="px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-200 flex items-center justify-between text-xs">
+                <span className="font-extrabold text-[#1A384C] flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-[#FF6B16]" />
+                  <span>
+                    {scheduleType === 'weekends'
+                      ? 'Every Weekend Departures'
+                      : scheduleType === 'daily'
+                      ? 'Daily Departures (All 365 Days)'
+                      : scheduleType === 'batches'
+                      ? 'Fixed Departure Batches'
+                      : 'Flexible Custom Departures'}
+                  </span>
+                </span>
+                <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  Open
+                </span>
+              </div>
+
+              {/* Quick Select Upcoming Batches (if available) */}
+              {upcomingSlots.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[11px] font-black text-neutral-700 uppercase tracking-wider">
+                      {scheduleType === 'weekends'
+                        ? 'UPCOMING WEEKEND BATCHES'
+                        : scheduleType === 'batches'
+                        ? 'SCHEDULED BATCH DATES'
+                        : 'UPCOMING DEPARTURE DATES'}
+                    </span>
+                    <span className="text-[10px] font-bold text-neutral-400">Quick Select</span>
+                  </div>
+
+                  <div className="flex gap-2 overflow-x-auto pb-1.5 no-scrollbar">
+                    {upcomingSlots.slice(0, 6).map((slot) => {
+                      const isSelected = selectedDate === slot.date;
+                      const isSoldOut = slot.status === 'sold_out';
+
+                      return (
+                        <button
+                          key={slot.date}
+                          type="button"
+                          disabled={isSoldOut}
+                          onClick={() => setSelectedDate(slot.date)}
+                          className={`px-3 py-2 rounded-xl border text-left shrink-0 transition-all cursor-pointer ${
+                            isSelected
+                              ? 'border-[#FF6B16] bg-orange-50/80 ring-2 ring-[#FF6B16]/20'
+                              : isSoldOut
+                              ? 'border-neutral-200 bg-neutral-100 opacity-50 cursor-not-allowed'
+                              : 'border-neutral-200 bg-white hover:border-neutral-300'
+                          }`}
+                        >
+                          <div className="text-xs font-black text-neutral-900">{slot.label}</div>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <span
+                              className={`text-[10px] font-extrabold ${
+                                isSoldOut
+                                  ? 'text-rose-600'
+                                  : slot.status === 'filling_fast'
+                                  ? 'text-amber-600'
+                                  : 'text-emerald-600'
+                              }`}
+                            >
+                              {isSoldOut ? 'Sold Out' : `${slot.seatsLeft} seats left`}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Booking Availability Form */}
               <form onSubmit={handleCheckAvailability} className="space-y-4">
+                {/* Date Picker (Every Day & Random Day support) */}
                 <div>
-                  <label className="block text-[11px] font-black text-neutral-600 uppercase tracking-wider mb-1.5">
-                    SELECT TRAVEL DATE
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[11px] font-black text-neutral-700 uppercase tracking-wider">
+                      SELECT ANY DATE (CALENDAR)
+                    </label>
+                    <span className="text-[10px] text-neutral-400 font-bold">
+                      {scheduleType === 'weekends' ? 'Weekend / Custom' : 'Every Day'}
+                    </span>
+                  </div>
                   <input
                     type="date"
                     required
+                    min={tomorrowStr}
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-neutral-200 text-sm font-medium focus:outline-none focus:border-[#FF6B16] focus:ring-2 focus:ring-[#FF6B16]/10 transition-all cursor-pointer"
+                    className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 text-sm font-semibold focus:outline-none focus:border-[#FF6B16] focus:ring-2 focus:ring-[#FF6B16]/10 transition-all cursor-pointer bg-white"
                   />
+                  <p className="text-[10px] text-neutral-400 mt-1">
+                    {scheduleType === 'weekends'
+                      ? 'Trek departs every Friday/Saturday. You can also pick any date for private batches.'
+                      : 'Choose any date 365 days a year for instant booking.'}
+                  </p>
                 </div>
 
+                {/* Pricing Option / Sharing Selector */}
+                {tiers.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-[11px] font-black text-neutral-700 uppercase tracking-wider">
+                        {pkg.pricingType === 'sharing'
+                          ? 'ROOM / CAMP SHARING'
+                          : pkg.pricingType === 'distance'
+                          ? 'BOARDING / ROUTE OPTION'
+                          : 'PACKAGE OPTION'}
+                      </label>
+                      <span className="text-[10px] text-emerald-600 font-bold truncate max-w-[180px]">
+                        {selectedTier?.subtext || ''}
+                      </span>
+                    </div>
+                    <select
+                      value={selectedTier?.name || ''}
+                      onChange={(e) => {
+                        const found = tiers.find((t) => t.name === e.target.value);
+                        if (found) setSelectedTier(found);
+                      }}
+                      className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 text-sm font-semibold focus:outline-none focus:border-[#FF6B16] bg-white cursor-pointer"
+                    >
+                      {tiers.map((t) => (
+                        <option key={t.name} value={t.name}>
+                          {t.name} — {formatCurrency(t.price)}/person {t.subtext ? `(${t.subtext})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Travelers Count */}
                 <div>
-                  <label className="block text-[11px] font-black text-neutral-600 uppercase tracking-wider mb-1.5">
+                  <label className="block text-[11px] font-black text-neutral-700 uppercase tracking-wider mb-1.5">
                     NUMBER OF TRAVELERS
                   </label>
                   <select
                     value={travelersCount}
                     onChange={(e) => setTravelersCount(Number(e.target.value))}
-                    className="w-full px-4 py-3 rounded-xl border border-neutral-200 text-sm font-medium focus:outline-none focus:border-[#FF6B16] focus:ring-2 focus:ring-[#FF6B16]/10 transition-all cursor-pointer"
+                    className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 text-sm font-semibold focus:outline-none focus:border-[#FF6B16] focus:ring-2 focus:ring-[#FF6B16]/10 transition-all cursor-pointer bg-white"
                   >
                     <option value={1}>1 Traveler (Solo)</option>
                     <option value={2}>2 Travelers (Pair/Couple)</option>
                     <option value={3}>3 Travelers (Small Group)</option>
                     <option value={4}>4 Travelers (Group)</option>
-                    <option value={5}>5+ Travelers (Group Batch)</option>
+                    <option value={5}>5 Travelers (Group)</option>
+                    <option value={6}>6+ Travelers (Custom Batch)</option>
                   </select>
                 </div>
 
-                <div className="pt-2">
-                  <div className="flex justify-between items-center text-sm font-bold text-neutral-800 pb-2">
+                {/* Live Real-time Availability Feedback Card */}
+                {selectedDate && (
+                  <div className="transition-all animate-fade-in">
+                    {checkingAvailability ? (
+                      <div className="p-3 bg-neutral-50 rounded-2xl border border-neutral-200 flex items-center justify-center gap-2 text-xs font-bold text-neutral-500">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#FF6B16]" />
+                        <span>Verifying seat availability...</span>
+                      </div>
+                    ) : availabilityResult ? (
+                      availabilityResult.available ? (
+                        <div
+                          className={`p-3.5 rounded-2xl border ${
+                            availabilityResult.status === 'filling_fast'
+                              ? 'bg-amber-50/70 border-amber-200 text-amber-900'
+                              : 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            {availabilityResult.status === 'filling_fast' ? (
+                              <Zap className="w-4 h-4 text-amber-600 shrink-0" />
+                            ) : (
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                            )}
+                            <span className="text-xs font-black">
+                              {availabilityResult.status === 'filling_fast'
+                                ? 'Filling Fast • High Demand Date'
+                                : 'Available • Guaranteed Departure'}
+                            </span>
+                          </div>
+                          <p className="text-[11px] font-medium mt-1 pl-6 opacity-90">
+                            {availabilityResult.seatsLeft !== undefined
+                              ? `${availabilityResult.seatsLeft} seat(s) available for ${travelersCount} traveler(s).`
+                              : availabilityResult.message || 'Slot confirmed for your dates.'}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                            <span className="text-xs font-black">Date Unavailable</span>
+                          </div>
+                          <p className="text-[11px] font-medium mt-1 pl-6 text-rose-700">
+                            {availabilityResult.reason ||
+                              'Selected date is sold out or unavailable. Please pick another date or message us on WhatsApp.'}
+                          </p>
+                        </div>
+                      )
+                    ) : null}
+                  </div>
+                )}
+
+                {/* Price Breakdown */}
+                <div className="pt-2 border-t border-neutral-100">
+                  <div className="flex justify-between items-center text-sm font-bold text-neutral-800 pb-1">
                     <span className="text-neutral-900 font-bold">Total Estimated Cost</span>
                     <span className="text-[#FF6B16] text-xl font-black">
-                      {formatCurrency(pkg.price * travelersCount)}
+                      {formatCurrency(effectivePrice * travelersCount)}
                     </span>
                   </div>
+                  <span className="text-[10px] text-neutral-400 block text-right">
+                    {selectedTier
+                      ? `${selectedTier.name} • ${formatCurrency(effectivePrice)} × ${travelersCount} traveler(s)`
+                      : 'Includes all permits, stays & guided trek'}
+                  </span>
                 </div>
 
+                {/* Primary CTA */}
                 <button
                   type="submit"
-                  className="w-full py-4 rounded-full bg-[#FF6B16] hover:bg-[#e05809] active:scale-[0.99] text-white font-black text-sm uppercase tracking-wider shadow-xl shadow-[#FF6B16]/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  disabled={availabilityResult && availabilityResult.available === false}
+                  className={`w-full py-4 rounded-full font-black text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg ${
+                    availabilityResult && availabilityResult.available === false
+                      ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed shadow-none'
+                      : 'bg-[#FF6B16] hover:bg-[#e05809] active:scale-[0.99] text-white shadow-[#FF6B16]/30'
+                  }`}
                 >
-                  <span>CHECK AVAILABILITY</span>
+                  <span>
+                    {availabilityResult && availabilityResult.available === false
+                      ? 'SELECT ANOTHER DATE'
+                      : 'PROCEED TO BOOKING'}
+                  </span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </form>
 
-              <div className="pt-4 border-t border-neutral-100 flex items-center justify-center gap-3">
+              {/* WhatsApp Support Button */}
+              <div className="pt-3 border-t border-neutral-100">
                 <a
                   href={packageWaUrl || BRAND.whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-3 rounded-full border border-neutral-300 hover:border-emerald-500 hover:bg-emerald-50/50 text-neutral-800 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  className="w-full py-2.5 rounded-full border border-neutral-300 hover:border-emerald-500 hover:bg-emerald-50/50 text-neutral-800 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
                   <MessageCircle className="w-4 h-4 text-emerald-600" />
-                  <span>Talk on WhatsApp</span>
+                  <span>Custom Dates? Inquire on WhatsApp</span>
                 </a>
               </div>
             </div>

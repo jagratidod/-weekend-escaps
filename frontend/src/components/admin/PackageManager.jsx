@@ -145,6 +145,15 @@ export function PackageManager() {
       { day: 'Day 1', title: 'Arrival & Basecamp Briefing', desc: 'Arrive at destination, check-in to camps/hotel, safety briefing and welcome dinner.' },
       { day: 'Day 2', title: 'Acclimatization & Trail Walk', desc: 'Scenic gentle trek through pine forest and alpine viewpoints.' },
     ],
+    availability: {
+      scheduleType: 'daily', // 'daily' | 'weekends' | 'batches' | 'custom'
+      defaultSeatsPerBatch: 16,
+      minAdvanceNoticeDays: 1,
+      batches: [],
+      blackoutDates: [],
+    },
+    pricingType: 'standard', // 'standard' | 'sharing' | 'distance' | 'custom'
+    pricingTiers: [],
     isFeatured: false,
     isTrending: true,
     isActive: true,
@@ -152,6 +161,27 @@ export function PackageManager() {
   };
 
   const [formData, setFormData] = useState(initialFormData);
+
+  // Availability Builder Temp States
+  const [newBatch, setNewBatch] = useState({
+    startDate: '',
+    endDate: '',
+    totalSeats: 16,
+    status: 'auto',
+    note: '',
+  });
+  const [newBlackout, setNewBlackout] = useState({
+    date: '',
+    reason: '',
+  });
+
+  // Dynamic Pricing Tier Temp State
+  const [newTier, setNewTier] = useState({
+    name: '',
+    subtext: '',
+    price: '',
+    originalPrice: '',
+  });
 
   const showToast = (type, text) => {
     setToastMessage({ type, text });
@@ -204,6 +234,21 @@ export function PackageManager() {
         : [
             { day: 'Day 1', title: 'Arrival & Welcome', desc: 'Reach destination and check-in.' },
           ],
+      availability: pkg.availability ? {
+        scheduleType: pkg.availability.scheduleType || 'daily',
+        defaultSeatsPerBatch: pkg.availability.defaultSeatsPerBatch || 16,
+        minAdvanceNoticeDays: pkg.availability.minAdvanceNoticeDays ?? 1,
+        batches: Array.isArray(pkg.availability.batches) ? [...pkg.availability.batches] : [],
+        blackoutDates: Array.isArray(pkg.availability.blackoutDates) ? [...pkg.availability.blackoutDates] : [],
+      } : {
+        scheduleType: 'daily',
+        defaultSeatsPerBatch: 16,
+        minAdvanceNoticeDays: 1,
+        batches: [],
+        blackoutDates: [],
+      },
+      pricingType: pkg.pricingType || 'standard',
+      pricingTiers: Array.isArray(pkg.pricingTiers) ? [...pkg.pricingTiers] : [],
       isFeatured: !!pkg.isFeatured,
       isTrending: pkg.isTrending !== undefined ? !!pkg.isTrending : true,
       isActive: pkg.isActive !== undefined ? !!pkg.isActive : true,
@@ -440,6 +485,168 @@ export function PackageManager() {
       ...prev,
       itinerary: prev.itinerary.filter((_, i) => i !== index),
     }));
+  };
+
+  // Availability & Batch helpers
+  const handleUpdateAvailabilityField = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      availability: {
+        ...(prev.availability || {}),
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleAddBatch = () => {
+    if (!newBatch.startDate) {
+      showToast('error', 'Batch start date is required');
+      return;
+    }
+    setFormData((prev) => ({
+      ...prev,
+      availability: {
+        ...(prev.availability || {}),
+        batches: [
+          ...(prev.availability?.batches || []),
+          {
+            ...newBatch,
+            totalSeats: Number(newBatch.totalSeats) || 16,
+            bookedSeats: 0,
+          },
+        ],
+      },
+    }));
+    setNewBatch({
+      startDate: '',
+      endDate: '',
+      totalSeats: formData.availability?.defaultSeatsPerBatch || 16,
+      status: 'auto',
+      note: '',
+    });
+    showToast('success', 'Departure batch added!');
+  };
+
+  const handleRemoveBatch = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      availability: {
+        ...(prev.availability || {}),
+        batches: (prev.availability?.batches || []).filter((_, i) => i !== index),
+      },
+    }));
+  };
+
+  const handleUpdateBatch = (index, field, value) => {
+    setFormData((prev) => {
+      const updatedBatches = [...(prev.availability?.batches || [])];
+      updatedBatches[index] = { ...updatedBatches[index], [field]: value };
+      return {
+        ...prev,
+        availability: {
+          ...(prev.availability || {}),
+          batches: updatedBatches,
+        },
+      };
+    });
+  };
+
+  const handleAddBlackout = () => {
+    if (!newBlackout.date) {
+      showToast('error', 'Blackout date is required');
+      return;
+    }
+    setFormData((prev) => ({
+      ...prev,
+      availability: {
+        ...(prev.availability || {}),
+        blackoutDates: [
+          ...(prev.availability?.blackoutDates || []),
+          {
+            date: newBlackout.date,
+            reason: newBlackout.reason.trim() || 'Operational closure / Maintenance',
+          },
+        ],
+      },
+    }));
+    setNewBlackout({ date: '', reason: '' });
+    showToast('success', 'Blackout date added');
+  };
+
+  const handleRemoveBlackout = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      availability: {
+        ...(prev.availability || {}),
+        blackoutDates: (prev.availability?.blackoutDates || []).filter((_, i) => i !== index),
+      },
+    }));
+  };
+
+  // ── DYNAMIC PRICING TIERS HELPERS (SHARING & DISTANCE) ──
+  const handleLoadSharingPresets = () => {
+    const baseP = Number(formData.price) || 8999;
+    setFormData((prev) => ({
+      ...prev,
+      pricingType: 'sharing',
+      pricingTiers: [
+        { name: 'Quad Sharing', subtext: 'Camp in Kedarnath', price: baseP, originalPrice: Math.round(baseP * 1.3), isDefault: true },
+        { name: 'Triple Sharing', subtext: 'Camp in Kedarnath', price: baseP + 500, originalPrice: Math.round((baseP + 500) * 1.3), isDefault: false },
+        { name: 'Double Sharing', subtext: 'Camp in Kedarnath', price: baseP + 1000, originalPrice: Math.round((baseP + 1000) * 1.3), isDefault: false },
+      ],
+    }));
+    showToast('success', 'Loaded Quad, Triple, and Double sharing preset tiers!');
+  };
+
+  const handleLoadDistancePresets = () => {
+    const baseP = Number(formData.price) || 5999;
+    const dest = formData.name?.split(' ')[0] || 'Manali';
+    setFormData((prev) => ({
+      ...prev,
+      pricingType: 'distance',
+      pricingTiers: [
+        { name: `${dest} to ${dest}`, subtext: 'Ex-Basecamp (Direct Report)', price: baseP, originalPrice: Math.round(baseP * 1.4), isDefault: true },
+        { name: 'Delhi to Delhi', subtext: 'Including AC Volvo Bus Transfers', price: baseP + 2000, originalPrice: Math.round((baseP + 2000) * 1.4), isDefault: false },
+      ],
+    }));
+    showToast('success', 'Loaded Route / Distance based preset tiers!');
+  };
+
+  const handleAddPricingTier = () => {
+    if (!newTier.name.trim() || !newTier.price) {
+      showToast('error', 'Tier name and price are required');
+      return;
+    }
+    setFormData((prev) => ({
+      ...prev,
+      pricingTiers: [
+        ...(prev.pricingTiers || []),
+        {
+          name: newTier.name.trim(),
+          subtext: newTier.subtext.trim(),
+          price: Number(newTier.price),
+          originalPrice: newTier.originalPrice ? Number(newTier.originalPrice) : null,
+          isDefault: (prev.pricingTiers || []).length === 0,
+        },
+      ],
+    }));
+    setNewTier({ name: '', subtext: '', price: '', originalPrice: '' });
+    showToast('success', 'Pricing tier added!');
+  };
+
+  const handleRemovePricingTier = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      pricingTiers: (prev.pricingTiers || []).filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleUpdatePricingTier = (index, field, value) => {
+    setFormData((prev) => {
+      const updated = [...(prev.pricingTiers || [])];
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, pricingTiers: updated };
+    });
   };
 
   // Toggle active / trending status directly from table
@@ -1052,6 +1259,7 @@ export function PackageManager() {
                 { id: 'pricing', label: 'Pricing & Badges' },
                 { id: 'media', label: 'Cover Image' },
                 { id: 'itinerary', label: 'Itinerary Builder' },
+                { id: 'availability', label: 'Batches & Availability' },
                 { id: 'inclusions', label: 'Inclusions & Highlights' },
               ].map((tab) => (
                 <button
@@ -1369,6 +1577,262 @@ export function PackageManager() {
                       className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs font-medium focus:outline-none focus:border-[#FF6B16]"
                     />
                   </div>
+
+                  {/* ── DYNAMIC PRICING TIERS SECTION (SHARING & DISTANCE BASED) ── */}
+                  <div className="pt-4 border-t border-neutral-200 space-y-4">
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs font-black text-neutral-800 uppercase tracking-wider">
+                          Package Pricing Format (Dynamic Tiers)
+                        </label>
+                        <span className="text-[11px] font-bold text-[#FF6B16] bg-orange-50 px-2 py-0.5 rounded-full">
+                          Sharing & Distance Options
+                        </span>
+                      </div>
+                      <p className="text-xs text-neutral-500 mt-0.5">
+                        Choose whether this package has sharing-based pricing (Quad, Triple, Double) or route/distance-based pricing (Delhi to Delhi, Manali to Manali).
+                      </p>
+                    </div>
+
+                    {/* Mode Selector Cards */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      {[
+                        {
+                          id: 'standard',
+                          label: 'Standard',
+                          desc: 'Single base price',
+                          icon: '🏷️',
+                        },
+                        {
+                          id: 'sharing',
+                          label: 'Sharing Based',
+                          desc: 'Quad, Triple, Double',
+                          icon: '👥',
+                        },
+                        {
+                          id: 'distance',
+                          label: 'Route / Distance',
+                          desc: 'Delhi, Manali, etc.',
+                          icon: '🚌',
+                        },
+                        {
+                          id: 'custom',
+                          label: 'Custom Tiers',
+                          desc: 'Custom variants',
+                          icon: '⚙️',
+                        },
+                      ].map((mode) => {
+                        const isSelected = (formData.pricingType || 'standard') === mode.id;
+                        return (
+                          <div
+                            key={mode.id}
+                            onClick={() => setFormData({ ...formData, pricingType: mode.id })}
+                            className={`p-3 rounded-xl border-2 transition-all cursor-pointer text-center ${
+                              isSelected
+                                ? 'border-[#FF6B16] bg-orange-50/60 ring-1 ring-[#FF6B16]'
+                                : 'border-neutral-200 bg-white hover:border-neutral-300'
+                            }`}
+                          >
+                            <span className="text-lg block mb-0.5">{mode.icon}</span>
+                            <div className="text-xs font-bold text-[#1A384C]">{mode.label}</div>
+                            <div className="text-[10px] text-neutral-400">{mode.desc}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Tiers Editor if not standard */}
+                    {formData.pricingType && formData.pricingType !== 'standard' && (
+                      <div className="space-y-3 bg-neutral-50 p-4 rounded-2xl border border-neutral-200">
+                        {/* Preset Buttons */}
+                        <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-neutral-200">
+                          <span className="text-xs font-bold text-neutral-700">Quick 1-Click Presets:</span>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={handleLoadSharingPresets}
+                              className="px-2.5 py-1 bg-white hover:bg-neutral-100 text-neutral-700 text-[11px] font-bold rounded-lg border border-neutral-200 transition-colors shadow-2xs cursor-pointer flex items-center gap-1"
+                            >
+                              <span>👥 Load Sharing Presets</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleLoadDistancePresets}
+                              className="px-2.5 py-1 bg-white hover:bg-neutral-100 text-neutral-700 text-[11px] font-bold rounded-lg border border-neutral-200 transition-colors shadow-2xs cursor-pointer flex items-center gap-1"
+                            >
+                              <span>🚌 Load Route / Distance Presets</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Add Tier Bar */}
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end pt-1">
+                          <div className="sm:col-span-4">
+                            <label className="block text-[11px] font-bold text-neutral-700 mb-1">
+                              Tier Name <span className="text-rose-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              placeholder={
+                                formData.pricingType === 'sharing'
+                                  ? 'e.g. Quad Sharing'
+                                  : 'e.g. Delhi to Delhi'
+                              }
+                              value={newTier.name}
+                              onChange={(e) => setNewTier({ ...newTier, name: e.target.value })}
+                              className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-neutral-200 text-xs font-medium focus:outline-none focus:border-[#FF6B16]"
+                            />
+                          </div>
+
+                          <div className="sm:col-span-3">
+                            <label className="block text-[11px] font-bold text-neutral-700 mb-1">
+                              Subtext / Stay Details
+                            </label>
+                            <input
+                              type="text"
+                              placeholder={
+                                formData.pricingType === 'sharing'
+                                  ? 'e.g. Camp in Kedarnath'
+                                  : 'e.g. Volvo AC Bus Included'
+                              }
+                              value={newTier.subtext}
+                              onChange={(e) => setNewTier({ ...newTier, subtext: e.target.value })}
+                              className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-neutral-200 text-xs font-medium focus:outline-none focus:border-[#FF6B16]"
+                            />
+                          </div>
+
+                          <div className="sm:col-span-2">
+                            <label className="block text-[11px] font-bold text-neutral-700 mb-1">
+                              Price (₹) <span className="text-rose-500">*</span>
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder="8999"
+                              value={newTier.price}
+                              onChange={(e) => setNewTier({ ...newTier, price: e.target.value })}
+                              className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-neutral-200 text-xs font-medium focus:outline-none focus:border-[#FF6B16]"
+                            />
+                          </div>
+
+                          <div className="sm:col-span-3">
+                            <button
+                              type="button"
+                              onClick={handleAddPricingTier}
+                              className="w-full py-1.5 px-3 bg-[#FF6B16] hover:bg-[#E55A0B] text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center justify-center gap-1 cursor-pointer"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>Add Option</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Tiers List */}
+                        {formData.pricingTiers?.length > 0 ? (
+                          <div className="space-y-2 pt-2">
+                            {formData.pricingTiers.map((tier, tIdx) => (
+                              <div
+                                key={tIdx}
+                                className="p-3 bg-white rounded-xl border border-neutral-200 flex flex-wrap items-center justify-between gap-3 shadow-2xs"
+                              >
+                                <div className="flex-1 min-w-[200px]">
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="text"
+                                      value={tier.name}
+                                      onChange={(e) =>
+                                        handleUpdatePricingTier(tIdx, 'name', e.target.value)
+                                      }
+                                      className="font-bold text-xs text-neutral-900 border-b border-transparent hover:border-neutral-300 focus:border-[#FF6B16] outline-none"
+                                    />
+                                    <span className="text-[10px] text-neutral-400 font-semibold">
+                                      Tier {tIdx + 1}
+                                    </span>
+                                  </div>
+                                  <input
+                                    type="text"
+                                    value={tier.subtext || ''}
+                                    onChange={(e) =>
+                                      handleUpdatePricingTier(tIdx, 'subtext', e.target.value)
+                                    }
+                                    placeholder="Optional subtext (e.g. Camp in Kedarnath)"
+                                    className="text-[11px] text-neutral-500 w-full border-b border-transparent hover:border-neutral-300 focus:border-[#FF6B16] outline-none mt-0.5"
+                                  />
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-xs font-bold text-neutral-600">₹</span>
+                                    <input
+                                      type="number"
+                                      value={tier.price}
+                                      onChange={(e) =>
+                                        handleUpdatePricingTier(tIdx, 'price', Number(e.target.value))
+                                      }
+                                      className="w-20 px-2 py-1 bg-neutral-50 border border-neutral-200 rounded-lg text-xs font-black text-emerald-600 focus:outline-none focus:border-[#FF6B16]"
+                                    />
+                                    <span className="text-[10px] text-neutral-400">/ person</span>
+                                  </div>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemovePricingTier(tIdx)}
+                                    className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                                    title="Delete Tier"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="p-3 rounded-xl border border-dashed border-neutral-200 text-center text-xs text-neutral-400">
+                            No pricing tiers added yet. Click a preset above or add custom tiers.
+                          </div>
+                        )}
+
+                        {/* Live Visual Preview of Section */}
+                        {formData.pricingTiers?.length > 0 && (
+                          <div className="pt-3 border-t border-neutral-200">
+                            <span className="block text-[11px] font-black text-neutral-400 uppercase tracking-wider mb-2">
+                              Live UI Preview on Website (Package Details)
+                            </span>
+                            <div className="space-y-2.5 p-3.5 bg-white rounded-2xl border border-neutral-200 shadow-2xs">
+                              {formData.pricingTiers.map((tier, idx) => (
+                                <div
+                                  key={idx}
+                                  className="flex items-center justify-between p-3.5 rounded-2xl border border-neutral-200 hover:border-neutral-300 transition-all bg-white"
+                                >
+                                  <div>
+                                    <div className="font-bold text-sm text-neutral-900">
+                                      {tier.name || 'Tier Option'}
+                                    </div>
+                                    {tier.subtext && (
+                                      <div className="text-xs text-neutral-400 mt-0.5">
+                                        {tier.subtext}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-4">
+                                    <div className="text-right">
+                                      <div className="text-lg font-black text-[#0E9F6E]">
+                                        ₹{(Number(tier.price) || 0).toLocaleString('en-IN')}
+                                      </div>
+                                      <div className="text-[10px] text-neutral-400">per person</div>
+                                    </div>
+                                    <span className="px-3.5 py-1.5 rounded-full bg-[#ECFDF5] text-[#0E9F6E] font-bold text-xs border border-[#A7F3D0]">
+                                      Book Now
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -1559,6 +2023,377 @@ export function PackageManager() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── TAB: BATCHES & AVAILABILITY ── */}
+              {activeFormTab === 'availability' && (
+                <div className="space-y-6">
+                  {/* Schedule Mode Selector */}
+                  <div>
+                    <label className="block text-xs font-black text-neutral-800 uppercase tracking-wider mb-2">
+                      Departure Schedule Mode <span className="text-rose-500">*</span>
+                    </label>
+                    <p className="text-xs text-neutral-500 mb-3">
+                      Choose how this package operates so travelers see the correct departure dates and instant availability.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                      {[
+                        {
+                          id: 'daily',
+                          title: 'Every Day (Daily)',
+                          badge: '365 Days',
+                          desc: 'Trip operates every day. Open booking for any calendar date.',
+                          icon: '🌟',
+                        },
+                        {
+                          id: 'weekends',
+                          title: 'Every Weekend',
+                          badge: 'Fri & Sat Batches',
+                          desc: 'Automatic departures on Fridays and Saturdays for weekend escapes.',
+                          icon: '🎒',
+                        },
+                        {
+                          id: 'batches',
+                          title: 'Fixed Batches',
+                          badge: 'Specific Dates',
+                          desc: 'Strict departures only on the specific scheduled batches listed below.',
+                          icon: '📅',
+                        },
+                        {
+                          id: 'custom',
+                          title: 'Flexible / Any Day',
+                          badge: 'On Request',
+                          desc: 'Travelers can pick any random date, subject to advance notice & capacity.',
+                          icon: '🗺️',
+                        },
+                      ].map((mode) => {
+                        const isSelected = (formData.availability?.scheduleType || 'daily') === mode.id;
+                        return (
+                          <div
+                            key={mode.id}
+                            onClick={() => handleUpdateAvailabilityField('scheduleType', mode.id)}
+                            className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                              isSelected
+                                ? 'border-[#FF6B16] bg-orange-50/50 shadow-xs ring-1 ring-[#FF6B16]'
+                                : 'border-neutral-200 bg-white hover:border-neutral-300'
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-xl">{mode.icon}</span>
+                                <span
+                                  className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                                    isSelected
+                                      ? 'bg-[#FF6B16] text-white'
+                                      : 'bg-neutral-100 text-neutral-600'
+                                  }`}
+                                >
+                                  {mode.badge}
+                                </span>
+                              </div>
+                              <h4 className="text-xs font-black text-[#1A384C] mb-1">{mode.title}</h4>
+                              <p className="text-[11px] text-neutral-500 leading-snug">{mode.desc}</p>
+                            </div>
+                            <div className="mt-3 pt-2 border-t border-neutral-100 flex items-center gap-1.5 text-[11px] font-bold">
+                              <span
+                                className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                                  isSelected ? 'border-[#FF6B16] bg-[#FF6B16]' : 'border-neutral-300'
+                                }`}
+                              >
+                                {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                              </span>
+                              <span className={isSelected ? 'text-[#FF6B16]' : 'text-neutral-500'}>
+                                {isSelected ? 'Selected' : 'Select'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Capacity & Booking Notice Rules */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-neutral-50 p-4 rounded-2xl border border-neutral-200">
+                    <div>
+                      <label className="block text-xs font-bold text-neutral-700 mb-1">
+                        Default Seats per Departure / Batch
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={formData.availability?.defaultSeatsPerBatch || 16}
+                        onChange={(e) =>
+                          handleUpdateAvailabilityField(
+                            'defaultSeatsPerBatch',
+                            Math.max(1, Number(e.target.value) || 16)
+                          )
+                        }
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-neutral-200 text-xs font-bold focus:outline-none focus:border-[#FF6B16]"
+                      />
+                      <span className="text-[11px] text-neutral-400 mt-1 block">
+                        Maximum passenger capacity per batch or per day.
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-neutral-700 mb-1">
+                        Minimum Advance Notice (Days)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="30"
+                        value={formData.availability?.minAdvanceNoticeDays ?? 1}
+                        onChange={(e) =>
+                          handleUpdateAvailabilityField(
+                            'minAdvanceNoticeDays',
+                            Math.max(0, Number(e.target.value) || 0)
+                          )
+                        }
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-neutral-200 text-xs font-bold focus:outline-none focus:border-[#FF6B16]"
+                      />
+                      <span className="text-[11px] text-neutral-400 mt-1 block">
+                        Days before departure booking cutoff (e.g. 1 = book at least 24h before).
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Scheduled Specific Batches */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <h4 className="text-xs font-black text-neutral-800 uppercase tracking-wider">
+                          Specific Scheduled Batches
+                        </h4>
+                        <p className="text-xs text-neutral-500">
+                          Add custom departure dates with fixed seat limits and special tags (e.g. "Diwali Long Weekend", "Snow Trek Batch").
+                        </p>
+                      </div>
+                      <span className="text-xs font-bold text-neutral-400">
+                        {formData.availability?.batches?.length || 0} Batches Configured
+                      </span>
+                    </div>
+
+                    {/* Quick Add Batch Form Bar */}
+                    <div className="p-3 bg-orange-50/60 rounded-2xl border border-orange-100 mb-3 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+                      <div className="sm:col-span-3">
+                        <label className="block text-[11px] font-bold text-neutral-700 mb-1">
+                          Start Date <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          value={newBatch.startDate}
+                          onChange={(e) => setNewBatch({ ...newBatch, startDate: e.target.value })}
+                          className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-neutral-200 text-xs font-semibold focus:outline-none focus:border-[#FF6B16]"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-3">
+                        <label className="block text-[11px] font-bold text-neutral-700 mb-1">
+                          End Date (Optional)
+                        </label>
+                        <input
+                          type="date"
+                          value={newBatch.endDate}
+                          onChange={(e) => setNewBatch({ ...newBatch, endDate: e.target.value })}
+                          className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-neutral-200 text-xs font-semibold focus:outline-none focus:border-[#FF6B16]"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-[11px] font-bold text-neutral-700 mb-1">
+                          Seats
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="100"
+                          value={newBatch.totalSeats}
+                          onChange={(e) =>
+                            setNewBatch({ ...newBatch, totalSeats: Number(e.target.value) || 16 })
+                          }
+                          className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-neutral-200 text-xs font-semibold focus:outline-none focus:border-[#FF6B16]"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-[11px] font-bold text-neutral-700 mb-1">
+                          Batch Label
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Weekend Special"
+                          value={newBatch.note}
+                          onChange={(e) => setNewBatch({ ...newBatch, note: e.target.value })}
+                          className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-neutral-200 text-xs font-semibold focus:outline-none focus:border-[#FF6B16]"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <button
+                          type="button"
+                          onClick={handleAddBatch}
+                          className="w-full py-1.5 px-3 bg-[#FF6B16] hover:bg-[#E55A0B] text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add Batch</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Batches Table / List */}
+                    {formData.availability?.batches?.length > 0 ? (
+                      <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                        {formData.availability.batches.map((batch, bIdx) => {
+                          const total = batch.totalSeats || 16;
+                          const booked = batch.bookedSeats || 0;
+                          const left = Math.max(0, total - booked);
+
+                          return (
+                            <div
+                              key={bIdx}
+                              className="p-3 bg-white rounded-xl border border-neutral-200 flex flex-wrap items-center justify-between gap-3 shadow-2xs hover:border-neutral-300 transition-colors"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-orange-100 text-[#FF6B16] flex items-center justify-center font-black text-xs">
+                                  {bIdx + 1}
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-black text-neutral-900">
+                                      {batch.startDate}
+                                      {batch.endDate ? ` → ${batch.endDate}` : ''}
+                                    </span>
+                                    {batch.note && (
+                                      <span className="px-2 py-0.5 rounded-full bg-neutral-100 text-[10px] font-bold text-neutral-700">
+                                        {batch.note}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 text-[11px] text-neutral-500 mt-0.5">
+                                    <span>Total: <b>{total}</b></span>
+                                    <span>•</span>
+                                    <span>Booked: <b>{booked}</b></span>
+                                    <span>•</span>
+                                    <span
+                                      className={`font-black ${
+                                        left === 0
+                                          ? 'text-rose-600'
+                                          : left <= 4
+                                          ? 'text-amber-600'
+                                          : 'text-emerald-600'
+                                      }`}
+                                    >
+                                      {left} Seats Available
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <select
+                                  value={batch.status || 'auto'}
+                                  onChange={(e) =>
+                                    handleUpdateBatch(bIdx, 'status', e.target.value)
+                                  }
+                                  className="px-2 py-1 bg-neutral-50 rounded-lg border border-neutral-200 text-xs font-bold cursor-pointer"
+                                >
+                                  <option value="auto">Auto (Calculate from seats)</option>
+                                  <option value="available">Force Available</option>
+                                  <option value="filling_fast">Force Filling Fast</option>
+                                  <option value="sold_out">Force Sold Out</option>
+                                </select>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveBatch(bIdx)}
+                                  className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                                  title="Delete Batch"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="p-4 rounded-xl border border-dashed border-neutral-200 text-center text-xs text-neutral-400">
+                        No specific departure batches added yet.
+                        {formData.availability?.scheduleType === 'weekends'
+                          ? ' Since "Every Weekend" is selected, the system will automatically open all upcoming Friday and Saturday dates.'
+                          : formData.availability?.scheduleType === 'daily'
+                          ? ' Since "Every Day" is selected, all calendar dates are open for booking.'
+                          : ' Click "+ Add Batch" above to set specific dates.'}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Blackout / Blocked Dates */}
+                  <div className="pt-2 border-t border-neutral-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <h4 className="text-xs font-black text-rose-600 uppercase tracking-wider">
+                          Blackout / Blocked Dates
+                        </h4>
+                        <p className="text-xs text-neutral-500">
+                          Select dates when this trip cannot operate (e.g. extreme weather, festival closure, maintenance).
+                        </p>
+                      </div>
+                      <span className="text-xs font-bold text-neutral-400">
+                        {formData.availability?.blackoutDates?.length || 0} Blocked Dates
+                      </span>
+                    </div>
+
+                    {/* Add Blackout Date */}
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                      <input
+                        type="date"
+                        value={newBlackout.date}
+                        onChange={(e) => setNewBlackout({ ...newBlackout, date: e.target.value })}
+                        className="px-3 py-1.5 bg-white rounded-lg border border-neutral-200 text-xs font-semibold focus:outline-none focus:border-rose-500"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Reason (e.g. Trail Maintenance)"
+                        value={newBlackout.reason}
+                        onChange={(e) =>
+                          setNewBlackout({ ...newBlackout, reason: e.target.value })
+                        }
+                        className="flex-1 min-w-[200px] px-3 py-1.5 bg-white rounded-lg border border-neutral-200 text-xs font-semibold focus:outline-none focus:border-rose-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddBlackout}
+                        className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-lg border border-rose-200 transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Block Date</span>
+                      </button>
+                    </div>
+
+                    {/* Blackout List */}
+                    <div className="flex flex-wrap gap-2">
+                      {formData.availability?.blackoutDates?.map((b, bIdx) => (
+                        <span
+                          key={bIdx}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold"
+                        >
+                          <span>🔒 {b.date} ({b.reason})</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveBlackout(bIdx)}
+                            className="hover:text-rose-900 cursor-pointer"
+                            title="Unblock Date"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}

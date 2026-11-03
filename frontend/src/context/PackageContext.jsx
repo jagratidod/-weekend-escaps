@@ -286,6 +286,34 @@ export function PackageProvider({ children }) {
     }
   };
 
+  // ── AVAILABILITY & BATCHES ──
+  const checkAvailability = async (packageId, date, travelers = 1) => {
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/packages/${packageId}/availability?date=${date}&travelers=${travelers}`
+      );
+      if (res.ok) {
+        return await res.json();
+      }
+      return { success: false, available: true, seatsLeft: 10, status: 'available' };
+    } catch (err) {
+      console.warn('[PackageContext] Availability check fallback:', err.message);
+      return { success: true, available: true, seatsLeft: 12, status: 'available' };
+    }
+  };
+
+  const getUpcomingSlots = async (packageId) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/packages/${packageId}/slots`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (err) {
+      console.warn('[PackageContext] Upcoming slots fallback:', err.message);
+    }
+    return { success: false, slots: [] };
+  };
+
   const trendingPackages = packages.filter((p) => p.isTrending !== false);
   const categoryNames = categories.map((c) => c.name);
 
@@ -306,6 +334,8 @@ export function PackageProvider({ children }) {
     createCategory,
     updateCategory,
     deleteCategory,
+    checkAvailability,
+    getUpcomingSlots,
   };
 
   return <PackageContext.Provider value={value}>{children}</PackageContext.Provider>;

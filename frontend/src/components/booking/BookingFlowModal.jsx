@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '../../utils/helpers';
 import { useSettings } from '../../context/SettingsContext';
+import { usePackages } from '../../context/PackageContext';
 
 const ADVANCE_PER_PERSON = 2000;
 
@@ -32,6 +33,7 @@ export default function BookingFlowModal({
   initialTravelers = 1,
 }) {
   const { whatsappUrl, getCustomWhatsAppUrl, API_BASE_URL } = useSettings();
+  const { checkAvailability } = usePackages();
 
   // Wizard Step: 1 = YOUR TRIP, 2 = TRAVELER DETAILS, 3 = PAY & CONFIRM, 4 = SUCCESS CONFIRMATION
   const [step, setStep] = useState(1);
@@ -40,6 +42,31 @@ export default function BookingFlowModal({
   const [travelDate, setTravelDate] = useState('');
   const [totalPersons, setTotalPersons] = useState(1);
   const [sharingType, setSharingType] = useState('Standard Sharing');
+  const [customPricePerPerson, setCustomPricePerPerson] = useState(null);
+
+  // Real-time Availability Verification State
+  const [availabilityInfo, setAvailabilityInfo] = useState(null);
+  const [isCheckingAvail, setIsCheckingAvail] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (!travelDate || !pkg || !isOpen) return;
+
+    const check = async () => {
+      setIsCheckingAvail(true);
+      const targetId = pkg.id || pkg._id;
+      const res = await checkAvailability(targetId, travelDate, totalPersons);
+      if (isMounted) {
+        setAvailabilityInfo(res);
+        setIsCheckingAvail(false);
+      }
+    };
+    const t = setTimeout(check, 250);
+    return () => {
+      isMounted = false;
+      clearTimeout(t);
+    };
+  }, [travelDate, totalPersons, pkg, isOpen]);
 
   // Step 2 State: Travelers List
   const [travelers, setTravelers] = useState([]);
@@ -65,6 +92,14 @@ export default function BookingFlowModal({
       const persons = Math.max(1, Number(initialTravelers) || 1);
       setTotalPersons(persons);
       setErrors({});
+      if (Array.isArray(pkg?.pricingTiers) && pkg.pricingTiers.length > 0) {
+        const defaultT = pkg.pricingTiers.find((t) => t.isDefault) || pkg.pricingTiers[0];
+        setSharingType(`${defaultT.name}${defaultT.subtext ? ` (${defaultT.subtext})` : ''}`);
+        setCustomPricePerPerson(defaultT.price);
+      } else {
+        setSharingType('Standard Sharing');
+        setCustomPricePerPerson(null);
+      }
       setCouponCode('');
       setAppliedDiscount(0);
       setCouponMessage({ type: '', text: '' });
@@ -142,7 +177,7 @@ export default function BookingFlowModal({
   };
 
   // Pricing calculations
-  const pricePerPerson = pkg?.price || 8999;
+  const pricePerPerson = customPricePerPerson || pkg?.price || 8999;
   const subtotal = pricePerPerson * totalPersons;
   const totalPayable = Math.max(0, subtotal - appliedDiscount);
   const advancePayable = ADVANCE_PER_PERSON * totalPersons;
@@ -153,6 +188,11 @@ export default function BookingFlowModal({
     e.preventDefault();
     if (!travelDate) {
       setErrors({ travelDate: 'Please select your travel date' });
+      return;
+    }
+    if (availabilityInfo && availabilityInfo.available === false) {
+      setErrors({ travelDate: availabilityInfo.reason || 'This date is currently unavailable for booking. Please pick another date.' });
+      return;
       return;
     }
     setErrors({});
@@ -464,6 +504,78 @@ export default function BookingFlowModal({
                     </div>
                   </div>
                 </div>
+
+                {/* Dynamic Pricing / Sharing Option Selector */}
+                {Array.isArray(pkg?.pricingTiers) && pkg.pricingTiers.length > 0 && (
+                  <div>
+                    <label className="block text-[11px] font-extrabold text-neutral-600 uppercase tracking-wider mb-1.5">
+                      {pkg.pricingType === 'sharing'
+                        ? 'ROOM / CAMP OCCUPANCY *'
+                        : pkg.pricingType === 'distance'
+                        ? 'BOARDING & DEPARTURE ROUTE *'
+                        : 'SELECTED PACKAGE OPTION *'}
+                    </label>
+                    <select
+                      value={sharingType}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSharingType(val);
+                        const match = pkg.pricingTiers.find((t) => val.startsWith(t.name));
+                        if (match) setCustomPricePerPerson(match.price);
+                      }}
+                      className="w-full h-12 px-4 rounded-xl border border-neutral-200 text-sm font-semibold text-neutral-800 bg-white focus:border-[#FF6B16] outline-none cursor-pointer"
+                    >
+                      {pkg.pricingTiers.map((t) => {
+                        const label = `${t.name}${t.subtext ? ` (${t.subtext})` : ''}`;
+                        return (
+                          <option key={t.name} value={label}>
+                            {t.name} — {formatCurrency(t.price)}/person {t.subtext ? `• ${t.subtext}` : ''}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                )}
+
+                {/* Real-time Availability Status Banner */}
+                {travelDate && (
+                  <div>
+                    {isCheckingAvail ? (
+                      <div className="p-3 rounded-xl bg-neutral-50 border border-neutral-200 text-xs font-semibold text-neutral-500 flex items-center gap-2">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#FF6B16]" />
+                        <span>Verifying seat availability for {travelDate}...</span>
+                      </div>
+                    ) : availabilityInfo ? (
+                      <div
+                        className={`p-3.5 rounded-xl border text-xs flex items-center justify-between gap-3 ${
+                          availabilityInfo.available
+                            ? availabilityInfo.status === 'filling_fast'
+                              ? 'bg-amber-50/80 border-amber-200 text-amber-900 font-bold'
+                              : 'bg-emerald-50/80 border-emerald-200 text-emerald-900 font-bold'
+                            : 'bg-rose-50 border-rose-200 text-rose-900 font-bold'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          {availabilityInfo.available ? (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          ) : (
+                            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                          )}
+                          <span>
+                            {availabilityInfo.available
+                              ? availabilityInfo.status === 'filling_fast'
+                                ? `⚡ High Demand: Only ${availabilityInfo.seatsLeft} seat(s) remaining for ${totalPersons} traveler(s)!`
+                                : `✓ Departure Confirmed: ${availabilityInfo.seatsLeft} seat(s) open for ${totalPersons} traveler(s)`
+                              : availabilityInfo.reason || 'This date is currently unavailable for booking.'}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/80 border border-current">
+                          {availabilityInfo.available ? 'Available' : 'Unavailable'}
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
 
                 {/* Booking Advance Notice Box (Warm Theme) */}
                 <div className="bg-[#FFF6F0] border border-[#FED7AA] rounded-xl p-4 flex items-start gap-3">
