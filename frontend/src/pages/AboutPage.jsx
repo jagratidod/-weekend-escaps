@@ -1,7 +1,7 @@
 import React from 'react';
 import Container from '../components/common/Container';
 import AboutHero from '../components/about/AboutHero';
-import { ShieldCheck, Award, Heart, Users, MapPin, Sparkles } from 'lucide-react';
+import { ShieldCheck, Award, Heart, Users, MapPin, Flame } from 'lucide-react';
 import { BRAND } from '../utils/constants';
 
 export function AboutPage() {
@@ -101,7 +101,7 @@ export function AboutPage() {
 
           <div className="bg-white p-8 rounded-3xl border border-neutral-100 shadow-sm text-center">
             <div className="w-14 h-14 rounded-full bg-[#FF6B16]/10 text-[#FF6B16] flex items-center justify-center mx-auto mb-4">
-              <Sparkles className="w-7 h-7" />
+              <Flame className="w-7 h-7" />
             </div>
             <h3 className="text-xl font-bold text-neutral-900 mb-2">Unmatched Value</h3>
             <p className="text-sm text-neutral-600">

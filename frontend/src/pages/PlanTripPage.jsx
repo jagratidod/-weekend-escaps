@@ -3,7 +3,7 @@ import Container from '../components/common/Container';
 import { DESTINATIONS } from '../data/destinations';
 import { BRAND } from '../utils/constants';
 import { useSettings } from '../context/SettingsContext';
-import { Sparkles, Check, ArrowRight, MessageCircle, CheckCircle } from 'lucide-react';
+import { Check, ArrowRight, MessageCircle, CheckCircle } from 'lucide-react';
 
 export function PlanTripPage() {
   const { whatsappUrl, getCustomWhatsAppUrl } = useSettings();
@@ -252,7 +252,7 @@ export function PlanTripPage() {
               className="w-full py-4 rounded-full bg-[#FF6B16] hover:bg-[#e05809] text-white font-extrabold text-sm uppercase tracking-wider shadow-xl shadow-[#FF6B16]/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Get Custom Trip Plan</span>
-              <Sparkles className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4" />
             </button>
           </form>
         )}

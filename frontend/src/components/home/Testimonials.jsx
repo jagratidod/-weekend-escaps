@@ -7,7 +7,6 @@ import {
   ChevronRight,
   Send,
   CheckCircle2,
-  Sparkles,
   User,
   MapPin,
   Compass,
@@ -342,7 +341,7 @@ export function Testimonials() {
                     className="hidden lg:inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#FF6B16] hover:text-white transition-colors cursor-pointer border-b-2 border-[#FF6B16] hover:border-white pb-0.5"
                   >
                     <span>Share your story</span>
-                    <Sparkles className="w-3.5 h-3.5" />
+                    <Send className="w-3.5 h-3.5" />
                   </button>
 
                   <div className="flex items-center gap-3">

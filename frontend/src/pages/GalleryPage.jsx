@@ -8,7 +8,6 @@ import {
   Maximize,
   Bed,
   Mountain,
-  Sparkles,
   MapPin,
   Compass,
   ArrowRight,
@@ -283,7 +282,7 @@ export default function GalleryPage() {
             transition={{ duration: 0.7 }}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-neutral-200/90 shadow-sm mb-4"
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#FF6B16]" />
+            <Camera className="w-3.5 h-3.5 text-[#FF6B16]" />
             <span className="text-[11px] font-black tracking-[0.25em] uppercase text-neutral-600">
               WEEKEND ESCAPES • OFFICIAL PHOTO ARCHIVE
             </span>

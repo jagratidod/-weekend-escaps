@@ -47,19 +47,6 @@ export const NAV_LINKS = [
       { name: "Bali Escape (7D/6N)", path: "/packages/bali-escape" }
     ]
   },
-  {
-    name: "Experiences",
-    path: "/experiences",
-    hasDropdown: true,
-    sublinks: [
-      { name: "Trekking", path: "/experiences#trekking" },
-      { name: "Adventure", path: "/experiences#adventure" },
-      { name: "Honeymoon", path: "/experiences#honeymoon" },
-      { name: "Family Trips", path: "/experiences#family" },
-      { name: "Group Tours", path: "/experiences#group" },
-      { name: "International", path: "/experiences#international" }
-    ]
-  },
   { name: "Travel Guide", path: "/blogs" },
   { name: "Gallery", path: "/gallery" },
   { name: "About Us", path: "/about" },

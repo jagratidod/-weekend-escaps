@@ -9,7 +9,6 @@ import {
   Filter,
   RefreshCw,
   Clock,
-  Sparkles,
   MapPin,
   Compass,
   AlertTriangle,

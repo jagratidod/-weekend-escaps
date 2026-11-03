@@ -13,7 +13,6 @@ import {
   Loader2,
   Layers,
   Calendar,
-  Sparkles,
   Palette,
   Eye,
   Type,
@@ -447,7 +446,7 @@ export default function PagesManager({ initialSlug = 'terms-and-conditions' }) {
       <div className="bg-white rounded-2xl border border-neutral-200 p-6 shadow-xs space-y-6">
         <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
           <h2 className="text-sm font-extrabold text-[#1A384C] flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#FF6B16]" />
+            <FileText className="w-4 h-4 text-[#FF6B16]" />
             <span>Page Header Settings (Fully Dynamic)</span>
           </h2>
           <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">

@@ -76,3 +76,27 @@
   animation: kenBurns 5s ease-out forwards;
   will-change: transform;
 }
+
+@keyframes marqueeLeft {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee-reels {
+  display: flex;
+  width: max-content;
+  animation: marqueeLeft 42s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-reels:hover {
+  animation-play-state: paused;
+}
+
+.marquee-paused {
+  animation-play-state: paused !important;
+}

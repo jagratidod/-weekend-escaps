@@ -11,7 +11,6 @@ import {
   User,
   ArrowLeft,
   ArrowRight,
-  Sparkles,
   Search,
   Compass,
   Loader2,

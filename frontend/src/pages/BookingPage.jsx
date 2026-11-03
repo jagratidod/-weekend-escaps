@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
-import { PACKAGES } from '../data/packages';
+import { usePackages } from '../context/PackageContext';
 import { formatCurrency } from '../utils/helpers';
 import { useSettings } from '../context/SettingsContext';
 import { getVisitorId } from '../hooks/usePushNotifications';
@@ -19,7 +19,6 @@ import {
   AlertCircle,
   Tag,
   Loader2,
-  Sparkles,
   MessageCircle,
   ShieldCheck,
   MapPin,
@@ -38,7 +37,8 @@ export function BookingPage() {
   const { whatsappUrl, getCustomWhatsAppUrl, API_BASE_URL } = useSettings();
 
   // Find package by ID
-  const pkg = PACKAGES.find((p) => p.id === id) || PACKAGES[0];
+  const { getPackageById } = usePackages();
+  const pkg = getPackageById(id);
   const tripTitle = pkg?.name || pkg?.title || 'Expedition Trek';
 
   // Read initial date & travelers from URL query params or router state

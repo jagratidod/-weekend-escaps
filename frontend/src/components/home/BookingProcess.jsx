@@ -1,7 +1,17 @@
 import React, { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Compass, CalendarDays, ShieldCheck, Plane, MapPin, Sparkles } from 'lucide-react';
+import {
+  Compass,
+  CalendarDays,
+  ShieldCheck,
+  Plane,
+  MapPin,
+  HandHeart,
+  Waves,
+  Utensils,
+  Heart,
+} from 'lucide-react';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -43,9 +53,9 @@ export function BookingProcess() {
     {
       num: 3,
       stepNumber: "03",
-      title: "Book",
-      tagline: "Instant & Secure",
-      desc: "Lock in your slots with 100% verified payment gateways, zero hidden charges, and trip insurance.",
+      title: "Book & Give Back",
+      tagline: "Secure & Gives Back",
+      desc: "Lock in slots with verified gateways. A share of every booking is donated to flood relief, food distribution & welfare trusts.",
       icon: ShieldCheck,
       position: "above" // card sits above node on desktop
     },
@@ -360,7 +370,7 @@ export function BookingProcess() {
 
                     {/* Step Tagline / Subtitle */}
                     <div className="relative z-10 flex items-center gap-1 mb-0.5">
-                      <Sparkles className={`w-3 h-3 ${isActive ? 'text-[#FF6B16]' : 'text-neutral-400'}`} />
+                      <Compass className={`w-3 h-3 ${isActive ? 'text-[#FF6B16]' : 'text-neutral-400'}`} />
                       <span className="text-[10px] font-bold text-[#FF6B16] uppercase tracking-wider">
                         {step.tagline}
                       </span>
@@ -496,6 +506,85 @@ export function BookingProcess() {
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* ============================================================== */}
+        {/* 3. EVERY BOOKING GIVES BACK (Social Impact & Trust Banner)     */}
+        {/* ============================================================== */}
+        <div className="mt-8 sm:mt-10 max-w-4xl mx-auto rounded-3xl bg-gradient-to-br from-amber-50/90 via-white to-orange-50/90 border border-orange-200/90 p-5 sm:p-7 shadow-md relative overflow-hidden">
+          {/* Subtle background decorative glow */}
+          <div className="absolute top-0 right-0 -mr-12 -mt-12 w-48 h-48 rounded-full bg-[#FF6B16]/10 blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-4 sm:gap-6">
+            <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-[#FF6B16] to-[#ff8c42] text-white flex items-center justify-center shrink-0 shadow-lg shadow-[#FF6B16]/30">
+              <HandHeart className="w-7 h-7 sm:w-8 sm:h-8" />
+            </div>
+
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#FF6B16] text-white shadow-xs">
+                  <Heart className="w-2.5 h-2.5 fill-white" />
+                  Every Booking Gives Back
+                </span>
+                <span className="text-xs font-extrabold text-neutral-800 tracking-wide">
+                  Travel With A Purpose
+                </span>
+              </div>
+
+              <h4 className="text-base sm:text-lg font-black text-[#111111] leading-tight">
+                A Part of Your Trip Cost is Donated to Trusted Welfare & Relief Trusts
+              </h4>
+
+              <p className="text-xs sm:text-sm text-neutral-600 mt-1.5 leading-relaxed">
+                Jab aap hamare saath apni trip book karte hain, aapke booking amount ka ek hissa direct verified relief trusts ko jata hai jisse zaroorat ke waqt real help provide ki ja sake:
+              </p>
+
+              {/* 3 Impact Highlights Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-3.5 border-t border-orange-200/60">
+                <div className="flex items-start gap-2.5 bg-white/80 p-2.5 rounded-xl border border-orange-100">
+                  <span className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <Waves className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h5 className="text-xs font-bold text-neutral-900 leading-tight">
+                      Flood & Calamity Relief
+                    </h5>
+                    <p className="text-[11px] text-neutral-500 mt-0.5 leading-snug">
+                      Floods aur natural disasters ke waqt prompt rescue & rehabilitation help.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5 bg-white/80 p-2.5 rounded-xl border border-orange-100">
+                  <span className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <Utensils className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h5 className="text-xs font-bold text-neutral-900 leading-tight">
+                      Food & Ration Drives
+                    </h5>
+                    <p className="text-[11px] text-neutral-500 mt-0.5 leading-snug">
+                      Remote aur underprivileged parivaron tak hygienic food aur ration supply.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5 bg-white/80 p-2.5 rounded-xl border border-orange-100">
+                  <span className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <Heart className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h5 className="text-xs font-bold text-neutral-900 leading-tight">
+                      Community & Welfare
+                    </h5>
+                    <p className="text-[11px] text-neutral-500 mt-0.5 leading-snug">
+                      Local mountain communities ki medical aid aur welfare support.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

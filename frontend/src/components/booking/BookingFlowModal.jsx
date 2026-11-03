@@ -15,7 +15,6 @@ import {
   AlertCircle,
   Tag,
   Loader2,
-  Sparkles,
   Download,
   Share2,
   MessageCircle,

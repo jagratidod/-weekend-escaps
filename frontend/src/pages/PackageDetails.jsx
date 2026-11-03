@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { PACKAGES } from '../data/packages';
+import { usePackages } from '../context/PackageContext';
+import { getImageUrl } from '../utils/imageHelper';
 import Container from '../components/common/Container';
 import {
   Clock,
@@ -13,7 +14,6 @@ import {
   ShieldCheck,
   ArrowRight,
   MessageCircle,
-  Sparkles
 } from 'lucide-react';
 import { formatCurrency } from '../utils/helpers';
 import { BRAND } from '../utils/constants';
@@ -23,7 +23,9 @@ import ItineraryTimeline from '../components/packages/ItineraryTimeline';
 export function PackageDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const pkg = PACKAGES.find((p) => p.id === id) || PACKAGES[0];
+  const { getPackageById } = usePackages();
+  const pkg = getPackageById(id);
+
   const { whatsappUrl, getCustomWhatsAppUrl } = useSettings();
   const packageWaUrl = getCustomWhatsAppUrl
     ? getCustomWhatsAppUrl(`Hi Weekend Escapes! I would like to inquire about the package: ${pkg.name || pkg.title}`)
@@ -39,15 +41,27 @@ export function PackageDetails() {
     if (selectedDate) query.append('date', selectedDate);
     query.append('travelers', String(travelersCount));
     query.append('step', '1');
-    navigate(`/book/${pkg.id}?${query.toString()}`);
+    navigate(`/book/${pkg.id || pkg._id}?${query.toString()}`);
   };
+
+  const includedItems = Array.isArray(pkg.included) && pkg.included.length > 0
+    ? pkg.included
+    : ['Experienced Trip Marshal', 'All Meals & Stays', 'Permits & Safety Gears'];
+
+  const excludedItems = Array.isArray(pkg.excluded) && pkg.excluded.length > 0
+    ? pkg.excluded
+    : [
+        'Personal expenses and tips',
+        'Insurance and emergency evacuation',
+        'Anything not mentioned in inclusions',
+      ];
 
   return (
     <div className="pt-24 pb-24 bg-[#F7F7F5] min-h-screen">
       {/* Hero Banner for Package */}
       <div className="relative h-[55vh] min-h-[400px] w-full bg-neutral-900 overflow-hidden">
         <img
-          src={pkg.image}
+          src={getImageUrl(pkg.image)}
           alt={pkg.name}
           className="w-full h-full object-cover object-center opacity-85 scale-105"
         />
@@ -56,16 +70,24 @@ export function PackageDetails() {
         <div className="absolute inset-0 flex items-end">
           <Container className="pb-10 text-white">
             <div className="flex flex-wrap items-center gap-3 mb-3">
-              <span className="px-3.5 py-1 rounded-full bg-[#FF6B16] text-white text-xs font-black uppercase tracking-wider shadow-md">
-                {pkg.badge}
-              </span>
+              {pkg.badge && (
+                <span
+                  className={`px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider shadow-md ${
+                    pkg.badgeColor || 'bg-[#FF6B16] text-white'
+                  }`}
+                >
+                  {pkg.badge}
+                </span>
+              )}
               <span className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-bold border border-white/10 flex items-center gap-1">
                 <Star className="w-3.5 h-3.5 fill-[#FF6B16] text-[#FF6B16]" />
-                {pkg.rating} ({pkg.reviewsCount} reviews)
+                {pkg.rating || 4.9} ({pkg.reviewsCount || 120} reviews)
               </span>
-              <span className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-bold border border-white/10">
-                {pkg.season}
-              </span>
+              {pkg.season && (
+                <span className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-bold border border-white/10">
+                  {pkg.season}
+                </span>
+              )}
             </div>
 
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight">
@@ -83,7 +105,7 @@ export function PackageDetails() {
               </span>
               <span className="flex items-center gap-1.5">
                 <Users className="w-4 h-4 text-[#FF6B16]" />
-                {pkg.groupSize}
+                {pkg.groupSize || '12 - 18 Explorers'}
               </span>
             </div>
           </Container>
@@ -129,7 +151,7 @@ export function PackageDetails() {
               </button>
             </div>
 
-            {/* Tab: Itinerary (Reference UI Match) */}
+            {/* Tab: Itinerary */}
             {activeTab === 'itinerary' && (
               <div className="bg-white rounded-3xl p-6 sm:p-10 border border-neutral-100 shadow-sm">
                 <div className="mb-6 pb-4 border-b border-neutral-100 flex items-center justify-between">
@@ -146,7 +168,7 @@ export function PackageDetails() {
                   </span>
                 </div>
 
-                <ItineraryTimeline itinerary={pkg.itinerary} packageId={pkg.id} />
+                <ItineraryTimeline itinerary={pkg.itinerary} packageId={pkg.id || pkg._id} />
               </div>
             )}
 
@@ -163,7 +185,7 @@ export function PackageDetails() {
                       Included with Package
                     </h4>
                     <ul className="space-y-3 text-sm text-neutral-700">
-                      {pkg.included.map((inc, i) => (
+                      {includedItems.map((inc, i) => (
                         <li key={i} className="flex items-center gap-2.5">
                           <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
                           <span>{inc}</span>
@@ -177,18 +199,12 @@ export function PackageDetails() {
                       Not Included
                     </h4>
                     <ul className="space-y-3 text-sm text-neutral-700">
-                      <li className="flex items-center gap-2.5">
-                        <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                        <span>Personal expenses and tips</span>
-                      </li>
-                      <li className="flex items-center gap-2.5">
-                        <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                        <span>Insurance and emergency evacuation</span>
-                      </li>
-                      <li className="flex items-center gap-2.5">
-                        <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                        <span>Anything not mentioned in inclusions</span>
-                      </li>
+                      {excludedItems.map((exc, i) => (
+                        <li key={i} className="flex items-center gap-2.5">
+                          <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                          <span>{exc}</span>
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 </div>
@@ -217,7 +233,7 @@ export function PackageDetails() {
           {/* Right Column: Pricing & Booking Card */}
           <div className="lg:col-span-4">
             <div className="sticky top-28 bg-white rounded-3xl p-6 sm:p-8 border border-neutral-200/80 shadow-xl space-y-6">
-              {/* Price Row (Matches Image 1) */}
+              {/* Price Row */}
               <div className="flex items-center justify-between pb-6 border-b border-neutral-100">
                 <div>
                   <span className="block text-[11px] font-extrabold uppercase tracking-wider text-neutral-400">
@@ -237,7 +253,7 @@ export function PackageDetails() {
                 </span>
               </div>
 
-              {/* Booking Availability Form (Image 1) */}
+              {/* Booking Availability Form */}
               <form onSubmit={handleCheckAvailability} className="space-y-4">
                 <div>
                   <label className="block text-[11px] font-black text-neutral-600 uppercase tracking-wider mb-1.5">

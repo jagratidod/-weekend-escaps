@@ -11,7 +11,6 @@ import {
   Eye,
   CheckCircle2,
   XCircle,
-  Sparkles,
   Star,
   RefreshCw,
   FolderTree,

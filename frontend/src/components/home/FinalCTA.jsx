@@ -88,7 +88,7 @@ export function FinalCTA() {
                   <span>Talk on WhatsApp</span>
                 </a>
 
-                {/* Orange Radiating Burst Sparkles matching screenshot */}
+                {/* Orange Radiating Burst lines matching screenshot */}
                 <div className="absolute -top-3 -right-2.5 pointer-events-none">
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                     <path d="M3 11 L1 12.5" stroke="#FF6B16" strokeWidth="2" strokeLinecap="round" />

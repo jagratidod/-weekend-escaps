@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { X, ChevronDown, Sparkles, PhoneCall } from 'lucide-react';
+import { X, ChevronDown, ArrowRight, PhoneCall } from 'lucide-react';
 import { NAV_LINKS, BRAND } from '../../utils/constants';
 import { useSettings } from '../../context/SettingsContext';
 
@@ -98,7 +98,7 @@ export function MobileMenu({
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full font-bold bg-[#FF6B16] text-white shadow-lg shadow-[#FF6B16]/30 text-center"
           >
             <span>Plan My Trip</span>
-            <Sparkles className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4" />
           </Link>
 
           <a

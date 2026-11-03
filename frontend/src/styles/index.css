@@ -41,6 +41,15 @@
   background: #e05809;
 }
 
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Swiper custom styles */
 .swiper-pagination-bullet-active {
   background: #FF6B16 !important;
@@ -51,6 +60,29 @@
 .swiper-pagination-bullet {
   background: #a1a1aa;
   transition: all 0.3s ease;
+}
+
+.destinations-mobile-swiper {
+  touch-action: pan-y !important;
+}
+
+.destinations-mobile-swiper .swiper-wrapper {
+  touch-action: pan-y !important;
+}
+
+.destinations-mobile-swiper .swiper-slide {
+  user-select: none !important;
+  -webkit-user-drag: none !important;
+}
+
+.destinations-mobile-swiper .swiper-slide-shadow-left,
+.destinations-mobile-swiper .swiper-slide-shadow-right {
+  border-radius: 1.5rem !important;
+  pointer-events: none !important;
+}
+
+.destinations-mobile-swiper .swiper-slide-active {
+  z-index: 20 !important;
 }
 
 /* Glassmorphism helpers */

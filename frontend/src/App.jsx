@@ -8,6 +8,7 @@ import { MessageCircle } from 'lucide-react';
 import { BRAND } from './utils/constants';
 import { AuthProvider } from './context/AuthContext';
 import { SettingsProvider, useSettings } from './context/SettingsContext';
+import { PackageProvider } from './context/PackageContext';
 import { usePushNotifications } from './hooks/usePushNotifications';
 import PushNotificationToast from './components/common/PushNotificationToast';
 
@@ -60,8 +61,10 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <SettingsProvider>
-          <ScrollToTop />
-          <AppContent />
+          <PackageProvider>
+            <ScrollToTop />
+            <AppContent />
+          </PackageProvider>
         </SettingsProvider>
       </AuthProvider>
     </BrowserRouter>

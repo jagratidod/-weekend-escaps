@@ -12,7 +12,6 @@ import {
   Loader2,
   ExternalLink,
   Users,
-  Sparkles,
   Info,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -483,7 +482,7 @@ export default function BroadcastManager() {
         <div className="lg:col-span-5 space-y-6">
           <div className="bg-[#1A384C] text-white p-6 sm:p-7 rounded-2xl shadow-md space-y-4">
             <div className="flex items-center gap-2 text-amber-300">
-              <Sparkles className="w-4 h-4" />
+              <Bell className="w-4 h-4" />
               <h3 className="text-xs font-bold uppercase tracking-wider">Device Notification Preview</h3>
             </div>
             <p className="text-xs text-white/70">

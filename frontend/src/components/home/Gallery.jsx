@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Maximize2, X, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
+import { ArrowRight, Maximize2, X, ChevronLeft, ChevronRight, MapPin, Camera } from 'lucide-react';
 import { GALLERY_ITEMS } from '../../data/gallery';
 import SectionHeading from '../common/SectionHeading';
 import Container from '../common/Container';
+import TripReelsRow from './TripReelsRow';
 
 export function Gallery() {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(null);
@@ -39,6 +40,20 @@ export function Gallery() {
             </Link>
           }
         />
+
+        {/* 1. Live Trip Reels & Video Clips Row (Auto-Running Mode) */}
+        <TripReelsRow />
+
+        {/* 2. Photo Snapshots Header */}
+        <div className="flex items-center justify-between mb-3 px-1">
+          <div className="flex items-center gap-2">
+            <Camera className="w-4 h-4 text-[#FF6B16]" />
+            <span className="text-xs sm:text-sm font-bold text-neutral-800 uppercase tracking-wider">
+              Captured Snapshots
+            </span>
+          </div>
+          <span className="text-xs text-neutral-500 font-medium">Click any photo to enlarge</span>
+        </div>
 
         {/* Gallery Grid (6 Images matching screenshot) */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">

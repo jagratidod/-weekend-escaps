@@ -9,6 +9,7 @@ import BookingManager from '../../components/admin/BookingManager';
 import PaymentManager from '../../components/admin/PaymentManager';
 import BlogManager from '../../components/admin/BlogManager';
 import BroadcastManager from '../../components/admin/BroadcastManager';
+import PackageManager from '../../components/admin/PackageManager';
 import {
   Package,
   CalendarCheck,
@@ -19,7 +20,7 @@ import {
   Info,
   Compass,
   ArrowUpRight,
-  Sparkles,
+  CheckCircle2,
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
@@ -46,7 +47,7 @@ export default function AdminDashboardPage() {
       {activeTab === 'contact_editor' && <ContactInfoManager />}
       {activeTab === 'settings' && <LogoManager />}
       {activeTab === 'destinations' && <PlaceholderModule title="Destinations Management" icon={Compass} />}
-      {activeTab === 'packages' && <PlaceholderModule title="Tour Packages" icon={Package} />}
+      {activeTab === 'packages' && <PackageManager />}
     </AdminLayout>
   );
 }
@@ -359,7 +360,7 @@ function PlaceholderModule({ title, icon: Icon }) {
         This section is ready for future operations, CRUD tables, and management workflows.
       </p>
       <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
-        <Sparkles className="w-4 h-4" />
+        <CheckCircle2 className="w-4 h-4" />
         Modular Section — Ready for Expansion
       </div>
     </div>
