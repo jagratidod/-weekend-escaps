@@ -39,20 +39,72 @@ export function PackageDetails() {
   const [selectedDate, setSelectedDate] = useState('');
   const [travelersCount, setTravelersCount] = useState(2);
 
-  // Dynamic Pricing Tiers State (Sharing & Distance based)
-  const tiers = Array.isArray(pkg?.pricingTiers) && pkg.pricingTiers.length > 0 ? pkg.pricingTiers : [];
-  const [selectedTier, setSelectedTier] = useState(null);
+  // Dynamic Pricing Tiers State (Sharing & Distance based with 3 default sharing options)
+  const displayTiers = (() => {
+    if (Array.isArray(pkg?.pricingTiers) && pkg.pricingTiers.length > 0) {
+      return pkg.pricingTiers;
+    }
+    // If distance package: provide route options
+    if (pkg?.pricingType === 'distance') {
+      const base = Number(pkg?.price) || 5999;
+      const dest = pkg?.name?.split(' ')[0] || 'Manali';
+      return [
+        { name: `${dest} to ${dest}`, subtext: 'Ex-Basecamp (Direct Report)', price: base, originalPrice: Math.round(base * 1.4), isDefault: true },
+        { name: 'Delhi to Delhi', subtext: 'Including AC Volvo Bus Transfers', price: base + 2000, originalPrice: Math.round((base + 2000) * 1.4), isDefault: false },
+      ];
+    }
+    // Default 3 sharing tiers (Quad, Triple, Double) matching user specifications
+    const base = Number(pkg?.price) && Number(pkg.price) >= 3000 ? Number(pkg.price) : 8999;
+    const sub = 'Camp in Kedarnath';
+    return [
+      { name: 'Quad Sharing', subtext: sub, price: base, originalPrice: Math.round(base * 1.35), isDefault: true },
+      { name: 'Triple Sharing', subtext: sub, price: base + 500, originalPrice: Math.round((base + 500) * 1.35), isDefault: false },
+      { name: 'Double Sharing', subtext: sub, price: base + 1000, originalPrice: Math.round((base + 1000) * 1.35), isDefault: false },
+    ];
+  })();
+
+  const tiers = displayTiers;
+
+  const [selectedTier, setSelectedTier] = useState(() => {
+    return displayTiers.find((t) => t.isDefault) || displayTiers[0] || null;
+  });
 
   useEffect(() => {
-    if (tiers.length > 0) {
-      setSelectedTier(tiers.find((t) => t.isDefault) || tiers[0]);
+    if (displayTiers.length > 0) {
+      const initial = displayTiers.find((t) => t.isDefault) || displayTiers[0];
+      setSelectedTier(initial);
+      if (initial.name.toLowerCase().includes('double')) {
+        setTravelersCount(2);
+      } else if (initial.name.toLowerCase().includes('triple')) {
+        setTravelersCount(3);
+      } else if (initial.name.toLowerCase().includes('quad')) {
+        setTravelersCount(4);
+      }
     } else {
       setSelectedTier(null);
     }
   }, [pkg?.id, pkg?._id]);
 
-  const effectivePrice = selectedTier ? Number(selectedTier.price) : (pkg?.price || 8999);
+  const effectivePrice = selectedTier ? Number(selectedTier.price) : (Number(pkg?.price) || 8999);
   const effectiveOriginalPrice = selectedTier?.originalPrice || pkg?.originalPrice || Math.round(effectivePrice * 1.4);
+
+  const handleDropdownChange = (val) => {
+    if (displayTiers.length > 0) {
+      const found = displayTiers.find((t) => t.name === val);
+      if (found) {
+        setSelectedTier(found);
+        if (found.name.toLowerCase().includes('double')) {
+          setTravelersCount(2);
+        } else if (found.name.toLowerCase().includes('triple')) {
+          setTravelersCount(3);
+        } else if (found.name.toLowerCase().includes('quad')) {
+          setTravelersCount(4);
+        }
+      }
+    } else {
+      setTravelersCount(Number(val));
+    }
+  };
 
   // Availability & Slots State
   const [upcomingSlots, setUpcomingSlots] = useState([]);
@@ -121,11 +173,12 @@ export function PackageDetails() {
     };
   }, [selectedDate, travelersCount, pkg?.id, pkg?._id, id]);
 
-  const handleCheckAvailability = (e, tierToUse = selectedTier) => {
+  const handleCheckAvailability = (e, tierToUse = selectedTier, countOverride = null) => {
     if (e?.preventDefault) e.preventDefault();
     const query = new URLSearchParams();
     if (selectedDate) query.append('date', selectedDate);
-    query.append('travelers', String(travelersCount));
+    const travelersToPass = countOverride !== null ? countOverride : travelersCount;
+    query.append('travelers', String(travelersToPass));
     if (tierToUse?.name) {
       query.append('tier', tierToUse.name);
       query.append('tierPrice', String(tierToUse.price));
@@ -137,7 +190,12 @@ export function PackageDetails() {
 
   const handleSelectTierAndBook = (tier) => {
     setSelectedTier(tier);
-    handleCheckAvailability(null, tier);
+    let count = travelersCount;
+    if (tier.name.toLowerCase().includes('double')) count = 2;
+    else if (tier.name.toLowerCase().includes('triple')) count = 3;
+    else if (tier.name.toLowerCase().includes('quad')) count = 4;
+    setTravelersCount(count);
+    handleCheckAvailability(null, tier, count);
   };
 
   const includedItems = Array.isArray(pkg.included) && pkg.included.length > 0
@@ -521,55 +579,72 @@ export function PackageDetails() {
                   </p>
                 </div>
 
-                {/* Pricing Option / Sharing Selector */}
-                {tiers.length > 0 && (
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-[11px] font-black text-neutral-700 uppercase tracking-wider">
-                        {pkg.pricingType === 'sharing'
-                          ? 'ROOM / CAMP SHARING'
-                          : pkg.pricingType === 'distance'
-                          ? 'BOARDING / ROUTE OPTION'
-                          : 'PACKAGE OPTION'}
-                      </label>
-                      <span className="text-[10px] text-emerald-600 font-bold truncate max-w-[180px]">
-                        {selectedTier?.subtext || ''}
-                      </span>
-                    </div>
-                    <select
-                      value={selectedTier?.name || ''}
-                      onChange={(e) => {
-                        const found = tiers.find((t) => t.name === e.target.value);
-                        if (found) setSelectedTier(found);
-                      }}
-                      className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 text-sm font-semibold focus:outline-none focus:border-[#FF6B16] bg-white cursor-pointer"
-                    >
-                      {tiers.map((t) => (
-                        <option key={t.name} value={t.name}>
-                          {t.name} — {formatCurrency(t.price)}/person {t.subtext ? `(${t.subtext})` : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {/* Travelers Count */}
+                {/* Unified Sharing / Route / Travelers Dropdown */}
                 <div>
-                  <label className="block text-[11px] font-black text-neutral-700 uppercase tracking-wider mb-1.5">
-                    NUMBER OF TRAVELERS
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[11px] font-black text-neutral-700 uppercase tracking-wider">
+                      {tiers.length > 0
+                        ? pkg?.pricingType === 'distance'
+                          ? 'SELECT ROUTE & BOARDING'
+                          : 'ROOM & SHARING OCCUPANCY'
+                        : 'NUMBER OF TRAVELERS'}
+                    </label>
+                    {selectedTier?.subtext && (
+                      <span className="text-[10px] text-emerald-600 font-bold truncate max-w-[170px]">
+                        {selectedTier.subtext}
+                      </span>
+                    )}
+                  </div>
+
                   <select
-                    value={travelersCount}
-                    onChange={(e) => setTravelersCount(Number(e.target.value))}
+                    value={selectedTier?.name || travelersCount}
+                    onChange={(e) => handleDropdownChange(e.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 text-sm font-semibold focus:outline-none focus:border-[#FF6B16] focus:ring-2 focus:ring-[#FF6B16]/10 transition-all cursor-pointer bg-white"
                   >
-                    <option value={1}>1 Traveler (Solo)</option>
-                    <option value={2}>2 Travelers (Pair/Couple)</option>
-                    <option value={3}>3 Travelers (Small Group)</option>
-                    <option value={4}>4 Travelers (Group)</option>
-                    <option value={5}>5 Travelers (Group)</option>
-                    <option value={6}>6+ Travelers (Custom Batch)</option>
+                    {tiers.length > 0 ? (
+                      tiers.map((t) => (
+                        <option key={t.name} value={t.name}>
+                          {t.name} — {formatCurrency(t.price)} per person {t.subtext ? `(${t.subtext})` : ''}
+                        </option>
+                      ))
+                    ) : (
+                      <>
+                        <option value={1}>1 Traveler (Solo)</option>
+                        <option value={2}>2 Travelers (Pair/Couple)</option>
+                        <option value={3}>3 Travelers (Small Group)</option>
+                        <option value={4}>4 Travelers (Group)</option>
+                        <option value={5}>5 Travelers (Group)</option>
+                        <option value={6}>6+ Travelers (Custom Batch)</option>
+                      </>
+                    )}
                   </select>
+
+                  {/* Travelers Count Adjuster Stepper */}
+                  {tiers.length > 0 && (
+                    <div className="mt-2 flex items-center justify-between px-3.5 py-1.5 bg-neutral-50 rounded-xl border border-neutral-200/80 text-xs font-semibold text-neutral-600">
+                      <div className="flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5 text-neutral-400" />
+                        <span>Travelers Count:</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setTravelersCount(Math.max(1, travelersCount - 1))}
+                          className="w-6 h-6 rounded-md bg-white border border-neutral-200 text-neutral-700 font-bold hover:bg-neutral-100 flex items-center justify-center text-xs active:scale-95 cursor-pointer shadow-2xs"
+                        >
+                          -
+                        </button>
+                        <span className="font-bold text-neutral-900 min-w-[20px] text-center">{travelersCount}</span>
+                        <button
+                          type="button"
+                          onClick={() => setTravelersCount(travelersCount + 1)}
+                          className="w-6 h-6 rounded-md bg-white border border-neutral-200 text-neutral-700 font-bold hover:bg-neutral-100 flex items-center justify-center text-xs active:scale-95 cursor-pointer shadow-2xs"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Live Real-time Availability Feedback Card */}

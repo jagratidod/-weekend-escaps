@@ -41,6 +41,28 @@ export function BookingPage() {
   const pkg = getPackageById(id);
   const tripTitle = pkg?.name || pkg?.title || 'Expedition Trek';
 
+  // Dynamic pricing tiers fallback
+  const displayTiers = (() => {
+    if (Array.isArray(pkg?.pricingTiers) && pkg.pricingTiers.length > 0) {
+      return pkg.pricingTiers;
+    }
+    if (pkg?.pricingType === 'distance') {
+      const base = Number(pkg?.price) || 5999;
+      const dest = pkg?.name?.split(' ')[0] || 'Manali';
+      return [
+        { name: `${dest} to ${dest}`, subtext: 'Ex-Basecamp (Direct Report)', price: base, isDefault: true },
+        { name: 'Delhi to Delhi', subtext: 'Including AC Volvo Bus Transfers', price: base + 2000, isDefault: false },
+      ];
+    }
+    const base = Number(pkg?.price) && Number(pkg.price) >= 3000 ? Number(pkg.price) : 8999;
+    const sub = 'Camp in Kedarnath';
+    return [
+      { name: 'Quad Sharing', subtext: sub, price: base, isDefault: true },
+      { name: 'Triple Sharing', subtext: sub, price: base + 500, isDefault: false },
+      { name: 'Double Sharing', subtext: sub, price: base + 1000, isDefault: false },
+    ];
+  })();
+
   // Read initial date & travelers from URL query params or router state
   const queryDate = searchParams.get('date') || location.state?.date || '';
   const queryTravelers = parseInt(searchParams.get('travelers') || location.state?.travelers || '1', 10);
@@ -55,10 +77,22 @@ export function BookingPage() {
   // Step 1: Trip Confirmation
   const [travelDate, setTravelDate] = useState(queryDate || getDefaultTomorrowDate());
   const [totalPersons, setTotalPersons] = useState(Math.max(1, queryTravelers || 1));
-  const [sharingType, setSharingType] = useState(
-    queryTier ? `${queryTier}${queryTierSubtext ? ` (${queryTierSubtext})` : ''}` : 'Standard Sharing'
-  );
-  const [customPricePerPerson, setCustomPricePerPerson] = useState(queryTierPrice);
+  const [sharingType, setSharingType] = useState(() => {
+    if (queryTier) return `${queryTier}${queryTierSubtext ? ` (${queryTierSubtext})` : ''}`;
+    if (displayTiers.length > 0) {
+      const first = displayTiers.find((t) => t.isDefault) || displayTiers[0];
+      return `${first.name}${first.subtext ? ` (${first.subtext})` : ''}`;
+    }
+    return 'Standard Sharing';
+  });
+  const [customPricePerPerson, setCustomPricePerPerson] = useState(() => {
+    if (queryTierPrice) return queryTierPrice;
+    if (displayTiers.length > 0) {
+      const first = displayTiers.find((t) => t.isDefault) || displayTiers[0];
+      return first.price;
+    }
+    return null;
+  });
 
   // Real-time Availability Verification State
   const [availabilityInfo, setAvailabilityInfo] = useState(null);
@@ -478,26 +512,24 @@ export function BookingPage() {
                 </div>
 
                 {/* Dynamic Pricing / Sharing Option Selector */}
-                {Array.isArray(pkg?.pricingTiers) && pkg.pricingTiers.length > 0 && (
+                {displayTiers.length > 0 && (
                   <div>
                     <label className="block text-[11px] font-extrabold text-neutral-600 uppercase tracking-wider mb-1.5">
-                      {pkg.pricingType === 'sharing'
-                        ? 'ROOM / CAMP OCCUPANCY *'
-                        : pkg.pricingType === 'distance'
+                      {pkg?.pricingType === 'distance'
                         ? 'BOARDING & DEPARTURE ROUTE *'
-                        : 'SELECTED PACKAGE OPTION *'}
+                        : 'ROOM / CAMP OCCUPANCY *'}
                     </label>
                     <select
                       value={sharingType}
                       onChange={(e) => {
                         const val = e.target.value;
                         setSharingType(val);
-                        const match = pkg.pricingTiers.find((t) => val.startsWith(t.name));
+                        const match = displayTiers.find((t) => val.startsWith(t.name));
                         if (match) setCustomPricePerPerson(match.price);
                       }}
                       className="w-full h-12 px-4 rounded-xl border border-neutral-200 text-sm font-semibold text-neutral-800 bg-white focus:border-[#FF6B16] outline-none cursor-pointer"
                     >
-                      {pkg.pricingTiers.map((t) => {
+                      {displayTiers.map((t) => {
                         const label = `${t.name}${t.subtext ? ` (${t.subtext})` : ''}`;
                         return (
                           <option key={t.name} value={label}>
