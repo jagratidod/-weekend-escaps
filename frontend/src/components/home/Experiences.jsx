@@ -1,17 +1,32 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mountain, Compass, Heart, Users, Flame, Globe } from 'lucide-react';
 import Container from '../common/Container';
+import { useSettings } from '../../context/SettingsContext';
+import { getHomeIcon } from '../../utils/homeIconHelper';
+import { Mountain } from 'lucide-react';
 
 export function Experiences() {
-  const experiences = [
-    { id: 'trekking', name: 'Trekking', icon: Mountain, link: '/experiences#trekking' },
-    { id: 'adventure', name: 'Adventure', icon: Compass, link: '/experiences#adventure' },
-    { id: 'honeymoon', name: 'Honeymoon', icon: Heart, link: '/experiences#honeymoon' },
-    { id: 'family', name: 'Family Trips', icon: Users, link: '/experiences#family' },
-    { id: 'group', name: 'Group Tours', icon: Flame, link: '/experiences#group' },
-    { id: 'international', name: 'International', icon: Globe, link: '/experiences#international' },
+  const { homeSections } = useSettings();
+  const expData = homeSections?.experiences || {};
+
+  const badgeText = expData.badge || 'TRAVEL YOUR WAY';
+  const titleText = expData.title || 'Choose Your Experience';
+  const subtitleText =
+    expData.subtitle || 'Every journey is unique. Find the travel style that matches you.';
+
+  const defaultExperiences = [
+    { id: 'trekking', name: 'Trekking', icon: 'Mountain', link: '/experiences#trekking' },
+    { id: 'adventure', name: 'Adventure', icon: 'Compass', link: '/experiences#adventure' },
+    { id: 'honeymoon', name: 'Honeymoon', icon: 'Heart', link: '/experiences#honeymoon' },
+    { id: 'family', name: 'Family Trips', icon: 'Users', link: '/experiences#family' },
+    { id: 'group', name: 'Group Tours', icon: 'Flame', link: '/experiences#group' },
+    { id: 'international', name: 'International', icon: 'Globe', link: '/experiences#international' },
   ];
+
+  const experiences =
+    Array.isArray(expData.items) && expData.items.length > 0
+      ? expData.items
+      : defaultExperiences;
 
   return (
     <section className="relative bg-[#111111] text-white pt-4 pb-6 sm:pt-5 sm:pb-8 md:pt-6 md:pb-10 overflow-x-clip z-20">
@@ -30,27 +45,27 @@ export function Experiences() {
           <div className="inline-flex items-center gap-1.5 mb-1">
             <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B16]"></span>
             <span className="text-[#FF6B16] font-bold text-[11px] sm:text-xs tracking-widest uppercase">
-              TRAVEL YOUR WAY
+              {badgeText}
             </span>
           </div>
 
           <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white leading-tight">
-            Choose Your Experience
+            {titleText}
           </h2>
 
           <p className="mt-1 text-xs sm:text-sm text-neutral-400 font-medium">
-            Every journey is unique. Find the travel style that matches you.
+            {subtitleText}
           </p>
         </div>
 
-        {/* 6 White Category Cards in Grid */}
+        {/* Dynamic Category Cards in Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3.5">
-          {experiences.map((exp) => {
-            const Icon = exp.icon;
+          {experiences.map((exp, idx) => {
+            const Icon = getHomeIcon(exp.icon, Mountain);
             return (
               <Link
-                key={exp.id}
-                to={exp.link}
+                key={exp.id || idx}
+                to={exp.link || '/packages'}
                 className="group flex flex-col items-center justify-center p-3 sm:p-3.5 rounded-xl bg-white hover:bg-neutral-50 shadow-md hover:shadow-xl hover:shadow-[#FF6B16]/20 transition-all duration-300 hover:-translate-y-1 border border-white/10"
               >
                 {/* Orange Icon Container */}

@@ -12,6 +12,8 @@ import {
   Utensils,
   Heart,
 } from 'lucide-react';
+import { useSettings } from '../../context/SettingsContext';
+import { getHomeIcon } from '../../utils/homeIconHelper';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -31,54 +33,107 @@ export function BookingProcess() {
   // Active step state: 0 (Explore), 1 (Plan), 2 (Book), 3 (Travel)
   const [activeStep, setActiveStep] = useState(0);
 
-  const steps = [
+  const { homeSections } = useSettings();
+  const processData = homeSections?.bookingProcess || {};
+
+  const badgeText = processData.badge || 'OUR PROCESS';
+  const titleText = processData.title || 'From Dream to Destination.';
+  const subtitleText =
+    processData.subtitle ||
+    'One continuous journey designed to make planning, booking, and exploring completely effortless.';
+
+  const defaultSteps = [
     {
       num: 1,
-      stepNumber: "01",
-      title: "Explore",
-      tagline: "Curated Trails & Stays",
-      desc: "Browse our handpicked mountain treks, scenic road trips, and luxury weekend getaways.",
-      icon: Compass,
-      position: "above" // card sits above node on desktop
+      stepNumber: '01',
+      title: 'Explore',
+      tagline: 'Curated Trails & Stays',
+      desc: 'Browse our handpicked mountain treks, scenic road trips, and luxury weekend getaways.',
+      icon: 'Compass',
+      position: 'above',
     },
     {
       num: 2,
-      stepNumber: "02",
-      title: "Plan",
-      tagline: "Bespoke Itinerary",
-      desc: "Customize dates, group sizes, and special preferences with our certified expedition marshals.",
-      icon: CalendarDays,
-      position: "below" // card sits below node on desktop
+      stepNumber: '02',
+      title: 'Plan',
+      tagline: 'Bespoke Itinerary',
+      desc: 'Customize dates, group sizes, and special preferences with our certified expedition marshals.',
+      icon: 'CalendarDays',
+      position: 'below',
     },
     {
       num: 3,
-      stepNumber: "03",
-      title: "Book & Give Back",
-      tagline: "Secure & Gives Back",
-      desc: "Lock in slots with verified gateways. A share of every booking is donated to flood relief, food distribution & welfare trusts.",
-      icon: ShieldCheck,
-      position: "above" // card sits above node on desktop
+      stepNumber: '03',
+      title: 'Book & Give Back',
+      tagline: 'Secure & Gives Back',
+      desc: 'Lock in slots with verified gateways. A share of every booking is donated to flood relief, food distribution & welfare trusts.',
+      icon: 'ShieldCheck',
+      position: 'above',
     },
     {
       num: 4,
-      stepNumber: "04",
-      title: "Travel",
-      tagline: "Lifelong Memories",
-      desc: "Pack your bags, meet your trip leader at basecamp, and embark on your unforgettable escape.",
-      icon: Plane,
-      position: "below" // card sits below node on desktop
-    }
+      stepNumber: '04',
+      title: 'Travel',
+      tagline: 'Lifelong Memories',
+      desc: 'Pack your bags, meet your trip leader at basecamp, and embark on your unforgettable escape.',
+      icon: 'Plane',
+      position: 'below',
+    },
   ];
 
+  const stepsRaw =
+    Array.isArray(processData.steps) && processData.steps.length >= 4
+      ? processData.steps
+      : defaultSteps;
+
+  const steps = stepsRaw.slice(0, 4).map((s, idx) => ({
+    ...s,
+    position: idx % 2 === 0 ? 'above' : 'below',
+  }));
+
+  const welfare = processData.welfare || {};
+  const welfareBadge = welfare.badge || 'Every Booking Gives Back';
+  const welfareTagline = welfare.tagline || 'Travel With A Purpose';
+  const welfareTitle =
+    welfare.title ||
+    'A Part of Your Trip Cost is Donated to Trusted Welfare & Relief Trusts';
+  const welfareDescription =
+    welfare.description ||
+    'Jab aap hamare saath apni trip book karte hain, aapke booking amount ka ek hissa direct verified relief trusts ko jata hai jisse zaroorat ke waqt real help provide ki ja sake:';
+
+  const defaultWelfareItems = [
+    {
+      icon: 'Waves',
+      title: 'Flood & Calamity Relief',
+      desc: 'Floods aur natural disasters ke waqt prompt rescue & rehabilitation help.',
+      color: 'blue',
+    },
+    {
+      icon: 'Utensils',
+      title: 'Food & Ration Drives',
+      desc: 'Remote aur underprivileged parivaron tak hygienic food aur ration supply.',
+      color: 'emerald',
+    },
+    {
+      icon: 'Heart',
+      title: 'Community & Welfare',
+      desc: 'Local mountain communities ki medical aid aur welfare support.',
+      color: 'purple',
+    },
+  ];
+
+  const welfareItems =
+    Array.isArray(welfare.items) && welfare.items.length > 0
+      ? welfare.items
+      : defaultWelfareItems;
+
   // Full-width edge-to-edge cubic bezier wave path through the 4 steps:
-  // Step 1: (125, 170) - Valley
-  // Step 2: (375, 80) - Peak
-  // Step 3: (625, 170) - Valley
-  // Step 4: (875, 80) - Peak
-  const desktopPathD = "M 0,170 C 45,170 85,170 125,170 C 220,170 280,80 375,80 C 470,80 530,170 625,170 C 720,170 780,80 875,80 C 925,80 965,80 1000,80";
+  const desktopPathD =
+    'M 0,170 C 45,170 85,170 125,170 C 220,170 280,80 375,80 C 470,80 530,170 625,170 C 720,170 780,80 875,80 C 925,80 965,80 1000,80';
 
   // Mobile vertical smooth S-curve path connecting all 4 steps down
-  const mobilePathD = "M 24,15 C 24,55 38,80 24,120 C 10,160 38,185 24,225 C 10,265 38,290 24,330 C 10,370 38,395 24,435";
+  const mobilePathD =
+    'M 24,15 C 24,55 38,80 24,120 C 10,160 38,185 24,225 C 10,265 38,290 24,330 C 10,370 38,395 24,435';
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -93,7 +148,6 @@ export function BookingProcess() {
         desktopPath.style.strokeDasharray = `${dLength}`;
         desktopPath.style.strokeDashoffset = `${dLength}`;
 
-        // Initial light placement at start of path
         const startPt = desktopPath.getPointAtLength(0);
         if (desktopBeacon) {
           desktopBeacon.setAttribute('transform', `translate(${startPt.x}, ${startPt.y})`);
@@ -126,16 +180,16 @@ export function BookingProcess() {
 
                 if (progress < 0.25) {
                   setActiveStep(0);
-                } else if (progress < 0.50) {
+                } else if (progress < 0.5) {
                   setActiveStep(1);
                 } else if (progress < 0.75) {
                   setActiveStep(2);
                 } else {
                   setActiveStep(3);
                 }
-              }
+              },
             });
-          }
+          },
         });
       }
 
@@ -180,16 +234,16 @@ export function BookingProcess() {
 
                 if (progress < 0.25) {
                   setActiveStep(0);
-                } else if (progress < 0.50) {
+                } else if (progress < 0.5) {
                   setActiveStep(1);
                 } else if (progress < 0.75) {
                   setActiveStep(2);
                 } else {
                   setActiveStep(3);
                 }
-              }
+              },
             });
-          }
+          },
         });
       }
     }, sectionRef);
@@ -206,23 +260,23 @@ export function BookingProcess() {
       <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-[#FF6B16]/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-[#FF6B16]/5 rounded-full blur-3xl pointer-events-none" />
 
-      {/* FULL SCREEN WIDTH CONTAINER (No max-w-7xl restriction, fluid width) */}
+      {/* FULL SCREEN WIDTH CONTAINER */}
       <div className="w-full px-4 sm:px-8 lg:px-12 xl:px-16 2xl:px-20 relative z-10">
         {/* Compact Header Section */}
         <div className="text-center max-w-xl mx-auto mb-3 sm:mb-4">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white border border-neutral-200/80 shadow-xs mb-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B16] animate-pulse" />
             <span className="text-[#FF6B16] font-extrabold text-[10px] tracking-widest uppercase">
-              OUR PROCESS
+              {badgeText}
             </span>
           </div>
 
           <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-[#111111] leading-tight">
-            From Dream to Destination<span className="text-[#FF6B16]">.</span>
+            {titleText}
           </h2>
 
           <p className="mt-1 text-xs text-neutral-500 font-medium max-w-md mx-auto leading-relaxed">
-            One continuous journey designed to make planning, booking, and exploring completely effortless.
+            {subtitleText}
           </p>
         </div>
 
@@ -237,7 +291,6 @@ export function BookingProcess() {
             preserveAspectRatio="none"
           >
             <defs>
-              {/* Radial glow filter for travelling orange beacon */}
               <filter id="route-beacon-glow" x="-100%" y="-100%" width="300%" height="300%">
                 <feGaussianBlur stdDeviation="4" result="blur1" />
                 <feGaussianBlur stdDeviation="8" result="blur2" />
@@ -260,7 +313,7 @@ export function BookingProcess() {
               strokeLinecap="round"
             />
 
-            {/* Active Drawing Route Line (animated forward in 1.5s) */}
+            {/* Active Drawing Route Line */}
             <path
               ref={desktopActivePathRef}
               d={desktopPathD}
@@ -270,7 +323,7 @@ export function BookingProcess() {
               strokeLinecap="round"
             />
 
-            {/* Glowing Light Beacon (travels along route) */}
+            {/* Glowing Light Beacon */}
             <g ref={desktopBeaconRef} filter="url(#route-beacon-glow)">
               <circle cx="0" cy="0" r="10" fill="#FF6B16" opacity="0.4" />
               <circle cx="0" cy="0" r="5" fill="#FF6B16" />
@@ -280,28 +333,25 @@ export function BookingProcess() {
 
           {/* 4 Interactive Process Steps Positioned Along the Wave */}
           {steps.map((step, idx) => {
-            const Icon = step.icon;
+            const Icon = getHomeIcon(step.icon, Compass);
             const isActive = activeStep === idx;
             const isPassed = activeStep >= idx;
 
-            // X-Coordinates for the 4 nodes across full width
             const leftPercents = ['12.5%', '37.5%', '62.5%', '87.5%'];
             const leftPos = leftPercents[idx];
 
-            // Y-Coordinates on SVG (170/250 = 68%, 80/250 = 32%)
             const isValley = step.position === 'above';
             const nodeTop = isValley ? '68%' : '32%';
 
             return (
-              <React.Fragment key={step.num}>
-                {/* 1. NODE PIN BADGE (Located right on the curve) */}
+              <React.Fragment key={step.num || idx}>
+                {/* 1. NODE PIN BADGE */}
                 <div
                   style={{ left: leftPos, top: nodeTop }}
                   onClick={() => setActiveStep(idx)}
                   className="absolute -translate-x-1/2 -translate-y-1/2 z-20 cursor-pointer group"
                 >
                   <div className="relative">
-                    {/* Glowing outer pulse rings when active */}
                     {isPassed && (
                       <span className="absolute -inset-1.5 rounded-xl bg-[#FF6B16]/25 animate-ping opacity-60 pointer-events-none" />
                     )}
@@ -309,7 +359,6 @@ export function BookingProcess() {
                       <span className="absolute -inset-3 rounded-xl bg-[#FF6B16]/15 animate-pulse pointer-events-none" />
                     )}
 
-                    {/* Location Pin Head Indicator */}
                     <div
                       className={`absolute -top-2.5 left-1/2 -translate-x-1/2 transition-all duration-300 ${
                         isPassed ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
@@ -318,7 +367,6 @@ export function BookingProcess() {
                       <MapPin className="w-3.5 h-3.5 fill-[#FF6B16] text-white drop-shadow-xs" />
                     </div>
 
-                    {/* Hexagon/Squircle Pin Badge Surface */}
                     <div
                       className={`relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center transition-all duration-300 overflow-hidden ${
                         isPassed
@@ -326,12 +374,10 @@ export function BookingProcess() {
                           : 'bg-white/95 border-2 border-neutral-200/90 shadow-xs hover:border-[#FF6B16]/50 hover:scale-105'
                       }`}
                     >
-                      {/* Shimmer Sweep Effect across badge */}
                       {isPassed && (
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent animate-shimmer-sweep pointer-events-none" />
                       )}
 
-                      {/* Icon */}
                       <Icon
                         className={`w-4 h-4 sm:w-4.5 sm:h-4.5 transition-all duration-300 ${
                           isPassed ? 'text-[#FF6B16] scale-105' : 'text-neutral-500 group-hover:text-[#FF6B16]'
@@ -341,13 +387,11 @@ export function BookingProcess() {
                   </div>
                 </div>
 
-                {/* 2. STEP CONTENT CARD (Alternating above/below the curve) */}
+                {/* 2. STEP CONTENT CARD */}
                 <div
                   style={{
                     left: leftPos,
-                    ...(isValley
-                      ? { bottom: '42%' } // card placed above valley node
-                      : { top: '42%' })   // card placed below peak node
+                    ...(isValley ? { bottom: '42%' } : { top: '42%' }),
                   }}
                   className="absolute -translate-x-1/2 w-52 sm:w-56 md:w-[230px] z-10 transition-all duration-300"
                 >
@@ -359,7 +403,6 @@ export function BookingProcess() {
                         : 'bg-white/80 hover:bg-white border border-neutral-200/70 hover:border-neutral-300 shadow-xs'
                     }`}
                   >
-                    {/* Giant Faint Watermark Number */}
                     <span
                       className={`absolute -top-2.5 -right-1 text-4xl sm:text-5xl font-black select-none pointer-events-none transition-colors duration-300 tracking-tighter ${
                         isActive ? 'text-[#FF6B16]/15' : 'text-neutral-200/40'
@@ -368,7 +411,6 @@ export function BookingProcess() {
                       {step.stepNumber}
                     </span>
 
-                    {/* Step Tagline / Subtitle */}
                     <div className="relative z-10 flex items-center gap-1 mb-0.5">
                       <Compass className={`w-3 h-3 ${isActive ? 'text-[#FF6B16]' : 'text-neutral-400'}`} />
                       <span className="text-[10px] font-bold text-[#FF6B16] uppercase tracking-wider">
@@ -376,12 +418,10 @@ export function BookingProcess() {
                       </span>
                     </div>
 
-                    {/* Step Title */}
                     <h3 className="relative z-10 text-sm sm:text-base font-black text-[#111111] leading-tight mb-0.5">
                       {step.title}
                     </h3>
 
-                    {/* Step Description */}
                     <p className="relative z-10 text-[11px] text-neutral-600 font-medium leading-snug">
                       {step.desc}
                     </p>
@@ -396,7 +436,6 @@ export function BookingProcess() {
         {/* 2. MOBILE TIMELINE (Compact Vertical Curving Dotted Route)     */}
         {/* ============================================================== */}
         <div className="lg:hidden relative">
-          {/* Vertical Dotted Route Line Canvas */}
           <div className="absolute left-5 sm:left-7 top-4 bottom-4 w-10 pointer-events-none overflow-visible">
             <svg
               className="w-full h-full overflow-visible"
@@ -413,7 +452,6 @@ export function BookingProcess() {
                 </filter>
               </defs>
 
-              {/* Base Dotted Vertical Route */}
               <path
                 d={mobilePathD}
                 fill="none"
@@ -423,7 +461,6 @@ export function BookingProcess() {
                 strokeDasharray="5 5"
               />
 
-              {/* Active Progressive Vertical Route */}
               <path
                 ref={mobileActivePathRef}
                 d={mobilePathD}
@@ -433,7 +470,6 @@ export function BookingProcess() {
                 strokeLinecap="round"
               />
 
-              {/* Travelling Orange Beacon */}
               <g ref={mobileBeaconRef} filter="url(#mobile-beacon-glow)">
                 <circle cx="0" cy="0" r="9" fill="#FF6B16" opacity="0.35" />
                 <circle cx="0" cy="0" r="4.5" fill="#FF6B16" />
@@ -442,20 +478,18 @@ export function BookingProcess() {
             </svg>
           </div>
 
-          {/* Vertical Steps Stack */}
           <div className="space-y-3 sm:space-y-4 pl-11 sm:pl-14 relative z-10">
             {steps.map((step, idx) => {
-              const Icon = step.icon;
+              const Icon = getHomeIcon(step.icon, Compass);
               const isActive = activeStep === idx;
               const isPassed = activeStep >= idx;
 
               return (
                 <div
-                  key={step.num}
+                  key={step.num || idx}
                   onClick={() => setActiveStep(idx)}
                   className="relative group cursor-pointer"
                 >
-                  {/* Pin Badge on Left Line */}
                   <div className="absolute -left-11 sm:-left-14 top-3.5 -translate-y-1/2 z-20">
                     <div className="relative">
                       {isPassed && (
@@ -474,7 +508,6 @@ export function BookingProcess() {
                     </div>
                   </div>
 
-                  {/* Card Content */}
                   <div
                     className={`relative p-3 sm:p-3.5 rounded-xl transition-all duration-300 overflow-hidden ${
                       isActive
@@ -482,7 +515,6 @@ export function BookingProcess() {
                         : 'bg-white/80 border border-neutral-200/80 shadow-xs'
                     }`}
                   >
-                    {/* Watermark Number */}
                     <span
                       className={`absolute -top-2 -right-1 text-4xl font-black select-none pointer-events-none tracking-tighter ${
                         isActive ? 'text-[#FF6B16]/15' : 'text-neutral-200/40'
@@ -513,7 +545,6 @@ export function BookingProcess() {
         {/* 3. EVERY BOOKING GIVES BACK (Social Impact & Trust Banner)     */}
         {/* ============================================================== */}
         <div className="mt-8 sm:mt-10 max-w-4xl mx-auto rounded-3xl bg-gradient-to-br from-amber-50/90 via-white to-orange-50/90 border border-orange-200/90 p-5 sm:p-7 shadow-md relative overflow-hidden">
-          {/* Subtle background decorative glow */}
           <div className="absolute top-0 right-0 -mr-12 -mt-12 w-48 h-48 rounded-full bg-[#FF6B16]/10 blur-3xl pointer-events-none" />
 
           <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-4 sm:gap-6">
@@ -525,64 +556,53 @@ export function BookingProcess() {
               <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#FF6B16] text-white shadow-xs">
                   <Heart className="w-2.5 h-2.5 fill-white" />
-                  Every Booking Gives Back
+                  {welfareBadge}
                 </span>
                 <span className="text-xs font-extrabold text-neutral-800 tracking-wide">
-                  Travel With A Purpose
+                  {welfareTagline}
                 </span>
               </div>
 
               <h4 className="text-base sm:text-lg font-black text-[#111111] leading-tight">
-                A Part of Your Trip Cost is Donated to Trusted Welfare & Relief Trusts
+                {welfareTitle}
               </h4>
 
               <p className="text-xs sm:text-sm text-neutral-600 mt-1.5 leading-relaxed">
-                Jab aap hamare saath apni trip book karte hain, aapke booking amount ka ek hissa direct verified relief trusts ko jata hai jisse zaroorat ke waqt real help provide ki ja sake:
+                {welfareDescription}
               </p>
 
               {/* 3 Impact Highlights Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-3.5 border-t border-orange-200/60">
-                <div className="flex items-start gap-2.5 bg-white/80 p-2.5 rounded-xl border border-orange-100">
-                  <span className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
-                    <Waves className="w-4 h-4" />
-                  </span>
-                  <div>
-                    <h5 className="text-xs font-bold text-neutral-900 leading-tight">
-                      Flood & Calamity Relief
-                    </h5>
-                    <p className="text-[11px] text-neutral-500 mt-0.5 leading-snug">
-                      Floods aur natural disasters ke waqt prompt rescue & rehabilitation help.
-                    </p>
-                  </div>
-                </div>
+                {welfareItems.map((item, idx) => {
+                  const ItemIcon = getHomeIcon(item.icon, Heart);
+                  const colorClasses =
+                    item.color === 'emerald'
+                      ? 'bg-emerald-50 text-emerald-600'
+                      : item.color === 'purple'
+                      ? 'bg-purple-50 text-purple-600'
+                      : 'bg-blue-50 text-blue-600';
 
-                <div className="flex items-start gap-2.5 bg-white/80 p-2.5 rounded-xl border border-orange-100">
-                  <span className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
-                    <Utensils className="w-4 h-4" />
-                  </span>
-                  <div>
-                    <h5 className="text-xs font-bold text-neutral-900 leading-tight">
-                      Food & Ration Drives
-                    </h5>
-                    <p className="text-[11px] text-neutral-500 mt-0.5 leading-snug">
-                      Remote aur underprivileged parivaron tak hygienic food aur ration supply.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2.5 bg-white/80 p-2.5 rounded-xl border border-orange-100">
-                  <span className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 mt-0.5">
-                    <Heart className="w-4 h-4" />
-                  </span>
-                  <div>
-                    <h5 className="text-xs font-bold text-neutral-900 leading-tight">
-                      Community & Welfare
-                    </h5>
-                    <p className="text-[11px] text-neutral-500 mt-0.5 leading-snug">
-                      Local mountain communities ki medical aid aur welfare support.
-                    </p>
-                  </div>
-                </div>
+                  return (
+                    <div
+                      key={item.title || idx}
+                      className="flex items-start gap-2.5 bg-white/80 p-2.5 rounded-xl border border-orange-100"
+                    >
+                      <span
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${colorClasses}`}
+                      >
+                        <ItemIcon className="w-4 h-4" />
+                      </span>
+                      <div>
+                        <h5 className="text-xs font-bold text-neutral-900 leading-tight">
+                          {item.title}
+                        </h5>
+                        <p className="text-[11px] text-neutral-500 mt-0.5 leading-snug">
+                          {item.desc}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

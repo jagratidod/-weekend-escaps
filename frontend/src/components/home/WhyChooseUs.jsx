@@ -1,11 +1,13 @@
 import React from 'react';
-import { Mountain, Users, Handshake, UsersRound } from 'lucide-react';
+import { Mountain } from 'lucide-react';
 import Container from '../common/Container';
 import {
   TORN_PAPER_VIEWBOX,
   TORN_PAPER_OUTER,
   TORN_PHOTO_INNER,
 } from './tornPhotoPaths';
+import { useSettings } from '../../context/SettingsContext';
+import { getHomeIcon } from '../../utils/homeIconHelper';
 
 function SunMark({ className = '' }) {
   return (
@@ -28,28 +30,44 @@ function SunMark({ className = '' }) {
 }
 
 export function WhyChooseUs() {
-  const benefits = [
+  const { homeSections, formatImageUrl } = useSettings();
+  const whyData = homeSections?.whyChooseUs || {};
+
+  const badgeText = whyData.badge || 'WHY CHOOSE WEEKEND ESCAPES';
+  const titleText = whyData.title || 'More Than Just A Trip';
+  const subtitleText =
+    whyData.subtitle ||
+    'We create meaningful travel experiences with care, expertise and a passion for exploration.';
+  const imgSrc = formatImageUrl(whyData.image || '/newimage/other sections image/image1.png');
+  const handwrittenNote = whyData.handwrittenNote || 'Travel even\nRepeat';
+
+  const defaultBenefits = [
     {
-      icon: Mountain,
+      icon: 'Mountain',
       title: 'Curated Experiences',
       desc: 'Handpicked destinations and verified stays',
     },
     {
-      icon: Users,
+      icon: 'Users',
       title: 'Expert Guidance',
       desc: 'Experienced travel leaders and local support',
     },
     {
-      icon: Handshake,
+      icon: 'Handshake',
       title: 'Safe & Secure Travel',
       desc: 'Your safety is our priority',
     },
     {
-      icon: UsersRound,
+      icon: 'UsersRound',
       title: 'Best Price Guarantee',
       desc: 'Value-packed trips with no hidden costs',
     },
   ];
+
+  const benefits =
+    Array.isArray(whyData.benefits) && whyData.benefits.length > 0
+      ? whyData.benefits
+      : defaultBenefits;
 
   return (
     <section className="relative bg-[#111111] text-white pt-14 pb-14 md:pt-16 md:pb-16 overflow-x-clip z-20">
@@ -69,24 +87,24 @@ export function WhyChooseUs() {
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="w-2 h-2 rounded-full bg-[#FF6B16]"></span>
                 <span className="text-[#FF6B16] font-bold text-xs md:text-sm tracking-widest uppercase">
-                  WHY CHOOSE WEEKEND ESCAPES
+                  {badgeText}
                 </span>
               </div>
 
               <h2 className="text-2xl sm:text-3xl md:text-[34px] font-black tracking-tight text-white leading-tight">
-                More Than Just A Trip
+                {titleText}
               </h2>
 
               <p className="mt-2 text-sm md:text-base text-neutral-400 font-medium max-w-xl">
-                We create meaningful travel experiences with care, expertise and a passion for exploration.
+                {subtitleText}
               </p>
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 md:gap-4">
-              {benefits.map((item) => {
-                const Icon = item.icon;
+              {benefits.map((item, idx) => {
+                const Icon = getHomeIcon(item.icon, Mountain);
                 return (
-                  <div key={item.title} className="flex flex-col items-start gap-2.5 group">
+                  <div key={item.title || idx} className="flex flex-col items-start gap-2.5 group">
                     <div className="w-12 h-12 rounded-full border-[1.5px] border-[#FF6B16] flex items-center justify-center text-[#FF6B16] group-hover:bg-[#FF6B16] group-hover:text-white transition-all duration-300">
                       <Icon className="w-5 h-5" strokeWidth={1.8} />
                     </div>
@@ -117,7 +135,7 @@ export function WhyChooseUs() {
                 </defs>
                 <path d={TORN_PAPER_OUTER} fill="#ffffff" />
                 <image
-                  href="/newimage/other%20sections%20image/image1.png"
+                  href={imgSrc}
                   width="800"
                   height="500"
                   preserveAspectRatio="xMidYMid slice"
@@ -127,10 +145,8 @@ export function WhyChooseUs() {
 
               <SunMark className="absolute top-[12%] right-[18%] w-8 h-8 sm:w-9 sm:h-9 drop-shadow-md pointer-events-none" />
 
-              <p className="font-handwriting absolute bottom-[14%] right-[8%] text-xl sm:text-2xl md:text-[28px] text-white font-semibold leading-[0.95] drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)] rotate-[-12deg] pointer-events-none text-right">
-                Travel even
-                <br />
-                Repeat
+              <p className="font-handwriting absolute bottom-[14%] right-[8%] text-xl sm:text-2xl md:text-[28px] text-white font-semibold leading-[0.95] drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)] rotate-[-12deg] pointer-events-none text-right whitespace-pre-line">
+                {handwrittenNote}
               </p>
             </div>
           </div>

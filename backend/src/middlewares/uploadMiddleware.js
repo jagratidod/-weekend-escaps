@@ -29,3 +29,26 @@ export const uploadMemory = multer({
 export const uploadLogo = uploadMemory;
 export const uploadTestimonialImage = uploadMemory;
 export const uploadGenericMedia = uploadMemory;
+
+// Video & Poster file filter for Travel Reels
+const reelFileFilter = (req, file, cb) => {
+  const allowedExts = /mp4|webm|mov|mkv|jpg|jpeg|png|webp/;
+  const extname = allowedExts.test(path.extname(file.originalname).toLowerCase());
+  const isVideo = file.mimetype.startsWith('video/') || /mp4|webm|quicktime|x-matroska/.test(file.mimetype);
+  const isImage = file.mimetype.startsWith('image/');
+
+  if (extname && (isVideo || isImage)) {
+    return cb(null, true);
+  }
+  return cb(
+    new Error('Invalid file format. Only video files (.mp4, .mov, .webm) and poster images (.jpg, .png, .webp) are allowed.')
+  );
+};
+
+// Travel Reel Upload Middleware: 20MB strict limit for video & poster
+export const uploadReelMedia = multer({
+  storage: memoryStorage,
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB maximum size restriction
+  fileFilter: reelFileFilter,
+});
+

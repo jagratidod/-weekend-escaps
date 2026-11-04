@@ -444,36 +444,6 @@ export function ContactPage() {
         </div>
       </div>
 
-      {/* ── 3. Compact Full-Width Location Map (Edge-to-Edge) ── */}
-      <section className="w-full h-[220px] sm:h-[260px] relative bg-neutral-200 border-t border-neutral-200 overflow-hidden">
-        <iframe
-          title="Weekend Escapes Himalayan Basecamp Location"
-          src={
-            contactInfo?.mapUrl ||
-            'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d108861.32598379051!2d77.10898544976735!3d32.2396324905322!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390487081634b2f7%3A0x7292a870d0617302!2sManali%2C%20Himachal%20Pradesh!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin'
-          }
-          width="100%"
-          height="100%"
-          style={{ border: 0 }}
-          allowFullScreen=""
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          className="w-full h-full grayscale-[10%] contrast-[1.05]"
-        />
-
-        {/* Floating Location Pill Badge */}
-        <div className="absolute top-4 left-4 sm:left-10 bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-lg border border-neutral-200/80 flex items-center gap-3">
-          <div className="w-7 h-7 rounded-full bg-[#FF6B16] text-white flex items-center justify-center shrink-0 shadow-sm">
-            <MapPin className="w-3.5 h-3.5" />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-[#111111]">Weekend Escapes Basecamp</p>
-            <p className="text-[11px] text-neutral-500 max-w-[200px] sm:max-w-xs truncate">
-              {contactInfo?.address || 'Manali / Dehradun Hub, India'}
-            </p>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

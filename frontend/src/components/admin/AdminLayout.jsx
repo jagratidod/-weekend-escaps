@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../context/SettingsContext';
 import {
@@ -27,6 +28,7 @@ import {
   ShieldCheck,
   BookOpen,
   Radio,
+  Film,
 } from 'lucide-react';
 
 export default function AdminLayout({
@@ -44,6 +46,7 @@ export default function AdminLayout({
   const [pagesOpen, setPagesOpen] = useState(true);
 
   const pageSubItems = [
+    { id: 'home_sections', label: 'Home Page Editor', icon: Sparkles },
     { id: 'pages', label: 'Terms & Conditions', icon: FileText },
     { id: 'cancellation_policy', label: 'Cancellation Policy', icon: ShieldCheck },
     { id: 'testimonials', label: 'Testimonials', icon: MessageSquareQuote },
@@ -51,6 +54,7 @@ export default function AdminLayout({
   ];
 
   const otherNavItems = [
+    { id: 'reels', label: 'Travel Reels', icon: Film },
     { id: 'broadcast', label: 'Push & Broadcast', icon: Radio },
     { id: 'leads', label: 'Inquiries & Leads', icon: ShoppingCart },
     { id: 'destinations', label: 'Destinations', icon: Compass },

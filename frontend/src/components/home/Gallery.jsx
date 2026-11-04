@@ -23,69 +23,74 @@ export function Gallery() {
   };
 
   return (
-    <section className="pt-12 md:pt-16 pb-6 md:pb-8 bg-[#F7F7F5]">
-      <Container>
-        <SectionHeading
-          size="compact"
-          eyebrow="Memories For A Lifetime"
-          title="Moments From Our Trips"
-          subtitle="Real people. Real adventures. Real memories."
-          action={
-            <Link
-              to="/about#gallery"
-              className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-[#FF6B16]/70 hover:border-[#FF6B16] hover:bg-[#FF6B16] text-xs sm:text-sm font-bold text-neutral-800 hover:text-white transition-all bg-white shadow-xs group"
-            >
-              <span>View Gallery</span>
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-          }
-        />
-
-        {/* 1. Live Trip Reels & Video Clips Row (Auto-Running Mode) */}
+    <section className="pt-12 md:pt-16 pb-6 md:pb-8 bg-[#F7F7F5] overflow-hidden w-full">
+      {/* 1. Full Screen Width "What Our Travellers Say" 3D Video Reels */}
+      <div className="w-full overflow-hidden">
         <TripReelsRow />
+      </div>
 
-        {/* 2. Photo Snapshots Header */}
-        <div className="flex items-center justify-between mb-3 px-1">
-          <div className="flex items-center gap-2">
-            <Camera className="w-4 h-4 text-[#FF6B16]" />
-            <span className="text-xs sm:text-sm font-bold text-neutral-800 uppercase tracking-wider">
-              Captured Snapshots
-            </span>
+      {/* 2. Photo Snapshots Gallery */}
+      <Container>
+        <div className="pt-8 mt-6 border-t border-neutral-200/80">
+          <SectionHeading
+            size="compact"
+            eyebrow="Memories For A Lifetime"
+            title="Moments From Our Trips"
+            subtitle="Real people. Real adventures. Real memories."
+            action={
+              <Link
+                to="/about#gallery"
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-[#FF6B16]/70 hover:border-[#FF6B16] hover:bg-[#FF6B16] text-xs sm:text-sm font-bold text-neutral-800 hover:text-white transition-all bg-white shadow-xs group"
+              >
+                <span>View Gallery</span>
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            }
+          />
+
+          {/* Photo Snapshots Header Subtitle */}
+          <div className="flex items-center justify-between mb-3 px-1">
+            <div className="flex items-center gap-2">
+              <Camera className="w-4 h-4 text-[#FF6B16]" />
+              <span className="text-xs sm:text-sm font-bold text-neutral-800 uppercase tracking-wider">
+                Captured Snapshots
+              </span>
+            </div>
+            <span className="text-xs text-neutral-500 font-medium">Click any photo to enlarge</span>
           </div>
-          <span className="text-xs text-neutral-500 font-medium">Click any photo to enlarge</span>
-        </div>
 
-        {/* Gallery Grid (6 Images matching screenshot) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
-          {GALLERY_ITEMS.map((item, index) => (
-            <div
-              key={item.id}
-              onClick={() => openLightbox(index)}
-              className="group relative rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 bg-neutral-900"
-            >
-              <img
-                src={item.image}
-                alt={item.title}
-                loading="lazy"
-                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-              />
+          {/* Gallery Grid (6 Images matching screenshot) */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+            {GALLERY_ITEMS.map((item, index) => (
+              <div
+                key={item.id}
+                onClick={() => openLightbox(index)}
+                className="group relative rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 bg-neutral-900"
+              >
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  loading="lazy"
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                />
 
-              {/* Hover Overlay */}
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-3.5 text-white">
-                <div className="self-end w-7 h-7 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
-                  <Maximize2 className="w-3.5 h-3.5" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#FF6B16] block">
-                    {item.category}
-                  </span>
-                  <p className="text-xs font-bold leading-tight truncate">
-                    {item.title}
-                  </p>
+                {/* Hover Overlay */}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-3.5 text-white">
+                  <div className="self-end w-7 h-7 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
+                    <Maximize2 className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#FF6B16] block">
+                      {item.category}
+                    </span>
+                    <p className="text-xs font-bold leading-tight truncate">
+                      {item.title}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </Container>
 

@@ -7,6 +7,8 @@ import {
   resetFooterLogo,
   updateContactInfo,
   updateWhatsAppSettings,
+  updateHomeSections,
+  resetHomeSection,
 } from '../controllers/settingController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 import { uploadLogo } from '../middlewares/uploadMiddleware.js';
@@ -20,5 +22,7 @@ router.post('/footer-logo', protect, uploadLogo.single('logo'), updateFooterLogo
 router.post('/footer-logo/reset', protect, resetFooterLogo);
 router.put('/contact', protect, updateContactInfo);
 router.put('/whatsapp', protect, updateWhatsAppSettings);
+router.put('/home-sections', protect, updateHomeSections);
+router.post('/home-sections/reset', protect, resetHomeSection);
 
 export default router;

@@ -8,6 +8,151 @@ import { uploadBufferToCloudinary } from '../services/cloudinaryService.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+export const DEFAULT_HOME_SECTIONS = {
+  hero: {
+    badge: 'EXPLORE • DISCOVER • ESCAPE',
+    titleLine1: 'Your Next',
+    titleHighlight: 'Adventure',
+    titleLine2: 'Awaits',
+    subtitle:
+      'From majestic mountains to serene valleys, we craft unforgettable travel experiences for every explorer.',
+    primaryButtonText: 'Explore Destinations',
+    primaryButtonLink: '/destinations',
+    heroImage: '/newimage/herosecction/heroimage.png',
+    socialProof: {
+      travelersText: '500+ Happy Travelers',
+      rating: '4.9',
+      reviewsText: '(500+ Reviews)',
+      avatars: [
+        '/images/testimonials/priya-sharma.webp',
+        '/images/testimonials/rahul-verma.webp',
+        '/images/testimonials/sneha-patel.webp',
+      ],
+      badgeCount: '500+',
+    },
+  },
+  experiences: {
+    badge: 'TRAVEL YOUR WAY',
+    title: 'Choose Your Experience',
+    subtitle: 'Every journey is unique. Find the travel style that matches you.',
+    items: [
+      { id: 'trekking', name: 'Trekking', icon: 'Mountain', link: '/experiences#trekking' },
+      { id: 'adventure', name: 'Adventure', icon: 'Compass', link: '/experiences#adventure' },
+      { id: 'honeymoon', name: 'Honeymoon', icon: 'Heart', link: '/experiences#honeymoon' },
+      { id: 'family', name: 'Family Trips', icon: 'Users', link: '/experiences#family' },
+      { id: 'group', name: 'Group Tours', icon: 'Flame', link: '/experiences#group' },
+      { id: 'international', name: 'International', icon: 'Globe', link: '/experiences#international' },
+    ],
+  },
+  whyChooseUs: {
+    badge: 'WHY CHOOSE WEEKEND ESCAPES',
+    title: 'More Than Just A Trip',
+    subtitle:
+      'We create meaningful travel experiences with care, expertise and a passion for exploration.',
+    image: '/newimage/other sections image/image1.png',
+    handwrittenNote: 'Travel even\nRepeat',
+    benefits: [
+      {
+        icon: 'Mountain',
+        title: 'Curated Experiences',
+        desc: 'Handpicked destinations and verified stays',
+      },
+      {
+        icon: 'Users',
+        title: 'Expert Guidance',
+        desc: 'Experienced travel leaders and local support',
+      },
+      {
+        icon: 'Handshake',
+        title: 'Safe & Secure Travel',
+        desc: 'Your safety is our priority',
+      },
+      {
+        icon: 'UsersRound',
+        title: 'Best Price Guarantee',
+        desc: 'Value-packed trips with no hidden costs',
+      },
+    ],
+  },
+  bookingProcess: {
+    badge: 'OUR PROCESS',
+    title: 'From Dream to Destination.',
+    subtitle:
+      'One continuous journey designed to make planning, booking, and exploring completely effortless.',
+    steps: [
+      {
+        num: 1,
+        stepNumber: '01',
+        title: 'Explore',
+        tagline: 'Curated Trails & Stays',
+        desc: 'Browse our handpicked mountain treks, scenic road trips, and luxury weekend getaways.',
+        icon: 'Compass',
+      },
+      {
+        num: 2,
+        stepNumber: '02',
+        title: 'Plan',
+        tagline: 'Bespoke Itinerary',
+        desc: 'Customize dates, group sizes, and special preferences with our certified expedition marshals.',
+        icon: 'CalendarDays',
+      },
+      {
+        num: 3,
+        stepNumber: '03',
+        title: 'Book & Give Back',
+        tagline: 'Secure & Gives Back',
+        desc: 'Lock in slots with verified gateways. A share of every booking is donated to flood relief, food distribution & welfare trusts.',
+        icon: 'ShieldCheck',
+      },
+      {
+        num: 4,
+        stepNumber: '04',
+        title: 'Travel',
+        tagline: 'Lifelong Memories',
+        desc: 'Pack your bags, meet your trip leader at basecamp, and embark on your unforgettable escape.',
+        icon: 'Plane',
+      },
+    ],
+    welfare: {
+      badge: 'Every Booking Gives Back',
+      tagline: 'Travel With A Purpose',
+      title: 'A Part of Your Trip Cost is Donated to Trusted Welfare & Relief Trusts',
+      description:
+        'Jab aap hamare saath apni trip book karte hain, aapke booking amount ka ek hissa direct verified relief trusts ko jata hai jisse zaroorat ke waqt real help provide ki ja sake:',
+      items: [
+        {
+          icon: 'Waves',
+          title: 'Flood & Calamity Relief',
+          desc: 'Floods aur natural disasters ke waqt prompt rescue & rehabilitation help.',
+          color: 'blue',
+        },
+        {
+          icon: 'Utensils',
+          title: 'Food & Ration Drives',
+          desc: 'Remote aur underprivileged parivaron tak hygienic food aur ration supply.',
+          color: 'emerald',
+        },
+        {
+          icon: 'Heart',
+          title: 'Community & Welfare',
+          desc: 'Local mountain communities ki medical aid aur welfare support.',
+          color: 'purple',
+        },
+      ],
+    },
+  },
+  finalCta: {
+    heading: 'Ready for Your Next Adventure?',
+    subtitle:
+      "Let's turn your travel dreams into unforgettable memories. Get personalized recommendations and plan your next escape.",
+    bgImage: '/newimage/other sections image/footerbanner2.png',
+    primaryButtonText: 'Plan My Trip',
+    primaryButtonLink: '/plan-trip',
+    whatsappButtonText: 'Talk on WhatsApp',
+    whatsappUrl: '',
+  },
+};
+
 // Helper to get or initialize default settings
 const getOrCreateDefaultSettings = async () => {
   let settings = await Setting.findOne({ key: 'site_settings' });
@@ -19,13 +164,35 @@ const getOrCreateDefaultSettings = async () => {
       tagline: 'Crafting Adventures',
       whatsappNumber: '+91 98765 43210',
       whatsappMessage: 'Hi Weekend Escapes! I would like to plan my next adventure.',
+      homeSections: DEFAULT_HOME_SECTIONS,
     });
-  } else if (!settings.whatsappNumber) {
-    settings.whatsappNumber = (settings.contactInfo && settings.contactInfo.whatsapp) || '+91 98765 43210';
-    if (!settings.whatsappMessage) {
-      settings.whatsappMessage = 'Hi Weekend Escapes! I would like to plan my next adventure.';
+  } else {
+    let needsSave = false;
+
+    if (!settings.whatsappNumber) {
+      settings.whatsappNumber = (settings.contactInfo && settings.contactInfo.whatsapp) || '+91 98765 43210';
+      if (!settings.whatsappMessage) {
+        settings.whatsappMessage = 'Hi Weekend Escapes! I would like to plan my next adventure.';
+      }
+      needsSave = true;
     }
-    await settings.save();
+
+    if (!settings.homeSections) {
+      settings.homeSections = DEFAULT_HOME_SECTIONS;
+      needsSave = true;
+    } else {
+      ['hero', 'experiences', 'whyChooseUs', 'bookingProcess', 'finalCta'].forEach((sec) => {
+        if (!settings.homeSections[sec]) {
+          settings.homeSections[sec] = DEFAULT_HOME_SECTIONS[sec];
+          needsSave = true;
+        }
+      });
+    }
+
+    if (needsSave) {
+      settings.markModified('homeSections');
+      await settings.save();
+    }
   }
   return settings;
 };
@@ -338,6 +505,139 @@ export const updateWhatsAppSettings = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || 'Error updating WhatsApp settings',
+    });
+  }
+};
+
+// @desc    Update Home Page Dynamic Sections
+// @route   PUT /api/settings/home-sections
+// @access  Protected (Admin only)
+export const updateHomeSections = async (req, res) => {
+  try {
+    const settings = await getOrCreateDefaultSettings();
+    const updates = req.body || {};
+
+    if (!settings.homeSections) {
+      settings.homeSections = JSON.parse(JSON.stringify(DEFAULT_HOME_SECTIONS));
+    }
+
+    // 1. Hero Section update
+    if (updates.hero) {
+      settings.homeSections.hero = {
+        ...settings.homeSections.hero,
+        ...updates.hero,
+        socialProof: {
+          ...settings.homeSections.hero?.socialProof,
+          ...(updates.hero.socialProof || {}),
+        },
+      };
+    }
+
+    // 2. Experiences Section update
+    if (updates.experiences) {
+      settings.homeSections.experiences = {
+        ...settings.homeSections.experiences,
+        ...updates.experiences,
+        items: Array.isArray(updates.experiences.items)
+          ? updates.experiences.items
+          : settings.homeSections.experiences?.items || [],
+      };
+    }
+
+    // 3. Why Choose Us Section update
+    if (updates.whyChooseUs) {
+      settings.homeSections.whyChooseUs = {
+        ...settings.homeSections.whyChooseUs,
+        ...updates.whyChooseUs,
+        benefits: Array.isArray(updates.whyChooseUs.benefits)
+          ? updates.whyChooseUs.benefits
+          : settings.homeSections.whyChooseUs?.benefits || [],
+      };
+    }
+
+    // 4. Booking Process Section update
+    if (updates.bookingProcess) {
+      settings.homeSections.bookingProcess = {
+        ...settings.homeSections.bookingProcess,
+        ...updates.bookingProcess,
+        steps: Array.isArray(updates.bookingProcess.steps)
+          ? updates.bookingProcess.steps
+          : settings.homeSections.bookingProcess?.steps || [],
+        welfare: {
+          ...settings.homeSections.bookingProcess?.welfare,
+          ...(updates.bookingProcess.welfare || {}),
+          items: Array.isArray(updates.bookingProcess.welfare?.items)
+            ? updates.bookingProcess.welfare.items
+            : settings.homeSections.bookingProcess?.welfare?.items || [],
+        },
+      };
+    }
+
+    // 5. Final CTA Section update
+    if (updates.finalCta) {
+      settings.homeSections.finalCta = {
+        ...settings.homeSections.finalCta,
+        ...updates.finalCta,
+      };
+    }
+
+    settings.updatedBy = req.admin ? req.admin._id : null;
+    settings.markModified('homeSections');
+    await settings.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Home page sections updated successfully!',
+      homeSections: settings.homeSections,
+      settings,
+    });
+  } catch (error) {
+    console.error('[UpdateHomeSections Error]:', error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error updating home sections',
+    });
+  }
+};
+
+// @desc    Reset Home Page Section to Default
+// @route   POST /api/settings/home-sections/reset
+// @access  Protected (Admin only)
+export const resetHomeSection = async (req, res) => {
+  try {
+    const settings = await getOrCreateDefaultSettings();
+    const { section } = req.body;
+
+    if (!settings.homeSections) {
+      settings.homeSections = JSON.parse(JSON.stringify(DEFAULT_HOME_SECTIONS));
+    }
+
+    if (!section || section === 'all') {
+      settings.homeSections = JSON.parse(JSON.stringify(DEFAULT_HOME_SECTIONS));
+    } else if (DEFAULT_HOME_SECTIONS[section]) {
+      settings.homeSections[section] = JSON.parse(JSON.stringify(DEFAULT_HOME_SECTIONS[section]));
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid section name: ${section}`,
+      });
+    }
+
+    settings.updatedBy = req.admin ? req.admin._id : null;
+    settings.markModified('homeSections');
+    await settings.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Section "${section || 'all'}" reset to default successfully!`,
+      homeSections: settings.homeSections,
+      settings,
+    });
+  } catch (error) {
+    console.error('[ResetHomeSection Error]:', error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error resetting home section',
     });
   }
 };

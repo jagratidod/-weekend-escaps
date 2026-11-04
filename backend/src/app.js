@@ -84,6 +84,7 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
 import packageRoutes from './routes/packageRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import reelRoutes from './routes/reelRoutes.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/settings', settingRoutes);
@@ -97,6 +98,7 @@ app.use('/api/blogs', blogRoutes);
 app.use('/api/packages', packageRoutes);
 app.use('/api/fcm-tokens', notificationRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/reels', reelRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

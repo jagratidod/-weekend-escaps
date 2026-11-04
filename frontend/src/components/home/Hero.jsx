@@ -3,14 +3,43 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import TravelSearch from './TravelSearch';
+import { useSettings } from '../../context/SettingsContext';
 
 export function Hero() {
+  const { homeSections, formatImageUrl } = useSettings();
+  const heroData = homeSections?.hero || {};
+
+  const heroImageSrc = formatImageUrl(heroData.heroImage || '/newimage/herosecction/heroimage.png');
+  const badgeText = heroData.badge || 'EXPLORE • DISCOVER • ESCAPE';
+  const titleLine1 = heroData.titleLine1 || 'Your Next';
+  const titleHighlight = heroData.titleHighlight || 'Adventure';
+  const titleLine2 = heroData.titleLine2 || 'Awaits';
+  const subtitle =
+    heroData.subtitle ||
+    'From majestic mountains to serene valleys, we craft unforgettable travel experiences for every explorer.';
+  const primaryButtonText = heroData.primaryButtonText || 'Explore Destinations';
+  const primaryButtonLink = heroData.primaryButtonLink || '/destinations';
+
+  const socialProof = heroData.socialProof || {};
+  const travelersText = socialProof.travelersText || '500+ Happy Travelers';
+  const ratingValue = socialProof.rating || '4.9';
+  const reviewsText = socialProof.reviewsText || '(500+ Reviews)';
+  const badgeCount = socialProof.badgeCount || '500+';
+  const avatars =
+    Array.isArray(socialProof.avatars) && socialProof.avatars.length > 0
+      ? socialProof.avatars
+      : [
+          '/images/testimonials/priya-sharma.webp',
+          '/images/testimonials/rahul-verma.webp',
+          '/images/testimonials/sneha-patel.webp',
+        ];
+
   return (
     <section className="relative min-h-screen flex flex-col justify-between pt-24 sm:pt-28 overflow-x-clip bg-[#F7F7F5]">
       {/* 1. Background Cinematic Hero Artwork Image */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <img
-          src="/newimage/herosecction/heroimage.png"
+          src={heroImageSrc}
           alt="Weekend Escapes Mountain Adventure"
           loading="eager"
           className="w-full h-full object-cover object-right lg:object-center"
@@ -30,7 +59,7 @@ export function Hero() {
             className="flex items-center gap-2 mb-4"
           >
             <span className="text-[#FF6B16] font-black text-xs tracking-widest uppercase">
-              EXPLORE • DISCOVER • ESCAPE
+              {badgeText}
             </span>
           </motion.div>
 
@@ -41,9 +70,9 @@ export function Hero() {
             transition={{ duration: 0.7, delay: 0.1 }}
             className="text-4xl sm:text-6xl lg:text-[72px] font-black tracking-tight text-[#111111] leading-[1.06]"
           >
-            Your Next <br />
-            <span className="text-[#FF6B16] inline-block">Adventure</span> <br />
-            Awaits
+            {titleLine1} <br />
+            <span className="text-[#FF6B16] inline-block">{titleHighlight}</span> <br />
+            {titleLine2}
           </motion.h1>
 
           {/* Supporting Text */}
@@ -53,7 +82,7 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mt-4 sm:mt-5 text-sm sm:text-base text-neutral-700 max-w-lg font-medium leading-relaxed"
           >
-            From majestic mountains to serene valleys, we craft unforgettable travel experiences for every explorer.
+            {subtitle}
           </motion.p>
 
           {/* CTA Buttons */}
@@ -64,10 +93,10 @@ export function Hero() {
             className="mt-6 sm:mt-8 flex flex-wrap items-center gap-4"
           >
             <Link
-              to="/destinations"
+              to={primaryButtonLink}
               className="inline-flex items-center gap-2 px-6 sm:px-7 py-3 rounded-full font-bold text-xs sm:text-sm bg-[#FF6B16] hover:bg-[#e05809] text-white shadow-lg shadow-[#FF6B16]/30 hover:shadow-xl hover:shadow-[#FF6B16]/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 group cursor-pointer"
             >
-              <span>Explore Destinations</span>
+              <span>{primaryButtonText}</span>
               <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
           </motion.div>
@@ -79,39 +108,32 @@ export function Hero() {
             transition={{ duration: 0.8, delay: 0.45 }}
             className="mt-8 flex flex-wrap items-center gap-3 sm:gap-4"
           >
-            {/* 4 Avatars Stack */}
+            {/* Avatars Stack */}
             <div className="flex -space-x-2.5">
-              <img
-                src="/images/testimonials/priya-sharma.webp"
-                alt="Traveler"
-                className="w-9 h-9 rounded-full border-2 border-white object-cover shadow-xs"
-              />
-              <img
-                src="/images/testimonials/rahul-verma.webp"
-                alt="Traveler"
-                className="w-9 h-9 rounded-full border-2 border-white object-cover shadow-xs"
-              />
-              <img
-                src="/images/testimonials/sneha-patel.webp"
-                alt="Traveler"
-                className="w-9 h-9 rounded-full border-2 border-white object-cover shadow-xs"
-              />
+              {avatars.map((av, idx) => (
+                <img
+                  key={idx}
+                  src={formatImageUrl(av)}
+                  alt="Traveler"
+                  className="w-9 h-9 rounded-full border-2 border-white object-cover shadow-xs"
+                />
+              ))}
               <div className="w-9 h-9 rounded-full border-2 border-white bg-[#111111] text-[#FF6B16] text-[10px] font-black flex items-center justify-center shadow-xs">
-                500+
+                {badgeCount}
               </div>
             </div>
 
             {/* Ratings Text matching screenshot */}
             <div className="text-xs">
               <div className="flex items-center gap-1.5">
-                <span className="font-bold text-neutral-800">500+ Happy Travelers</span>
+                <span className="font-bold text-neutral-800">{travelersText}</span>
                 <div className="flex items-center gap-0.5 ml-1">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="w-3.5 h-3.5 fill-[#FF6B16] text-[#FF6B16]" />
                   ))}
                 </div>
-                <span className="font-bold text-neutral-800 ml-1">4.9</span>
-                <span className="text-neutral-500 font-medium">(200+ Reviews)</span>
+                <span className="font-bold text-neutral-800 ml-1">{ratingValue}</span>
+                <span className="text-neutral-500 font-medium">{reviewsText}</span>
               </div>
             </div>
           </motion.div>

@@ -10,6 +10,9 @@ import PaymentManager from '../../components/admin/PaymentManager';
 import BlogManager from '../../components/admin/BlogManager';
 import BroadcastManager from '../../components/admin/BroadcastManager';
 import PackageManager from '../../components/admin/PackageManager';
+import ReelManager from '../../components/admin/ReelManager';
+import HomeSectionsManager from '../../components/admin/HomeSectionsManager';
+import { Sparkles } from 'lucide-react';
 import {
   Package,
   CalendarCheck,
@@ -34,6 +37,7 @@ export default function AdminDashboardPage() {
           onGoToContact={() => setActiveTab('contact_editor')}
           onGoToTestimonials={() => setActiveTab('testimonials')}
           onGoToBookings={() => setActiveTab('bookings')}
+          onGoToHomeSections={() => setActiveTab('home_sections')}
         />
       )}
       {activeTab === 'bookings' && <BookingManager />}
@@ -45,15 +49,17 @@ export default function AdminDashboardPage() {
       {activeTab === 'testimonials' && <TestimonialManager />}
       {activeTab === 'leads' && <LeadManager />}
       {activeTab === 'contact_editor' && <ContactInfoManager />}
+      {activeTab === 'home_sections' && <HomeSectionsManager />}
       {activeTab === 'settings' && <LogoManager />}
       {activeTab === 'destinations' && <PlaceholderModule title="Destinations Management" icon={Compass} />}
       {activeTab === 'packages' && <PackageManager />}
+      {activeTab === 'reels' && <ReelManager />}
     </AdminLayout>
   );
 }
 
 // ── Main Dashboard View (Reference UI Match) ──
-function DashboardView({ onGoToLeads, onGoToContact, onGoToTestimonials, onGoToBookings }) {
+function DashboardView({ onGoToLeads, onGoToContact, onGoToTestimonials, onGoToBookings, onGoToHomeSections }) {
   // Top 10 destinations ranking (from reference "Top 10 Stores by sales")
   const topDestinations = [
     { name: 'Kashmir Valley', value: '874k', pct: 92 },

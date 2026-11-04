@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { DEFAULT_HOME_SECTIONS } from '../utils/defaultHomeSections';
 
 const SettingsContext = createContext();
 
@@ -52,19 +53,26 @@ export function SettingsProvider({ children }) {
     whatsappNumber: '+91 98765 43210',
     whatsappMessage: 'Hi Weekend Escapes! I would like to plan my next adventure.',
     contactInfo: DEFAULT_CONTACT_INFO,
+    homeSections: DEFAULT_HOME_SECTIONS,
   });
   const [loading, setLoading] = useState(true);
 
-  // Helper to format full logo URL
-  const formatLogoUrl = (rawUrl) => {
-    if (!rawUrl) return '/logo/weekend-escapes-logo.svg';
-    if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
+  // Helper to format any image URL (Cloudinary, local /uploads/, or static asset)
+  const formatImageUrl = useCallback((rawUrl) => {
+    if (!rawUrl) return '';
+    if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('data:')) {
       return rawUrl;
     }
     if (rawUrl.startsWith('/uploads/')) {
       return `${BACKEND_ROOT}${rawUrl}`;
     }
     return rawUrl;
+  }, []);
+
+  // Helper to format full logo URL
+  const formatLogoUrl = (rawUrl) => {
+    if (!rawUrl) return '/logo/weekend-escapes-logo.svg';
+    return formatImageUrl(rawUrl);
   };
 
   const fetchSettings = useCallback(async () => {
@@ -72,6 +80,7 @@ export function SettingsProvider({ children }) {
       const res = await fetch(`${API_BASE_URL}/settings`);
       const data = await res.json();
       if (data.success && data.settings) {
+        const serverHome = data.settings.homeSections || {};
         setSettings({
           ...data.settings,
           contactInfo: {
@@ -82,6 +91,43 @@ export function SettingsProvider({ children }) {
               ...((data.settings.contactInfo && data.settings.contactInfo.socials) || {}),
             },
           },
+          homeSections: {
+            hero: { ...DEFAULT_HOME_SECTIONS.hero, ...(serverHome.hero || {}) },
+            experiences: {
+              ...DEFAULT_HOME_SECTIONS.experiences,
+              ...(serverHome.experiences || {}),
+              items:
+                Array.isArray(serverHome.experiences?.items) && serverHome.experiences.items.length > 0
+                  ? serverHome.experiences.items
+                  : DEFAULT_HOME_SECTIONS.experiences.items,
+            },
+            whyChooseUs: {
+              ...DEFAULT_HOME_SECTIONS.whyChooseUs,
+              ...(serverHome.whyChooseUs || {}),
+              benefits:
+                Array.isArray(serverHome.whyChooseUs?.benefits) && serverHome.whyChooseUs.benefits.length > 0
+                  ? serverHome.whyChooseUs.benefits
+                  : DEFAULT_HOME_SECTIONS.whyChooseUs.benefits,
+            },
+            bookingProcess: {
+              ...DEFAULT_HOME_SECTIONS.bookingProcess,
+              ...(serverHome.bookingProcess || {}),
+              steps:
+                Array.isArray(serverHome.bookingProcess?.steps) && serverHome.bookingProcess.steps.length > 0
+                  ? serverHome.bookingProcess.steps
+                  : DEFAULT_HOME_SECTIONS.bookingProcess.steps,
+              welfare: {
+                ...DEFAULT_HOME_SECTIONS.bookingProcess.welfare,
+                ...(serverHome.bookingProcess?.welfare || {}),
+                items:
+                  Array.isArray(serverHome.bookingProcess?.welfare?.items) &&
+                  serverHome.bookingProcess.welfare.items.length > 0
+                    ? serverHome.bookingProcess.welfare.items
+                    : DEFAULT_HOME_SECTIONS.bookingProcess.welfare.items,
+              },
+            },
+            finalCta: { ...DEFAULT_HOME_SECTIONS.finalCta, ...(serverHome.finalCta || {}) },
+          },
         });
       }
     } catch (err) {
@@ -89,7 +135,7 @@ export function SettingsProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [formatImageUrl]);
 
   useEffect(() => {
     fetchSettings();
@@ -98,6 +144,7 @@ export function SettingsProvider({ children }) {
   const activeLogoUrl = formatLogoUrl(settings.logoUrl);
   const activeFooterLogoUrl = formatLogoUrl(settings.footerLogoUrl || settings.logoUrl);
   const activeContactInfo = settings.contactInfo || DEFAULT_CONTACT_INFO;
+  const activeHomeSections = settings.homeSections || DEFAULT_HOME_SECTIONS;
   const activeWhatsappNumber =
     settings.whatsappNumber ||
     (settings.contactInfo && settings.contactInfo.whatsapp) ||
@@ -115,6 +162,7 @@ export function SettingsProvider({ children }) {
     <SettingsContext.Provider
       value={{
         settings,
+        homeSections: activeHomeSections,
         logoUrl: activeLogoUrl,
         rawLogoUrl: settings.logoUrl,
         footerLogoUrl: activeFooterLogoUrl,
@@ -127,6 +175,7 @@ export function SettingsProvider({ children }) {
         getCustomWhatsAppUrl,
         cleanWhatsAppNumber,
         buildWhatsAppUrl,
+        formatImageUrl,
         loading,
         refreshSettings: fetchSettings,
         API_BASE_URL,

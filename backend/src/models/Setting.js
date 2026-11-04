@@ -112,6 +112,204 @@ const settingSchema = new mongoose.Schema(
         default: '',
       },
     },
+    homeSections: {
+      hero: {
+        badge: {
+          type: String,
+          default: 'EXPLORE • DISCOVER • ESCAPE',
+        },
+        titleLine1: {
+          type: String,
+          default: 'Your Next',
+        },
+        titleHighlight: {
+          type: String,
+          default: 'Adventure',
+        },
+        titleLine2: {
+          type: String,
+          default: 'Awaits',
+        },
+        subtitle: {
+          type: String,
+          default:
+            'From majestic mountains to serene valleys, we craft unforgettable travel experiences for every explorer.',
+        },
+        primaryButtonText: {
+          type: String,
+          default: 'Explore Destinations',
+        },
+        primaryButtonLink: {
+          type: String,
+          default: '/destinations',
+        },
+        heroImage: {
+          type: String,
+          default: '/newimage/herosecction/heroimage.png',
+        },
+        socialProof: {
+          travelersText: {
+            type: String,
+            default: '500+ Happy Travelers',
+          },
+          rating: {
+            type: String,
+            default: '4.9',
+          },
+          reviewsText: {
+            type: String,
+            default: '(500+ Reviews)',
+          },
+          avatars: {
+            type: [String],
+            default: [
+              '/images/testimonials/priya-sharma.webp',
+              '/images/testimonials/rahul-verma.webp',
+              '/images/testimonials/sneha-patel.webp',
+            ],
+          },
+          badgeCount: {
+            type: String,
+            default: '500+',
+          },
+        },
+      },
+      experiences: {
+        badge: {
+          type: String,
+          default: 'TRAVEL YOUR WAY',
+        },
+        title: {
+          type: String,
+          default: 'Choose Your Experience',
+        },
+        subtitle: {
+          type: String,
+          default: 'Every journey is unique. Find the travel style that matches you.',
+        },
+        items: [
+          {
+            id: { type: String, default: '' },
+            name: { type: String, default: '' },
+            icon: { type: String, default: 'Mountain' },
+            link: { type: String, default: '/packages' },
+          },
+        ],
+      },
+      whyChooseUs: {
+        badge: {
+          type: String,
+          default: 'WHY CHOOSE WEEKEND ESCAPES',
+        },
+        title: {
+          type: String,
+          default: 'More Than Just A Trip',
+        },
+        subtitle: {
+          type: String,
+          default:
+            'We create meaningful travel experiences with care, expertise and a passion for exploration.',
+        },
+        image: {
+          type: String,
+          default: '/newimage/other sections image/image1.png',
+        },
+        handwrittenNote: {
+          type: String,
+          default: 'Travel even\nRepeat',
+        },
+        benefits: [
+          {
+            icon: { type: String, default: 'Mountain' },
+            title: { type: String, default: '' },
+            desc: { type: String, default: '' },
+          },
+        ],
+      },
+      bookingProcess: {
+        badge: {
+          type: String,
+          default: 'OUR PROCESS',
+        },
+        title: {
+          type: String,
+          default: 'From Dream to Destination.',
+        },
+        subtitle: {
+          type: String,
+          default:
+            'One continuous journey designed to make planning, booking, and exploring completely effortless.',
+        },
+        steps: [
+          {
+            num: { type: Number, default: 1 },
+            stepNumber: { type: String, default: '01' },
+            title: { type: String, default: '' },
+            tagline: { type: String, default: '' },
+            desc: { type: String, default: '' },
+            icon: { type: String, default: 'Compass' },
+          },
+        ],
+        welfare: {
+          badge: {
+            type: String,
+            default: 'Every Booking Gives Back',
+          },
+          tagline: {
+            type: String,
+            default: 'Travel With A Purpose',
+          },
+          title: {
+            type: String,
+            default: 'A Part of Your Trip Cost is Donated to Trusted Welfare & Relief Trusts',
+          },
+          description: {
+            type: String,
+            default:
+              'Jab aap hamare saath apni trip book karte hain, aapke booking amount ka ek hissa direct verified relief trusts ko jata hai jisse zaroorat ke waqt real help provide ki ja sake:',
+          },
+          items: [
+            {
+              icon: { type: String, default: 'Waves' },
+              title: { type: String, default: '' },
+              desc: { type: String, default: '' },
+              color: { type: String, default: 'blue' },
+            },
+          ],
+        },
+      },
+      finalCta: {
+        heading: {
+          type: String,
+          default: 'Ready for Your Next Adventure?',
+        },
+        subtitle: {
+          type: String,
+          default:
+            "Let's turn your travel dreams into unforgettable memories. Get personalized recommendations and plan your next escape.",
+        },
+        bgImage: {
+          type: String,
+          default: '/newimage/other sections image/footerbanner2.png',
+        },
+        primaryButtonText: {
+          type: String,
+          default: 'Plan My Trip',
+        },
+        primaryButtonLink: {
+          type: String,
+          default: '/plan-trip',
+        },
+        whatsappButtonText: {
+          type: String,
+          default: 'Talk on WhatsApp',
+        },
+        whatsappUrl: {
+          type: String,
+          default: '',
+        },
+      },
+    },
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Admin',
