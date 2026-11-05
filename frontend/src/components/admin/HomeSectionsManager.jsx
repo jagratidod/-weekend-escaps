@@ -1507,7 +1507,7 @@ export default function HomeSectionsManager() {
 
                 <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
                   <span className="px-5 py-2 rounded-full bg-[#FF6B16] text-white text-xs font-bold shadow-md">
-                    {formData.finalCta?.primaryButtonText || 'Plan My Trip'} →
+                    {formData.finalCta?.primaryButtonText || 'Explore Packages'} →
                   </span>
                   <span className="px-5 py-2 rounded-full bg-black/60 border border-white/40 text-white text-xs font-bold flex items-center gap-1.5">
                     <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />

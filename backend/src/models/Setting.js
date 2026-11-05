@@ -294,11 +294,11 @@ const settingSchema = new mongoose.Schema(
         },
         primaryButtonText: {
           type: String,
-          default: 'Plan My Trip',
+          default: 'Explore Packages',
         },
         primaryButtonLink: {
           type: String,
-          default: '/plan-trip',
+          default: '/packages',
         },
         whatsappButtonText: {
           type: String,

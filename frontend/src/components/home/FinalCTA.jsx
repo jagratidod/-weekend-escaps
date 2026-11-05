@@ -27,8 +27,8 @@ export function FinalCTA() {
   const bgImg = formatImageUrl(
     ctaData.bgImage || '/newimage/other sections image/footerbanner2.png'
   );
-  const primaryButtonText = ctaData.primaryButtonText || 'Plan My Trip';
-  const primaryButtonLink = ctaData.primaryButtonLink || '/plan-trip';
+  const primaryButtonText = ctaData.primaryButtonText || 'Explore Packages';
+  const primaryButtonLink = ctaData.primaryButtonLink || '/packages';
   const whatsappButtonText = ctaData.whatsappButtonText || 'Talk on WhatsApp';
   const activeWhatsAppLink = ctaData.whatsappUrl || whatsappUrl || BRAND.whatsappUrl;
 

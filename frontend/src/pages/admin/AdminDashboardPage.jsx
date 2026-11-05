@@ -12,6 +12,7 @@ import BroadcastManager from '../../components/admin/BroadcastManager';
 import PackageManager from '../../components/admin/PackageManager';
 import ReelManager from '../../components/admin/ReelManager';
 import HomeSectionsManager from '../../components/admin/HomeSectionsManager';
+import GalleryManager from '../../components/admin/GalleryManager';
 import { Sparkles } from 'lucide-react';
 import {
   Package,
@@ -50,6 +51,7 @@ export default function AdminDashboardPage() {
       {activeTab === 'leads' && <LeadManager />}
       {activeTab === 'contact_editor' && <ContactInfoManager />}
       {activeTab === 'home_sections' && <HomeSectionsManager />}
+      {activeTab === 'gallery_editor' && <GalleryManager />}
       {activeTab === 'settings' && <LogoManager />}
       {activeTab === 'destinations' && <PlaceholderModule title="Destinations Management" icon={Compass} />}
       {activeTab === 'packages' && <PackageManager />}

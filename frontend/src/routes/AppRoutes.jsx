@@ -9,7 +9,6 @@ import ExperiencesPage from '../pages/ExperiencesPage';
 import BlogsPage from '../pages/BlogsPage';
 import AboutPage from '../pages/AboutPage';
 import ContactPage from '../pages/ContactPage';
-import PlanTripPage from '../pages/PlanTripPage';
 import TermsPage from '../pages/TermsPage';
 import CancellationPolicyPage from '../pages/CancellationPolicyPage';
 import PaymentReturnPage from '../pages/PaymentReturnPage';
@@ -46,7 +45,7 @@ export function AppRoutes() {
       <Route path="/cancellation-and-refund-policy" element={<CancellationPolicyPage />} />
       <Route path="/checkout/phonepe" element={<PhonePeCheckoutPage />} />
       <Route path="/payment/phonepe/return" element={<PaymentReturnPage />} />
-      <Route path="/plan-trip" element={<PlanTripPage />} />
+      <Route path="/plan-trip" element={<Navigate to="/" replace />} />
 
       {/* Admin Portal Routes */}
       <Route path="/admin/login" element={<AdminLoginPage />} />

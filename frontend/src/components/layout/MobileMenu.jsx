@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { X, ChevronDown, ArrowRight, PhoneCall } from 'lucide-react';
+import { X, ChevronDown, PhoneCall } from 'lucide-react';
 import { NAV_LINKS, BRAND } from '../../utils/constants';
 import { useSettings } from '../../context/SettingsContext';
 
@@ -91,16 +91,7 @@ export function MobileMenu({
         </div>
 
         {/* Footer CTAs */}
-        <div className="pt-6 border-t border-neutral-100 space-y-4">
-          <Link
-            to="/plan-trip"
-            onClick={onClose}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full font-bold bg-[#FF6B16] text-white shadow-lg shadow-[#FF6B16]/30 text-center"
-          >
-            <span>Plan My Trip</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-
+        <div className="pt-6 border-t border-neutral-100">
           <a
             href={`tel:${BRAND.phone}`}
             className="flex items-center justify-center gap-2 text-xs font-semibold text-neutral-600 hover:text-[#FF6B16]"

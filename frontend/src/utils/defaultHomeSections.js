@@ -136,8 +136,8 @@ export const DEFAULT_HOME_SECTIONS = {
     subtitle:
       "Let's turn your travel dreams into unforgettable memories. Get personalized recommendations and plan your next escape.",
     bgImage: '/newimage/other sections image/footerbanner2.png',
-    primaryButtonText: 'Plan My Trip',
-    primaryButtonLink: '/plan-trip',
+    primaryButtonText: 'Explore Packages',
+    primaryButtonLink: '/packages',
     whatsappButtonText: 'Talk on WhatsApp',
     whatsappUrl: '',
   },

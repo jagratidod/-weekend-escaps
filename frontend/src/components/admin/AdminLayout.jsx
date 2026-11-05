@@ -29,6 +29,7 @@ import {
   BookOpen,
   Radio,
   Film,
+  Camera,
 } from 'lucide-react';
 
 export default function AdminLayout({
@@ -47,6 +48,7 @@ export default function AdminLayout({
 
   const pageSubItems = [
     { id: 'home_sections', label: 'Home Page Editor', icon: Sparkles },
+    { id: 'gallery_editor', label: 'Gallery Page Editor', icon: Camera },
     { id: 'pages', label: 'Terms & Conditions', icon: FileText },
     { id: 'cancellation_policy', label: 'Cancellation Policy', icon: ShieldCheck },
     { id: 'testimonials', label: 'Testimonials', icon: MessageSquareQuote },

@@ -202,10 +202,10 @@ export function BlogsPage() {
                 <p className="text-xs text-neutral-500">Plan your custom trip with Weekend Escapes today.</p>
               </div>
               <Link
-                to="/plan-trip"
+                to="/packages"
                 className="px-6 py-3 rounded-full bg-[#FF6B16] hover:bg-[#e05809] text-white text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer"
               >
-                Plan My Trip
+                Explore Packages
               </Link>
             </div>
           </article>
