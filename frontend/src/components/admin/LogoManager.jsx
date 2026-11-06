@@ -10,9 +10,34 @@ import {
   ExternalLink,
   Phone,
   Save,
+  Lock,
+  Key,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  Palette,
+  Sparkles,
+  Check,
+  CheckCircle2,
+  Pipette,
+  SlidersHorizontal,
+  Grid,
+  Layers,
 } from 'lucide-react';
 import { useSettings, cleanWhatsAppNumber, buildWhatsAppUrl } from '../../context/SettingsContext';
 import { useAuth } from '../../context/AuthContext';
+import {
+  FULL_COLOR_PALETTES,
+  THEME_PRESETS,
+  DEFAULT_THEME_COLOR,
+  DEFAULT_THEME_HOVER,
+  computeHoverShade,
+  hexToRgb,
+  applyThemeColor,
+  isValidHex,
+  hslToHex,
+  hexToHsl,
+} from '../../utils/themeUtils';
 
 export default function LogoManager() {
   const {
@@ -22,12 +47,26 @@ export default function LogoManager() {
     rawFooterLogoUrl,
     darkLogoUrl,
     rawDarkLogoUrl,
+    themeColor,
+    themeColorHover,
+    updateThemeColor,
+    resetThemeColor,
     whatsappNumber,
     whatsappMessage,
     refreshSettings,
     API_BASE_URL,
   } = useSettings();
-  const { token } = useAuth();
+  const { token, admin, changePassword } = useAuth();
+
+  // Admin Password Change state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passStatusMessage, setPassStatusMessage] = useState({ type: '', text: '' });
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -54,6 +93,156 @@ export default function LogoManager() {
   const [waMessage, setWaMessage] = useState('');
   const [savingWa, setSavingWa] = useState(false);
   const [waStatusMessage, setWaStatusMessage] = useState({ type: '', text: '' });
+
+  // Theme Primary Color Customizer state
+  const [selectedThemeColor, setSelectedThemeColor] = useState(themeColor || DEFAULT_THEME_COLOR);
+  const [selectedThemeHover, setSelectedThemeHover] = useState(themeColorHover || DEFAULT_THEME_HOVER);
+  const [hexInput, setHexInput] = useState(themeColor || DEFAULT_THEME_COLOR);
+  const [hsl, setHsl] = useState(() => hexToHsl(themeColor || DEFAULT_THEME_COLOR));
+  const [activePaletteCategory, setActivePaletteCategory] = useState('all');
+  const [activeViewTab, setActiveViewTab] = useState('palettes'); // 'palettes' | 'spectrum'
+  const [savingTheme, setSavingTheme] = useState(false);
+  const [themeStatusMessage, setThemeStatusMessage] = useState({ type: '', text: '' });
+  const colorPickerInputRef = useRef(null);
+
+  useEffect(() => {
+    if (themeColor) {
+      setSelectedThemeColor(themeColor);
+      setSelectedThemeHover(themeColorHover || computeHoverShade(themeColor));
+      setHexInput(themeColor);
+      setHsl(hexToHsl(themeColor));
+    }
+  }, [themeColor, themeColorHover]);
+
+  const handleSelectColor = (color, hover) => {
+    const cleanHex = color.toUpperCase();
+    setSelectedThemeColor(cleanHex);
+    setHexInput(cleanHex);
+    const computedHover = hover || computeHoverShade(cleanHex);
+    setSelectedThemeHover(computedHover);
+    setHsl(hexToHsl(cleanHex));
+    // Instant live preview across the entire website
+    applyThemeColor(cleanHex, computedHover);
+  };
+
+  const handleHexInputChange = (e) => {
+    let val = e.target.value;
+    if (!val.startsWith('#') && val.length > 0) {
+      val = '#' + val;
+    }
+    setHexInput(val);
+    if (isValidHex(val)) {
+      handleSelectColor(val);
+    }
+  };
+
+  const handleHexInputBlur = () => {
+    if (!isValidHex(hexInput)) {
+      setHexInput(selectedThemeColor);
+    } else {
+      handleSelectColor(hexInput);
+    }
+  };
+
+  const handleHueSliderChange = (newHue) => {
+    const updatedHsl = { ...hsl, h: Number(newHue) };
+    setHsl(updatedHsl);
+    const newHex = hslToHex(updatedHsl.h, updatedHsl.s, updatedHsl.l);
+    setSelectedThemeColor(newHex);
+    setHexInput(newHex);
+    const hover = computeHoverShade(newHex);
+    setSelectedThemeHover(hover);
+    applyThemeColor(newHex, hover);
+  };
+
+  const handleSaturationSliderChange = (newSat) => {
+    const updatedHsl = { ...hsl, s: Number(newSat) };
+    setHsl(updatedHsl);
+    const newHex = hslToHex(updatedHsl.h, updatedHsl.s, updatedHsl.l);
+    setSelectedThemeColor(newHex);
+    setHexInput(newHex);
+    const hover = computeHoverShade(newHex);
+    setSelectedThemeHover(hover);
+    applyThemeColor(newHex, hover);
+  };
+
+  const handleLightnessSliderChange = (newLight) => {
+    const updatedHsl = { ...hsl, l: Number(newLight) };
+    setHsl(updatedHsl);
+    const newHex = hslToHex(updatedHsl.h, updatedHsl.s, updatedHsl.l);
+    setSelectedThemeColor(newHex);
+    setHexInput(newHex);
+    const hover = computeHoverShade(newHex);
+    setSelectedThemeHover(hover);
+    applyThemeColor(newHex, hover);
+  };
+
+  const handleOpenEyeDropper = async () => {
+    if (typeof window !== 'undefined' && window.EyeDropper) {
+      try {
+        const eyeDropper = new window.EyeDropper();
+        const result = await eyeDropper.open();
+        if (result && result.sRGBHex) {
+          handleSelectColor(result.sRGBHex.toUpperCase());
+        }
+      } catch (e) {
+        // User cancelled picker
+      }
+    }
+  };
+
+  const handleSaveTheme = async (e) => {
+    if (e) e.preventDefault();
+    if (!token) {
+      setThemeStatusMessage({ type: 'error', text: 'Admin authorization token missing. Please re-login.' });
+      return;
+    }
+    const hexRegex = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
+    if (!hexRegex.test(selectedThemeColor)) {
+      setThemeStatusMessage({ type: 'error', text: 'Please enter a valid HEX color code (e.g. #FF6B16).' });
+      return;
+    }
+    setSavingTheme(true);
+    setThemeStatusMessage({ type: '', text: '' });
+    try {
+      const res = await updateThemeColor(token, selectedThemeColor, selectedThemeHover);
+      if (res.success) {
+        setThemeStatusMessage({
+          type: 'success',
+          text: `Website theme color successfully updated to ${res.themeColor}! All pages and buttons now reflect this color.`,
+        });
+      } else {
+        setThemeStatusMessage({ type: 'error', text: res.message || 'Failed to update theme color.' });
+      }
+    } catch (err) {
+      setThemeStatusMessage({ type: 'error', text: err.message || 'Error updating theme color.' });
+    } finally {
+      setSavingTheme(false);
+    }
+  };
+
+  const handleResetTheme = async () => {
+    if (!token) return;
+    setSavingTheme(true);
+    setThemeStatusMessage({ type: '', text: '' });
+    try {
+      const res = await resetThemeColor(token);
+      if (res.success) {
+        setSelectedThemeColor(DEFAULT_THEME_COLOR);
+        setSelectedThemeHover(DEFAULT_THEME_HOVER);
+        setThemeStatusMessage({
+          type: 'success',
+          text: 'Website theme color reset to default Weekend Orange (#FF6B16) successfully!',
+        });
+      } else {
+        setThemeStatusMessage({ type: 'error', text: res.message || 'Failed to reset theme color.' });
+      }
+    } catch (err) {
+      setThemeStatusMessage({ type: 'error', text: err.message || 'Error resetting theme color.' });
+    } finally {
+      setSavingTheme(false);
+    }
+  };
 
   useEffect(() => {
     if (whatsappNumber !== undefined) {
@@ -334,6 +523,51 @@ export default function LogoManager() {
       setDarkStatusMessage({ type: 'error', text: err.message || 'Error resetting dark background logo' });
     } finally {
       setUploadingDark(false);
+    }
+  };
+
+  // Handle Admin Password Change
+  const handleChangePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setPassStatusMessage({ type: '', text: '' });
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPassStatusMessage({ type: 'error', text: 'All password fields are required.' });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPassStatusMessage({ type: 'error', text: 'New password must be at least 6 characters long.' });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPassStatusMessage({ type: 'error', text: 'New password and confirmation do not match.' });
+      return;
+    }
+
+    if (currentPassword === newPassword) {
+      setPassStatusMessage({ type: 'error', text: 'New password must be different from current password.' });
+      return;
+    }
+
+    setSavingPassword(true);
+    try {
+      const res = await changePassword(currentPassword, newPassword);
+      setPassStatusMessage({
+        type: 'success',
+        text: res.message || 'Admin password updated successfully! Please keep it safe.',
+      });
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      setPassStatusMessage({
+        type: 'error',
+        text: err.message || 'Failed to update admin password',
+      });
+    } finally {
+      setSavingPassword(false);
     }
   };
 
@@ -855,7 +1089,453 @@ export default function LogoManager() {
     </div>
 
     {/* ══════════════════════════════════════════════════════════════════
-        4. WHATSAPP FLOATING BUTTON & DIRECT CHAT SETTINGS
+        4. WEBSITE THEME & BRAND PRIMARY COLOR CUSTOMIZER
+        ══════════════════════════════════════════════════════════════════ */}
+    <div id="website-theme-section" className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-150 shadow-sm mt-8 scroll-mt-6">
+      {/* Section Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-neutral-100">
+        <div>
+          <div className="inline-flex items-center gap-2 mb-1.5">
+            <span
+              className="w-2.5 h-2.5 rounded-full animate-pulse"
+              style={{ backgroundColor: selectedThemeColor }}
+            ></span>
+            <span className="font-extrabold text-xs uppercase tracking-wider text-neutral-600">
+              Global Brand Customizer
+            </span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black text-[#111111] flex items-center gap-2.5">
+            <Palette className="w-6 h-6" style={{ color: selectedThemeColor }} />
+            <span>Website Theme & Primary Color</span>
+          </h2>
+          <p className="text-neutral-500 text-xs sm:text-sm mt-0.5">
+            Choose the primary brand color for Weekend Escapes. All orange buttons, badges, highlights, scrollbars, glowing accents, and icons will instantly update to this color.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleResetTheme}
+          disabled={savingTheme || selectedThemeColor.toUpperCase() === DEFAULT_THEME_COLOR.toUpperCase()}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-neutral-200 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 text-xs font-semibold transition-all w-fit cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          Reset to Default Orange
+        </button>
+      </div>
+
+      {/* Status Alert */}
+      {themeStatusMessage.text && (
+        <div
+          className={`mt-6 p-4 rounded-2xl flex items-start gap-3 text-sm animate-in fade-in duration-200 ${
+            themeStatusMessage.type === 'success'
+              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+              : 'bg-red-50 text-red-700 border border-red-200'
+          }`}
+        >
+          {themeStatusMessage.type === 'success' ? (
+            <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+          ) : (
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          )}
+          <span className="font-medium">{themeStatusMessage.text}</span>
+        </div>
+      )}
+
+      {/* Main Grid: Controls on Left, Live Preview on Right */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
+        
+        {/* Left Column (7 cols): Full Color Spectrum & All Palettes */}
+        <div className="lg:col-span-7 space-y-6">
+          
+          {/* 1. Custom Color Input & Eyedropper Bar */}
+          <div className="bg-neutral-50 p-5 rounded-2xl border border-neutral-200/80">
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-xs font-extrabold text-neutral-700 uppercase tracking-wider flex items-center gap-2">
+                <Palette className="w-4 h-4 text-neutral-500" />
+                <span>Custom Color & Hex Code</span>
+              </label>
+              {typeof window !== 'undefined' && window.EyeDropper && (
+                <button
+                  type="button"
+                  onClick={handleOpenEyeDropper}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-white border border-neutral-200 text-neutral-700 hover:text-neutral-900 hover:border-neutral-300 transition-all cursor-pointer shadow-xs"
+                >
+                  <Pipette className="w-3.5 h-3.5 text-neutral-600" />
+                  <span>Pick from Screen</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4">
+              {/* Native color picker trigger swatch button (no ugly black box!) */}
+              <div className="relative group shrink-0">
+                <button
+                  type="button"
+                  onClick={() => colorPickerInputRef.current?.click()}
+                  className="w-14 h-14 rounded-2xl shadow-md border-2 border-white flex items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 relative"
+                  style={{
+                    backgroundColor: selectedThemeColor,
+                    boxShadow: `0 8px 16px -4px ${selectedThemeColor}44`,
+                  }}
+                  title="Click to open system color dialog"
+                >
+                  <Palette className="w-6 h-6 text-white drop-shadow-md" />
+                </button>
+                <input
+                  ref={colorPickerInputRef}
+                  type="color"
+                  value={isValidHex(selectedThemeColor) ? selectedThemeColor : DEFAULT_THEME_COLOR}
+                  onChange={(e) => handleSelectColor(e.target.value)}
+                  className="sr-only"
+                />
+              </div>
+
+              {/* HEX text input with graceful typing */}
+              <div className="flex-1 min-w-[160px]">
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 font-mono font-bold text-xs sm:text-sm">
+                    HEX
+                  </span>
+                  <input
+                    type="text"
+                    value={hexInput}
+                    onChange={handleHexInputChange}
+                    onBlur={handleHexInputBlur}
+                    placeholder="#FF6B16"
+                    maxLength={7}
+                    className="w-full h-12 pl-13 pr-4 rounded-xl border border-neutral-200 bg-white text-sm font-mono font-bold text-neutral-900 focus:ring-2 focus:border-neutral-900 outline-none uppercase transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Active Color Info Pill */}
+              <div
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-white flex items-center gap-2 shadow-sm shrink-0"
+                style={{ backgroundColor: selectedThemeColor }}
+              >
+                <span className="w-2 h-2 rounded-full bg-white/90 animate-ping"></span>
+                <span>Active: {selectedThemeColor}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. Interactive Full Rainbow Spectrum & Hue Sliders */}
+          <div className="bg-white p-5 rounded-2xl border border-neutral-200/80 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-extrabold text-neutral-700 uppercase tracking-wider flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-neutral-500" />
+                <span>Spectrum Hue & Tone Sliders</span>
+              </label>
+              <span className="text-[11px] font-mono text-neutral-500 font-bold">
+                Hue: {hsl.h}° • Sat: {hsl.s}% • Light: {hsl.l}%
+              </span>
+            </div>
+
+            {/* Rainbow Hue Track (0 to 360 deg) */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-[11px] text-neutral-500 font-medium">
+                <span>Color Spectrum (Rainbow Hue)</span>
+                <span className="font-mono text-neutral-700 font-bold">{hsl.h}°</span>
+              </div>
+              <div className="relative h-6 rounded-xl overflow-hidden shadow-inner border border-neutral-200">
+                <input
+                  type="range"
+                  min="0"
+                  max="360"
+                  value={hsl.h}
+                  onChange={(e) => handleHueSliderChange(e.target.value)}
+                  className="w-full h-full appearance-none cursor-pointer bg-transparent"
+                  style={{
+                    background: 'linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Saturation & Lightness Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              {/* Saturation Slider */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-[11px] text-neutral-500 font-medium">
+                  <span>Vibrancy (Saturation)</span>
+                  <span className="font-mono text-neutral-700 font-bold">{hsl.s}%</span>
+                </div>
+                <div className="relative h-5 rounded-lg overflow-hidden border border-neutral-200">
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    value={hsl.s}
+                    onChange={(e) => handleSaturationSliderChange(e.target.value)}
+                    className="w-full h-full appearance-none cursor-pointer bg-transparent"
+                    style={{
+                      background: `linear-gradient(to right, ${hslToHex(hsl.h, 10, hsl.l)}, ${hslToHex(hsl.h, 100, hsl.l)})`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Lightness Slider */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-[11px] text-neutral-500 font-medium">
+                  <span>Tone (Shade / Depth)</span>
+                  <span className="font-mono text-neutral-700 font-bold">{hsl.l}%</span>
+                </div>
+                <div className="relative h-5 rounded-lg overflow-hidden border border-neutral-200">
+                  <input
+                    type="range"
+                    min="20"
+                    max="80"
+                    value={hsl.l}
+                    onChange={(e) => handleLightnessSliderChange(e.target.value)}
+                    className="w-full h-full appearance-none cursor-pointer bg-transparent"
+                    style={{
+                      background: `linear-gradient(to right, #111111, ${hslToHex(hsl.h, hsl.s, 50)}, #ffffff)`,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. All Color Palettes Library (80+ Colors across 10 Families) */}
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <label className="text-xs font-extrabold text-neutral-700 uppercase tracking-wider flex items-center gap-2">
+                <Grid className="w-4 h-4 text-neutral-500" />
+                <span>All Color Palettes Library (80+ Shades)</span>
+              </label>
+              <span className="text-[11px] text-neutral-400">10 Complete Color Families</span>
+            </div>
+
+            {/* Category Filter Pills */}
+            <div className="flex flex-wrap gap-1.5 pb-1">
+              <button
+                type="button"
+                onClick={() => setActivePaletteCategory('all')}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  activePaletteCategory === 'all'
+                    ? 'bg-neutral-900 text-white shadow-xs'
+                    : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-600'
+                }`}
+              >
+                All Families (80+)
+              </button>
+              {FULL_COLOR_PALETTES.map((palette) => {
+                const isActive = activePaletteCategory === palette.id;
+                return (
+                  <button
+                    key={palette.id}
+                    type="button"
+                    onClick={() => setActivePaletteCategory(palette.id)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      isActive
+                        ? 'bg-neutral-900 text-white shadow-xs'
+                        : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-600'
+                    }`}
+                  >
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: palette.colors[0].hex }}
+                    ></span>
+                    <span>{palette.family.split(' ')[0]}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Color Palettes Grid Accordion / List */}
+            <div className="space-y-4 max-h-[480px] overflow-y-auto pr-1">
+              {FULL_COLOR_PALETTES.filter(
+                (p) => activePaletteCategory === 'all' || activePaletteCategory === p.id
+              ).map((palette) => (
+                <div
+                  key={palette.id}
+                  className="bg-neutral-50/70 p-4 rounded-2xl border border-neutral-200/70 space-y-2.5"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="w-3 h-3 rounded-full shrink-0"
+                        style={{ backgroundColor: palette.colors[0].hex }}
+                      ></span>
+                      <span className="font-bold text-xs text-neutral-800">
+                        {palette.family}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-white border border-neutral-200 text-neutral-500">
+                      {palette.category}
+                    </span>
+                  </div>
+
+                  {/* 8 Shades Grid for this Family */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {palette.colors.map((colorItem) => {
+                      const isSelected =
+                        selectedThemeColor.toUpperCase() === colorItem.hex.toUpperCase();
+                      return (
+                        <button
+                          key={colorItem.hex}
+                          type="button"
+                          onClick={() => handleSelectColor(colorItem.hex)}
+                          className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer relative overflow-hidden group flex items-center gap-2.5 ${
+                            isSelected
+                              ? 'border-neutral-900 bg-white shadow-md ring-2 ring-neutral-900/10'
+                              : 'border-neutral-200/80 bg-white hover:border-neutral-300 hover:shadow-xs'
+                          }`}
+                        >
+                          <span
+                            className="w-7 h-7 rounded-lg shadow-xs flex items-center justify-center text-white shrink-0"
+                            style={{ backgroundColor: colorItem.hex }}
+                          >
+                            {isSelected && <Check className="w-4 h-4 stroke-[3]" />}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-bold text-[11px] text-neutral-800 truncate leading-tight">
+                              {colorItem.name}
+                            </div>
+                            <div className="font-mono text-[10px] text-neutral-400 mt-0.5">
+                              {colorItem.hex}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column (5 cols): Live Interactive Visual Preview */}
+        <div className="lg:col-span-5">
+          <div className="bg-neutral-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+            {/* Background Glow */}
+            <div
+              className="absolute -top-10 -right-10 w-44 h-44 rounded-full blur-3xl opacity-20 pointer-events-none transition-colors duration-500"
+              style={{ backgroundColor: selectedThemeColor }}
+            ></div>
+
+            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
+              <span className="text-xs font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" style={{ color: selectedThemeColor }} />
+                <span>Live Interactive Preview</span>
+              </span>
+              <span
+                className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                style={{
+                  backgroundColor: `${selectedThemeColor}33`,
+                  color: selectedThemeColor,
+                  border: `1px solid ${selectedThemeColor}55`,
+                }}
+              >
+                Instant Preview
+              </span>
+            </div>
+
+            {/* Simulated UI components */}
+            <div className="space-y-4">
+              {/* Badge Preview */}
+              <div>
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider"
+                  style={{
+                    backgroundColor: `${selectedThemeColor}26`,
+                    color: selectedThemeColor,
+                  }}
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: selectedThemeColor }}
+                  ></span>
+                  Featured Expedition
+                </span>
+              </div>
+
+              {/* Title with Highlight */}
+              <h3 className="text-lg font-black leading-snug">
+                Your Next{' '}
+                <span style={{ color: selectedThemeColor }}>Adventure</span>{' '}
+                Awaits
+              </h3>
+
+              {/* Sample Mini Card */}
+              <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-neutral-400">Kedarkantha Winter Trek</span>
+                  <span className="font-black" style={{ color: selectedThemeColor }}>
+                    ₹9,499
+                  </span>
+                </div>
+                {/* Progress bar */}
+                <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-300"
+                    style={{ width: '70%', backgroundColor: selectedThemeColor }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Buttons Row */}
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold text-white transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+                  style={{ backgroundColor: selectedThemeColor }}
+                >
+                  <span>Book Expedition</span>
+                </button>
+                <button
+                  type="button"
+                  className="py-2.5 px-4 rounded-xl text-xs font-bold transition-all border cursor-pointer"
+                  style={{
+                    borderColor: `${selectedThemeColor}88`,
+                    color: selectedThemeColor,
+                    backgroundColor: `${selectedThemeColor}15`,
+                  }}
+                >
+                  <span>Details</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Save Action Bar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-6 border-t border-neutral-100">
+        <div className="text-xs text-neutral-500 flex items-center gap-2">
+          <Palette className="w-4 h-4 text-neutral-400" />
+          <span>Theme color is applied across the entire website and saved permanently in database.</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleSaveTheme}
+          disabled={savingTheme}
+          className="h-12 px-7 text-white font-bold text-sm rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto justify-center"
+          style={{ backgroundColor: selectedThemeColor }}
+        >
+          {savingTheme ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Saving Theme...</span>
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4" />
+              <span>Save Theme Color</span>
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+
+    {/* ══════════════════════════════════════════════════════════════════
+        5. WHATSAPP FLOATING BUTTON & DIRECT CHAT SETTINGS
         ══════════════════════════════════════════════════════════════════ */}
     <div className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-150 shadow-sm mt-8">
       {/* Section Header */}
@@ -1031,6 +1711,200 @@ export default function LogoManager() {
         </div>
       </form>
     </div>
-  </div>
+    {/* ══════════════════════════════════════════════════════════════════
+        6. ADMIN ACCOUNT & PASSWORD SECURITY SETTINGS
+        ══════════════════════════════════════════════════════════════════ */}
+    <div id="admin-password-section" className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-150 shadow-sm mt-8 scroll-mt-6">
+      {/* Section Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-neutral-100">
+        <div>
+          <div className="inline-flex items-center gap-2 mb-1.5">
+            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+            <span className="text-blue-600 font-bold text-xs uppercase tracking-wider">
+              Admin Authentication & Access Control
+            </span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black text-[#111111] flex items-center gap-2.5">
+            <Lock className="w-6 h-6 text-blue-600" />
+            <span>Admin Account & Password Security</span>
+          </h2>
+          <p className="text-neutral-500 text-xs sm:text-sm mt-0.5">
+            Change the master password for the admin panel. Your new password must be at least 6 characters long.
+          </p>
+        </div>
+
+        {/* Account Chip */}
+        <div className="bg-neutral-50 px-4 py-2.5 rounded-2xl border border-neutral-200/80 flex items-center gap-3 self-start sm:self-auto">
+          <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0">
+            {admin?.name?.charAt(0) || 'A'}
+          </div>
+          <div className="text-left">
+            <div className="text-xs font-bold text-neutral-900">{admin?.name || 'Administrator'}</div>
+            <div className="text-[11px] text-neutral-500 font-mono">{admin?.email || 'admin@weekendescapes.in'}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Status Message */}
+      {passStatusMessage.text && (
+        <div
+          className={`mt-6 p-4 rounded-2xl flex items-start gap-3 text-sm ${
+            passStatusMessage.type === 'success'
+              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+              : 'bg-red-50 text-red-700 border border-red-200'
+          }`}
+        >
+          {passStatusMessage.type === 'success' ? (
+            <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+          ) : (
+            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          )}
+          <span className="font-medium">{passStatusMessage.text}</span>
+        </div>
+      )}
+
+      {/* Password Form */}
+      <form onSubmit={handleChangePasswordSubmit} className="mt-6 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* 1. Current Password */}
+          <div className="bg-[#F8FAFC] p-5 sm:p-6 rounded-2xl border border-neutral-200/80 space-y-2">
+            <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider flex items-center gap-2">
+              <Key className="w-4 h-4 text-neutral-500" />
+              <span>Current Password *</span>
+            </label>
+            <div className="relative">
+              <input
+                type={showCurrentPass ? 'text' : 'password'}
+                required
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+                className="w-full h-12 pl-4 pr-11 rounded-xl border border-neutral-200 bg-white text-sm font-medium text-neutral-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition-all"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPass(!showCurrentPass)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 p-1 cursor-pointer"
+                tabIndex={-1}
+              >
+                {showCurrentPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            <p className="text-[11px] text-neutral-400">Required to verify your authorization.</p>
+          </div>
+
+          {/* 2. New Password */}
+          <div className="bg-[#F8FAFC] p-5 sm:p-6 rounded-2xl border border-neutral-200/80 space-y-2">
+            <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider flex items-center gap-2">
+              <Lock className="w-4 h-4 text-blue-600" />
+              <span>New Password *</span>
+            </label>
+            <div className="relative">
+              <input
+                type={showNewPass ? 'text' : 'password'}
+                required
+                minLength={6}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter strong new password"
+                className="w-full h-12 pl-4 pr-11 rounded-xl border border-neutral-200 bg-white text-sm font-medium text-neutral-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition-all"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPass(!showNewPass)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 p-1 cursor-pointer"
+                tabIndex={-1}
+              >
+                {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-neutral-400">Min. 6 characters</span>
+              {newPassword && (
+                <span
+                  className={`font-bold ${
+                    newPassword.length >= 10
+                      ? 'text-emerald-600'
+                      : newPassword.length >= 6
+                      ? 'text-amber-600'
+                      : 'text-red-500'
+                  }`}
+                >
+                  {newPassword.length >= 10 ? 'Strong' : newPassword.length >= 6 ? 'Good' : 'Too short'}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* 3. Confirm New Password */}
+          <div className="bg-[#F8FAFC] p-5 sm:p-6 rounded-2xl border border-neutral-200/80 space-y-2">
+            <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span>Confirm New Password *</span>
+            </label>
+            <div className="relative">
+              <input
+                type={showConfirmPass ? 'text' : 'password'}
+                required
+                minLength={6}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Re-type new password"
+                className={`w-full h-12 pl-4 pr-11 rounded-xl border bg-white text-sm font-medium text-neutral-900 focus:ring-2 outline-none transition-all ${
+                  confirmPassword && confirmPassword !== newPassword
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10'
+                    : 'border-neutral-200 focus:border-blue-500 focus:ring-blue-500/10'
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPass(!showConfirmPass)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 p-1 cursor-pointer"
+                tabIndex={-1}
+              >
+                {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            <div className="text-[11px]">
+              {confirmPassword && confirmPassword !== newPassword ? (
+                <span className="text-red-500 font-semibold">Passwords do not match</span>
+              ) : confirmPassword && confirmPassword === newPassword ? (
+                <span className="text-emerald-600 font-semibold">Passwords match</span>
+              ) : (
+                <span className="text-neutral-400">Must match new password above</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Action Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-neutral-100">
+          <div className="text-xs text-neutral-500 flex items-center gap-2">
+            <Lock className="w-4 h-4 text-neutral-400" />
+            <span>Password changes take effect immediately across all sessions.</span>
+          </div>
+
+          <button
+            type="submit"
+            disabled={savingPassword || !currentPassword || !newPassword || newPassword !== confirmPassword}
+            className="h-12 px-7 bg-neutral-900 hover:bg-[#FF6B16] active:scale-[0.98] text-white font-bold text-sm rounded-xl shadow-lg shadow-neutral-900/10 hover:shadow-[#FF6B16]/25 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed w-full sm:w-auto justify-center"
+          >
+            {savingPassword ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Updating Password...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>Update Admin Password</span>
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    </div>
 );
 }

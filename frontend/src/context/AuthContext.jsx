@@ -56,6 +56,29 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  const changePassword = async (currentPassword, newPassword) => {
+    const res = await fetch(`${API_BASE_URL}/auth/admin/change-password`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'Failed to update password');
+    }
+    if (data.token) {
+      localStorage.setItem('admin_token', data.token);
+      setToken(data.token);
+    }
+    if (data.admin) {
+      setAdmin(data.admin);
+    }
+    return data;
+  };
+
   const logout = () => {
     localStorage.removeItem('admin_token');
     setToken(null);
@@ -71,6 +94,7 @@ export function AuthProvider({ children }) {
         loading,
         login,
         logout,
+        changePassword,
         API_BASE_URL,
       }}
     >

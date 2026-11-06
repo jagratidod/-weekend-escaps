@@ -42,7 +42,7 @@ const DEFAULT_MAIN_NAV_ITEMS = [
   { id: 'broadcast', label: 'Push & Broadcast', icon: Radio },
   { id: 'leads', label: 'Inquiries & Leads', icon: ShoppingCart },
   { id: 'packages', label: 'Tour Packages', icon: Package },
-  { id: 'settings', label: 'Settings & WhatsApp', icon: SettingsIcon },
+  { id: 'settings', label: 'Settings & Security', icon: SettingsIcon },
 ];
 
 const DEFAULT_PAGE_SUB_ITEMS = [

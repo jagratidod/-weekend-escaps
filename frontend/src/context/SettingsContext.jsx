@@ -1,5 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { DEFAULT_HOME_SECTIONS } from '../utils/defaultHomeSections';
+import {
+  applyThemeColor,
+  DEFAULT_THEME_COLOR,
+  DEFAULT_THEME_HOVER,
+} from '../utils/themeUtils';
 
 const SettingsContext = createContext();
 
@@ -58,6 +63,8 @@ export function SettingsProvider({ children }) {
     logoUrl: '/logo/weekend-escapes-logo.svg',
     footerLogoUrl: '/logo/weekend-escapes-logo.svg',
     darkLogoUrl: '/logo/weekend-escapes-logo.svg',
+    themeColor: DEFAULT_THEME_COLOR,
+    themeColorHover: DEFAULT_THEME_HOVER,
     siteName: 'Weekend Escapes',
     tagline: 'Crafting Adventures',
     whatsappNumber: '+91 98765 43210',
@@ -158,6 +165,11 @@ export function SettingsProvider({ children }) {
                 : [],
           },
         });
+
+        // Apply dynamic brand theme primary color & hover shade
+        if (data.settings.themeColor) {
+          applyThemeColor(data.settings.themeColor, data.settings.themeColorHover);
+        }
       }
     } catch (err) {
       console.warn('Could not fetch settings from backend, using defaults:', err.message);
@@ -169,6 +181,66 @@ export function SettingsProvider({ children }) {
   useEffect(() => {
     fetchSettings();
   }, [fetchSettings]);
+
+  const activeThemeColor = settings.themeColor || DEFAULT_THEME_COLOR;
+  const activeThemeColorHover = settings.themeColorHover || DEFAULT_THEME_HOVER;
+
+  const updateThemeColorSetting = useCallback(
+    async (token, themeColor, themeColorHover) => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/settings/theme`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ themeColor, themeColorHover }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          applyThemeColor(data.themeColor, data.themeColorHover);
+          setSettings((prev) => ({
+            ...prev,
+            themeColor: data.themeColor,
+            themeColorHover: data.themeColorHover,
+          }));
+        }
+        return data;
+      } catch (err) {
+        console.error('Failed to update theme color:', err);
+        return { success: false, message: err.message };
+      }
+    },
+    []
+  );
+
+  const resetThemeColorSetting = useCallback(
+    async (token) => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/settings/theme/reset`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await res.json();
+        if (data.success) {
+          applyThemeColor(data.themeColor, data.themeColorHover);
+          setSettings((prev) => ({
+            ...prev,
+            themeColor: data.themeColor,
+            themeColorHover: data.themeColorHover,
+          }));
+        }
+        return data;
+      } catch (err) {
+        console.error('Failed to reset theme color:', err);
+        return { success: false, message: err.message };
+      }
+    },
+    []
+  );
 
   const activeLogoUrl = formatLogoUrl(settings.logoUrl);
   const activeFooterLogoUrl = formatLogoUrl(settings.footerLogoUrl || settings.logoUrl);
@@ -219,6 +291,10 @@ export function SettingsProvider({ children }) {
         homeSections: activeHomeSections,
         packageFaqSection: settings.packageFaqSection || DEFAULT_FAQ_SECTION,
         updateFaqSectionSettings,
+        themeColor: activeThemeColor,
+        themeColorHover: activeThemeColorHover,
+        updateThemeColor: updateThemeColorSetting,
+        resetThemeColor: resetThemeColorSetting,
         logoUrl: activeLogoUrl,
         rawLogoUrl: settings.logoUrl,
         footerLogoUrl: activeFooterLogoUrl,

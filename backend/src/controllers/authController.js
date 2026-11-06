@@ -191,3 +191,69 @@ export const getAdminMe = async (req, res) => {
     });
   }
 };
+
+// @desc    Change Admin Password (Logged-in admin)
+// @route   PUT /api/auth/admin/change-password
+// @access  Protected
+export const changeAdminPassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide both your current password and new password',
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 6 characters long',
+      });
+    }
+
+    // Get admin with password hash
+    const admin = await Admin.findById(req.admin._id).select('+password');
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        message: 'Admin account not found',
+      });
+    }
+
+    // Verify current password
+    const isMatch = await admin.matchPassword(currentPassword);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Current password is incorrect. Please enter your existing password correctly.',
+      });
+    }
+
+    // Update password (pre('save') hook will automatically hash it with bcrypt)
+    admin.password = newPassword;
+    await admin.save();
+
+    // Generate fresh auth token
+    const token = generateToken(admin._id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Admin password changed successfully! Your account is now secured with the new password.',
+      token,
+      admin: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role,
+      },
+    });
+  } catch (error) {
+    console.error('[ChangeAdminPassword Error]:', error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error while updating password',
+    });
+  }
+};

@@ -2,7 +2,10 @@
 
 @layer base {
   :root {
-    --primary-orange: #FF6B16;
+    --theme-color: #FF6B16;
+    --theme-hover: #e05809;
+    --theme-rgb: 255, 107, 22;
+    --primary-orange: var(--theme-color);
     --dark-black: #111111;
     --pure-white: #FFFFFF;
     --light-bg: #F7F7F5;
@@ -34,11 +37,11 @@
   background: #111111;
 }
 ::-webkit-scrollbar-thumb {
-  background: #FF6B16;
+  background: var(--theme-color);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #e05809;
+  background: var(--theme-hover);
 }
 
 /* Hide scrollbar utility */
@@ -52,7 +55,7 @@
 
 /* Swiper custom styles */
 .swiper-pagination-bullet-active {
-  background: #FF6B16 !important;
+  background: var(--theme-color) !important;
   width: 24px !important;
   border-radius: 10px !important;
 }
@@ -102,7 +105,7 @@
 
 /* Text glow */
 .text-glow-orange {
-  text-shadow: 0 0 24px rgba(255, 107, 22, 0.45);
+  text-shadow: 0 0 24px rgba(var(--theme-rgb), 0.45) !important;
 }
 
 /* Image zoom smoothly */
@@ -111,4 +114,186 @@
 }
 .zoom-on-hover:hover {
   transform: scale(1.07);
+}
+
+/* ==========================================================================
+   DYNAMIC THEME COLOR ENGINE
+   Replaces all occurrences of the brand primary color (#FF6B16 and variants)
+   with the admin-configured theme color dynamically across the entire app.
+   ========================================================================== */
+
+/* 1. Typography & Text Colors */
+[class*="text-[#FF6B16]"]:not([class*="/"]):not([class*="hover:"]):not([class*="group-hover:"]) {
+  color: var(--theme-color) !important;
+}
+[class*="text-[#FF6B16]/15"] {
+  color: rgba(var(--theme-rgb), 0.15) !important;
+}
+.text-orange-500,
+.text-orange-600 {
+  color: var(--theme-color) !important;
+}
+[class*="hover:text-[#FF6B16]"]:hover {
+  color: var(--theme-color) !important;
+}
+[class*="hover:text-[#e05809]"]:hover {
+  color: var(--theme-hover) !important;
+}
+.group:hover [class*="group-hover:text-[#FF6B16]"],
+[class*="group"]:hover [class*="group-hover:text-[#FF6B16]"] {
+  color: var(--theme-color) !important;
+}
+
+/* 2. Background Colors */
+[class*="bg-[#FF6B16]"]:not([class*="/"]):not([class*="hover:"]):not([class*="group-hover:"]) {
+  background-color: var(--theme-color) !important;
+}
+[class*="bg-[#FF6B16]/5"] {
+  background-color: rgba(var(--theme-rgb), 0.05) !important;
+}
+[class*="bg-[#FF6B16]/10"],
+.bg-orange-50 {
+  background-color: rgba(var(--theme-rgb), 0.08) !important;
+}
+[class*="bg-[#FF6B16]/15"] {
+  background-color: rgba(var(--theme-rgb), 0.15) !important;
+}
+[class*="bg-[#FF6B16]/20"],
+.bg-orange-100 {
+  background-color: rgba(var(--theme-rgb), 0.20) !important;
+}
+[class*="bg-[#FF6B16]/25"] {
+  background-color: rgba(var(--theme-rgb), 0.25) !important;
+}
+[class*="bg-[#FF6B16]/80"] {
+  background-color: rgba(var(--theme-rgb), 0.80) !important;
+}
+[class*="hover:bg-[#FF6B16]"]:hover {
+  background-color: var(--theme-color) !important;
+}
+[class*="hover:bg-[#e05809]"]:hover,
+[class*="hover:bg-[#ff7d33]"]:hover,
+[class*="hover:bg-[#ff843a]"]:hover {
+  background-color: var(--theme-hover) !important;
+}
+[class*="hover:bg-[#FF6B16]/5"]:hover {
+  background-color: rgba(var(--theme-rgb), 0.06) !important;
+}
+[class*="hover:bg-[#FF6B16]/20"]:hover {
+  background-color: rgba(var(--theme-rgb), 0.22) !important;
+}
+[class*="hover:bg-[#FF6B16]/30"]:hover {
+  background-color: rgba(var(--theme-rgb), 0.32) !important;
+}
+.group:hover [class*="group-hover:bg-[#FF6B16]"],
+[class*="group"]:hover [class*="group-hover:bg-[#FF6B16]"] {
+  background-color: var(--theme-color) !important;
+}
+.group:hover [class*="group-hover:bg-[#e05809]"],
+[class*="group"]:hover [class*="group-hover:bg-[#e05809]"] {
+  background-color: var(--theme-hover) !important;
+}
+
+/* 3. Borders & Dividers */
+[class*="border-[#FF6B16]"]:not([class*="/"]):not([class*="hover:"]):not([class*="focus:"]):not([class*="border-t-"]) {
+  border-color: var(--theme-color) !important;
+}
+[class*="border-t-[#FF6B16]"] {
+  border-top-color: var(--theme-color) !important;
+}
+[class*="border-[#FF6B16]/15"] {
+  border-color: rgba(var(--theme-rgb), 0.15) !important;
+}
+[class*="border-[#FF6B16]/20"],
+.border-orange-100 {
+  border-color: rgba(var(--theme-rgb), 0.20) !important;
+}
+[class*="border-[#FF6B16]/40"],
+[class*="border-[#FF6B16]/50"],
+[class*="border-[#FF6B16]/60"],
+[class*="border-[#FF6B16]/70"],
+.border-orange-200 {
+  border-color: rgba(var(--theme-rgb), 0.40) !important;
+}
+[class*="hover:border-[#FF6B16]"]:hover {
+  border-color: var(--theme-color) !important;
+}
+[class*="hover:border-[#FF6B16]/40"]:hover {
+  border-color: rgba(var(--theme-rgb), 0.40) !important;
+}
+[class*="hover:border-[#FF6B16]/50"]:hover {
+  border-color: rgba(var(--theme-rgb), 0.50) !important;
+}
+[class*="focus:border-[#FF6B16]"]:focus,
+[class*="focus-within:border-[#FF6B16]"]:focus-within {
+  border-color: var(--theme-color) !important;
+}
+
+/* 4. Rings & Focus Outlines */
+[class*="ring-[#FF6B16]"]:not([class*="/"]):not([class*="focus:"]) {
+  --tw-ring-color: var(--theme-color) !important;
+}
+[class*="ring-[#FF6B16]/10"] {
+  --tw-ring-color: rgba(var(--theme-rgb), 0.10) !important;
+}
+[class*="ring-[#FF6B16]/20"] {
+  --tw-ring-color: rgba(var(--theme-rgb), 0.20) !important;
+}
+[class*="ring-[#FF6B16]/35"] {
+  --tw-ring-color: rgba(var(--theme-rgb), 0.35) !important;
+}
+[class*="ring-[#FF6B16]/40"] {
+  --tw-ring-color: rgba(var(--theme-rgb), 0.40) !important;
+}
+[class*="focus:ring-[#FF6B16]"]:focus {
+  --tw-ring-color: var(--theme-color) !important;
+}
+[class*="focus:ring-[#FF6B16]/10"]:focus {
+  --tw-ring-color: rgba(var(--theme-rgb), 0.10) !important;
+}
+[class*="focus:ring-[#FF6B16]/20"]:focus {
+  --tw-ring-color: rgba(var(--theme-rgb), 0.20) !important;
+}
+
+/* 5. Shadows */
+[class*="shadow-[#FF6B16]"],
+[class*="shadow-orange-500"] {
+  --tw-shadow-color: rgba(var(--theme-rgb), 0.35) !important;
+}
+[class*="hover:shadow-[#FF6B16]"]:hover {
+  --tw-shadow-color: rgba(var(--theme-rgb), 0.45) !important;
+}
+.group:hover [class*="group-hover:shadow-[#FF6B16]"],
+[class*="group"]:hover [class*="group-hover:shadow-[#FF6B16]"] {
+  --tw-shadow-color: rgba(var(--theme-rgb), 0.35) !important;
+}
+[class*="shadow-[0_0_8px_#FF6B16]"] {
+  box-shadow: 0 0 8px var(--theme-color) !important;
+}
+
+/* 6. Gradients & Accents */
+[class*="from-[#FF6B16]"] {
+  --tw-gradient-from: var(--theme-color) !important;
+}
+[class*="to-[#ff843a]"] {
+  --tw-gradient-to: var(--theme-hover) !important;
+}
+[class*="fill-[#FF6B16]"],
+svg [fill="#FF6B16"],
+[fill="#FF6B16"] {
+  fill: var(--theme-color) !important;
+}
+svg [stroke="#FF6B16"],
+[stroke="#FF6B16"] {
+  stroke: var(--theme-color) !important;
+}
+[class*="accent-[#FF6B16]"] {
+  accent-color: var(--theme-color) !important;
+}
+
+/* 7. Native Text Selection & Scrollbar Thumb */
+::selection,
+[class*="selection:bg-[#FF6B16]"]::selection {
+  background-color: var(--theme-color) !important;
+  color: #FFFFFF !important;
 }

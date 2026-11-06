@@ -28,6 +28,14 @@ const settingSchema = new mongoose.Schema(
       type: String,
       default: 'Crafting Adventures',
     },
+    themeColor: {
+      type: String,
+      default: '#FF6B16',
+    },
+    themeColorHover: {
+      type: String,
+      default: '#e05809',
+    },
     whatsappNumber: {
       type: String,
       default: '+91 98765 43210',
