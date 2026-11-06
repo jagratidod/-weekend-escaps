@@ -35,6 +35,15 @@ const blackoutDateSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const faqSchema = new mongoose.Schema(
+  {
+    question: { type: String, required: true, trim: true },
+    answer: { type: String, required: true, trim: true },
+    category: { type: String, default: 'General', trim: true },
+  },
+  { _id: true }
+);
+
 const pricingTierSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true }, // e.g. "Quad Sharing" or "Manali to Manali"
@@ -189,6 +198,10 @@ const packageSchema = new mongoose.Schema(
     },
     highlights: {
       type: [String],
+      default: [],
+    },
+    faqs: {
+      type: [faqSchema],
       default: [],
     },
     description: {

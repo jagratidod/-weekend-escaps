@@ -59,7 +59,7 @@ export function Footer() {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
   const [error, setError] = useState('');
-  const { logoUrl, footerLogoUrl, contactInfo, whatsappUrl, whatsappNumber } = useSettings();
+  const { logoUrl, footerLogoUrl, darkLogoUrl, contactInfo, whatsappUrl, whatsappNumber } = useSettings();
 
   const handleSubscribe = (e) => {
     e.preventDefault();
@@ -84,10 +84,18 @@ export function Footer() {
               {/* Logo with light styling */}
               <div className="flex items-center gap-3">
                 <img
-                  src={footerLogoUrl || logoUrl || "/logo/weekend-escapes-logo.svg"}
+                  src={
+                    (footerLogoUrl && !footerLogoUrl.includes('/logo/weekend-escapes-logo.svg'))
+                      ? footerLogoUrl
+                      : (darkLogoUrl && !darkLogoUrl.includes('/logo/weekend-escapes-logo.svg'))
+                      ? darkLogoUrl
+                      : footerLogoUrl || darkLogoUrl || logoUrl || "/logo/weekend-escapes-logo.svg"
+                  }
                   alt="Weekend Escapes"
                   className={`h-12 w-auto object-contain max-w-[220px] ${
-                    (footerLogoUrl || logoUrl)?.includes('/logo/weekend-escapes-logo.svg')
+                    (!footerLogoUrl || footerLogoUrl.includes('/logo/weekend-escapes-logo.svg')) &&
+                    (!darkLogoUrl || darkLogoUrl.includes('/logo/weekend-escapes-logo.svg')) &&
+                    (logoUrl?.includes('/logo/weekend-escapes-logo.svg') || !logoUrl)
                       ? 'invert brightness-200'
                       : ''
                   }`}

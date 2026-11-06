@@ -151,7 +151,21 @@ export const DEFAULT_HOME_SECTIONS = {
     whatsappButtonText: 'Talk on WhatsApp',
     whatsappUrl: '',
   },
+  sectionOrder: [
+    'hero',
+    'reels',
+    'experiences',
+    'packages',
+    'whyChooseUs',
+    'bookingProcess',
+    'testimonials',
+    'gallery',
+    'blogs',
+    'finalCta',
+  ],
 };
+
+export const DEFAULT_SECTION_ORDER = DEFAULT_HOME_SECTIONS.sectionOrder;
 
 // Helper to get or initialize default settings
 const getOrCreateDefaultSettings = async () => {
@@ -160,6 +174,8 @@ const getOrCreateDefaultSettings = async () => {
     settings = await Setting.create({
       key: 'site_settings',
       logoUrl: '/logo/weekend-escapes-logo.svg',
+      footerLogoUrl: '/logo/weekend-escapes-logo.svg',
+      darkLogoUrl: '/logo/weekend-escapes-logo.svg',
       siteName: 'Weekend Escapes',
       tagline: 'Crafting Adventures',
       whatsappNumber: '+91 98765 43210',
@@ -177,6 +193,16 @@ const getOrCreateDefaultSettings = async () => {
       needsSave = true;
     }
 
+    if (!settings.darkLogoUrl) {
+      settings.darkLogoUrl = '/logo/weekend-escapes-logo.svg';
+      needsSave = true;
+    }
+
+    if (!settings.footerLogoUrl) {
+      settings.footerLogoUrl = '/logo/weekend-escapes-logo.svg';
+      needsSave = true;
+    }
+
     if (!settings.homeSections) {
       settings.homeSections = DEFAULT_HOME_SECTIONS;
       needsSave = true;
@@ -187,10 +213,19 @@ const getOrCreateDefaultSettings = async () => {
           needsSave = true;
         }
       });
+      if (
+        !settings.homeSections.sectionOrder ||
+        !Array.isArray(settings.homeSections.sectionOrder) ||
+        settings.homeSections.sectionOrder.length === 0
+      ) {
+        settings.homeSections.sectionOrder = [...DEFAULT_SECTION_ORDER];
+        needsSave = true;
+      }
     }
 
     if (needsSave) {
       settings.markModified('homeSections');
+      settings.markModified('homeSections.sectionOrder');
       await settings.save();
     }
   }
@@ -406,6 +441,100 @@ export const resetFooterLogo = async (req, res) => {
   }
 };
 
+// @desc    Upload / Update Website Dark Background (Light / Contrast) Logo
+// @route   POST /api/settings/dark-logo
+// @access  Protected (Admin only)
+export const updateDarkLogo = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please upload an image file (PNG, JPG, SVG, WebP)',
+      });
+    }
+
+    const settings = await getOrCreateDefaultSettings();
+    let darkLogoUrl = '';
+
+    if (isCloudinaryConfigured()) {
+      const cloudinaryResult = await uploadBufferToCloudinary(req.file.buffer, {
+        folder: 'weekend_escapes/logos',
+        public_id: `dark-logo-${Date.now()}`,
+      });
+      darkLogoUrl = cloudinaryResult.secure_url;
+      console.log('[Cloudinary] Dark Logo uploaded successfully:', darkLogoUrl);
+    } else {
+      const logosDir = path.join(__dirname, '../../uploads/logos');
+      if (!fs.existsSync(logosDir)) {
+        fs.mkdirSync(logosDir, { recursive: true });
+      }
+      const ext = path.extname(req.file.originalname) || '.png';
+      const filename = `dark-logo-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+      const filePath = path.join(logosDir, filename);
+      fs.writeFileSync(filePath, req.file.buffer);
+      darkLogoUrl = `/uploads/logos/${filename}`;
+      console.log('[Local Upload] Saved dark logo to disk:', darkLogoUrl);
+    }
+
+    // Cleanup previous file if local disk
+    if (
+      settings.darkLogoUrl &&
+      settings.darkLogoUrl.startsWith('/uploads/logos/') &&
+      settings.darkLogoUrl !== darkLogoUrl
+    ) {
+      try {
+        const oldFilePath = path.join(process.cwd(), settings.darkLogoUrl);
+        if (fs.existsSync(oldFilePath)) {
+          fs.unlinkSync(oldFilePath);
+        }
+      } catch (err) {
+        console.warn('[Cleanup Warning] Could not delete old dark logo file:', err.message);
+      }
+    }
+
+    settings.darkLogoUrl = darkLogoUrl;
+    settings.updatedBy = req.admin ? req.admin._id : null;
+    await settings.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Dark background logo updated successfully!',
+      darkLogoUrl: settings.darkLogoUrl,
+      settings,
+    });
+  } catch (error) {
+    console.error('[UpdateDarkLogo Error]:', error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error while updating dark background logo',
+    });
+  }
+};
+
+// @desc    Reset Dark Background Logo to Default SVG
+// @route   POST /api/settings/dark-logo/reset
+// @access  Protected (Admin only)
+export const resetDarkLogo = async (req, res) => {
+  try {
+    const settings = await getOrCreateDefaultSettings();
+    settings.darkLogoUrl = '/logo/weekend-escapes-logo.svg';
+    settings.updatedBy = req.admin ? req.admin._id : null;
+    await settings.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Dark background logo reset to default successfully!',
+      darkLogoUrl: settings.darkLogoUrl,
+      settings,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error resetting dark background logo',
+    });
+  }
+};
+
 // @desc    Update Contact Page Info
 // @route   PUT /api/settings/contact
 // @access  Protected (Admin only)
@@ -521,6 +650,28 @@ export const updateHomeSections = async (req, res) => {
       settings.homeSections = JSON.parse(JSON.stringify(DEFAULT_HOME_SECTIONS));
     }
 
+    // 0. Section Order update (Drag and Drop ordering)
+    if (updates.sectionOrder && Array.isArray(updates.sectionOrder)) {
+      const validKeys = [
+        'hero',
+        'reels',
+        'experiences',
+        'packages',
+        'whyChooseUs',
+        'bookingProcess',
+        'testimonials',
+        'gallery',
+        'blogs',
+        'finalCta',
+      ];
+      const filtered = updates.sectionOrder.filter((k) => validKeys.includes(k));
+      validKeys.forEach((k) => {
+        if (!filtered.includes(k)) filtered.push(k);
+      });
+      settings.homeSections.sectionOrder = filtered;
+      settings.markModified('homeSections.sectionOrder');
+    }
+
     // 1. Hero Section update
     if (updates.hero) {
       settings.homeSections.hero = {
@@ -583,7 +734,15 @@ export const updateHomeSections = async (req, res) => {
 
     settings.updatedBy = req.admin ? req.admin._id : null;
     settings.markModified('homeSections');
+    settings.markModified('homeSections.sectionOrder');
     await settings.save();
+
+    if (updates.sectionOrder && Array.isArray(updates.sectionOrder)) {
+      await Setting.updateOne(
+        { key: 'site_settings' },
+        { $set: { 'homeSections.sectionOrder': settings.homeSections.sectionOrder } }
+      );
+    }
 
     res.status(200).json({
       success: true,
@@ -614,6 +773,8 @@ export const resetHomeSection = async (req, res) => {
 
     if (!section || section === 'all') {
       settings.homeSections = JSON.parse(JSON.stringify(DEFAULT_HOME_SECTIONS));
+    } else if (section === 'sectionOrder') {
+      settings.homeSections.sectionOrder = [...DEFAULT_SECTION_ORDER];
     } else if (DEFAULT_HOME_SECTIONS[section]) {
       settings.homeSections[section] = JSON.parse(JSON.stringify(DEFAULT_HOME_SECTIONS[section]));
     } else {
@@ -625,7 +786,15 @@ export const resetHomeSection = async (req, res) => {
 
     settings.updatedBy = req.admin ? req.admin._id : null;
     settings.markModified('homeSections');
+    settings.markModified('homeSections.sectionOrder');
     await settings.save();
+
+    if (section === 'sectionOrder' || !section || section === 'all') {
+      await Setting.updateOne(
+        { key: 'site_settings' },
+        { $set: { 'homeSections.sectionOrder': settings.homeSections.sectionOrder } }
+      );
+    }
 
     res.status(200).json({
       success: true,
@@ -638,6 +807,85 @@ export const resetHomeSection = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || 'Error resetting home section',
+    });
+  }
+};
+
+/**
+ * @desc    Update global FAQ section settings and default FAQs
+ * @route   PUT /api/settings/faq-section
+ * @access  Private (Admin)
+ */
+export const updateFaqSection = async (req, res) => {
+  try {
+    let settings = await Setting.findOne({ key: 'site_settings' });
+    if (!settings) {
+      settings = await Setting.create({ key: 'site_settings' });
+    }
+
+    const { badge, title, subtitle, defaultFaqs } = req.body;
+
+    if (!settings.packageFaqSection) {
+      settings.packageFaqSection = {};
+    }
+
+    if (badge !== undefined) settings.packageFaqSection.badge = badge;
+    if (title !== undefined) settings.packageFaqSection.title = title;
+    if (subtitle !== undefined) settings.packageFaqSection.subtitle = subtitle;
+    if (Array.isArray(defaultFaqs)) settings.packageFaqSection.defaultFaqs = defaultFaqs;
+
+    settings.updatedBy = req.admin ? req.admin._id : null;
+    settings.markModified('packageFaqSection');
+    await settings.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'FAQ section updated successfully',
+      packageFaqSection: settings.packageFaqSection,
+    });
+  } catch (error) {
+    console.error('[UpdateFaqSection Error]:', error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error updating FAQ section',
+    });
+  }
+};
+
+/**
+ * @desc    Reset global FAQ section to defaults
+ * @route   POST /api/settings/faq-section/reset
+ * @access  Private (Admin)
+ */
+export const resetFaqSection = async (req, res) => {
+  try {
+    let settings = await Setting.findOne({ key: 'site_settings' });
+    if (!settings) {
+      settings = await Setting.create({ key: 'site_settings' });
+    }
+
+    settings.packageFaqSection = {
+      badge: "Got Questions? We've Got Answers",
+      title: 'Frequently Asked Questions',
+      subtitle:
+        'Everything you need to know about preparation, safety, stays, permits, and booking for our expeditions.',
+      defaultFaqs: [],
+    };
+
+    settings.updatedBy = req.admin ? req.admin._id : null;
+    settings.markModified('packageFaqSection');
+    await settings.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'FAQ section reset to default successfully',
+      packageFaqSection: settings.packageFaqSection,
+    });
+  } catch (error) {
+    console.error('[ResetFaqSection Error]:', error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error resetting FAQ section',
     });
   }
 };

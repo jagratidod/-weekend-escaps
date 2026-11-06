@@ -33,7 +33,12 @@ import {
   FolderTree,
   MessageCircle,
   Shield,
+  HelpCircle,
+  RotateCcw,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
+import { getDefaultPackageFAQs } from '../packages/PackageFAQ';
 
 const DIFFICULTY_LEVELS = [
   'Easy',
@@ -162,9 +167,62 @@ export function PackageManager() {
     privateTrekNote: 'Direct WhatsApp Booking • Custom Batches',
     isActive: true,
     order: 0,
+    faqs: [],
   };
 
   const [formData, setFormData] = useState(initialFormData);
+
+  // FAQ Builder Temp State
+  const [newFaq, setNewFaq] = useState({
+    question: '',
+    answer: '',
+  });
+
+  const handleAddFaq = () => {
+    if (!newFaq.question.trim() || !newFaq.answer.trim()) return;
+    setFormData((prev) => ({
+      ...prev,
+      faqs: [...(prev.faqs || []), { question: newFaq.question.trim(), answer: newFaq.answer.trim() }],
+    }));
+    setNewFaq({ question: '', answer: '' });
+  };
+
+  const handleRemoveFaq = (idx) => {
+    setFormData((prev) => ({
+      ...prev,
+      faqs: (prev.faqs || []).filter((_, i) => i !== idx),
+    }));
+  };
+
+  const handleLoadDefaultsForPackage = () => {
+    const defaults = getDefaultPackageFAQs(formData);
+    setFormData((prev) => ({
+      ...prev,
+      faqs: defaults.map((d) => ({
+        question: d.question,
+        answer: d.answer,
+      })),
+    }));
+  };
+
+  const handleUpdateFaqItem = (idx, field, val) => {
+    setFormData((prev) => {
+      const next = [...(prev.faqs || [])];
+      next[idx] = { ...next[idx], [field]: val };
+      return { ...prev, faqs: next };
+    });
+  };
+
+  const handleMoveFaq = (idx, direction) => {
+    const targetIdx = idx + direction;
+    if (targetIdx < 0 || !formData.faqs || targetIdx >= formData.faqs.length) return;
+    setFormData((prev) => {
+      const next = [...(prev.faqs || [])];
+      const [item] = next.splice(idx, 1);
+      next.splice(targetIdx, 0, item);
+      return { ...prev, faqs: next };
+    });
+  };
 
   // Availability Builder Temp States
   const [newBatch, setNewBatch] = useState({
@@ -262,6 +320,7 @@ export function PackageManager() {
       privateTrekNote: pkg.privateTrekNote || 'Direct WhatsApp Booking • Custom Batches',
       isActive: pkg.isActive !== undefined ? !!pkg.isActive : true,
       order: pkg.order || 0,
+      faqs: Array.isArray(pkg.faqs) ? [...pkg.faqs] : [],
     });
     setActiveFormTab('basic');
     setShowQuickAddCat(false);
@@ -1314,6 +1373,7 @@ export function PackageManager() {
                 { id: 'itinerary', label: 'Itinerary Builder' },
                 { id: 'availability', label: 'Batches & Availability' },
                 { id: 'inclusions', label: 'Inclusions & Highlights' },
+                { id: 'faqs', label: 'FAQs' },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -2620,6 +2680,176 @@ export function PackageManager() {
                         </span>
                       ))}
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── TAB 7: FAQS BUILDER ── */}
+              {activeFormTab === 'faqs' && (
+                <div className="space-y-6">
+                  <div className="p-4 rounded-2xl bg-orange-50/60 border border-orange-100 flex items-start gap-3">
+                    <HelpCircle className="w-5 h-5 text-[#FF6B16] shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-xs font-bold text-neutral-900">
+                        Package Frequently Asked Questions
+                      </h4>
+                      <p className="text-[11px] text-neutral-500 mt-0.5">
+                        Add custom questions and answers for this package. If no custom FAQs are added here, Weekend Escapes automatically provides comprehensive, trail-tested default FAQs tailored to this package's name, difficulty, stays, and duration.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Add New FAQ Form */}
+                  <div className="p-4 rounded-2xl border border-neutral-200/80 bg-neutral-50/50 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-neutral-800">Add New Question</span>
+                      <span className="text-[10px] text-neutral-400">Custom Q&A</span>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-neutral-600 mb-1">
+                        Question
+                      </label>
+                      <input
+                        type="text"
+                        value={newFaq.question}
+                        onChange={(e) => setNewFaq({ ...newFaq, question: e.target.value })}
+                        placeholder="e.g. Is trekking pole mandatory?"
+                        className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-medium bg-white focus:outline-none focus:border-[#FF6B16]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-neutral-600 mb-1">
+                        Answer
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={newFaq.answer}
+                        onChange={(e) => setNewFaq({ ...newFaq, answer: e.target.value })}
+                        placeholder="Provide detailed, helpful answer for travelers..."
+                        className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-medium bg-white focus:outline-none focus:border-[#FF6B16]"
+                      />
+                    </div>
+
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={handleAddFaq}
+                        disabled={!newFaq.question.trim() || !newFaq.answer.trim()}
+                        className="px-4 py-2 rounded-xl bg-[#FF6B16] hover:bg-[#E55A0B] disabled:opacity-50 text-white text-xs font-bold transition-all shadow-sm cursor-pointer flex items-center gap-1.5"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Question</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* List of Current Custom FAQs */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <span className="text-xs font-bold text-neutral-800">
+                          Active Questions for {formData.name || 'Package'} ({formData.faqs?.length || 0})
+                        </span>
+                        <p className="text-[10px] text-neutral-400 mt-0.5">
+                          Edit questions & answers inline. Order here controls display sequence on package details.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleLoadDefaultsForPackage}
+                        className="px-3 py-1.5 rounded-xl border border-neutral-200 hover:border-[#FF6B16] hover:bg-orange-50/50 text-neutral-700 text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                      >
+                        <RotateCcw className="w-3 h-3 text-[#FF6B16]" />
+                        <span>Load Recommended FAQs</span>
+                      </button>
+                    </div>
+
+                    {(!formData.faqs || formData.faqs.length === 0) ? (
+                      <div className="p-6 rounded-2xl border-2 border-dashed border-neutral-200 text-center">
+                        <HelpCircle className="w-8 h-8 text-neutral-300 mx-auto mb-2" />
+                        <p className="text-xs text-neutral-600 font-bold">
+                          No custom questions configured yet.
+                        </p>
+                        <p className="text-[11px] text-neutral-400 mt-1 max-w-sm mx-auto">
+                          Standard comprehensive trail FAQs are automatically active on this package page. Click below to load them into this package for custom editing.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={handleLoadDefaultsForPackage}
+                          className="mt-3 px-4 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-[#FF6B16] text-xs font-bold transition-colors cursor-pointer"
+                        >
+                          Load & Customize Trail FAQs
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {formData.faqs.map((faq, idx) => (
+                          <div
+                            key={idx}
+                            className="p-3.5 sm:p-4 rounded-2xl border border-neutral-200/90 bg-[#F7F7F5] space-y-2.5 shadow-2xs"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <span className="w-5 h-5 rounded-md bg-white border border-neutral-200 flex items-center justify-center text-[10px] font-black text-neutral-700 shrink-0">
+                                  {idx + 1}
+                                </span>
+                                <span className="text-xs font-bold text-neutral-800">
+                                  Question #{idx + 1}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  disabled={idx === 0}
+                                  onClick={() => handleMoveFaq(idx, -1)}
+                                  className="w-6 h-6 rounded-md bg-white border border-neutral-200 hover:bg-neutral-50 flex items-center justify-center text-neutral-600 disabled:opacity-30 cursor-pointer"
+                                  title="Move Up"
+                                >
+                                  <ArrowUp className="w-3 h-3" />
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={idx === formData.faqs.length - 1}
+                                  onClick={() => handleMoveFaq(idx, 1)}
+                                  className="w-6 h-6 rounded-md bg-white border border-neutral-200 hover:bg-neutral-50 flex items-center justify-center text-neutral-600 disabled:opacity-30 cursor-pointer"
+                                  title="Move Down"
+                                >
+                                  <ArrowDown className="w-3 h-3" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveFaq(idx)}
+                                  className="w-6 h-6 rounded-md bg-rose-50 border border-rose-100 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                                  title="Delete Question"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+
+                            <input
+                              type="text"
+                              value={faq.question}
+                              onChange={(e) => handleUpdateFaqItem(idx, 'question', e.target.value)}
+                              placeholder="Question text..."
+                              className="w-full px-3 py-2 rounded-xl border border-neutral-200 bg-white text-xs font-bold text-neutral-900 focus:outline-none focus:border-[#FF6B16]"
+                            />
+
+                            <textarea
+                              rows={2}
+                              value={faq.answer}
+                              onChange={(e) => handleUpdateFaqItem(idx, 'answer', e.target.value)}
+                              placeholder="Answer text..."
+                              className="w-full px-3 py-2 rounded-xl border border-neutral-200 bg-white text-xs font-medium text-neutral-700 focus:outline-none focus:border-[#FF6B16]"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

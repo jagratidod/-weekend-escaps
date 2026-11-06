@@ -1,6 +1,7 @@
 import Package from '../models/Package.js';
+import { generateDefaultPackageFAQs } from './packageFaqHelper.js';
 
-export const DEFAULT_PACKAGES = [
+export const RAW_DEFAULT_PACKAGES = [
   {
     id: 'kedarkantha-trek',
     name: 'Kedarkantha Trek',
@@ -187,6 +188,32 @@ export const DEFAULT_PACKAGES = [
   },
 ];
 
+export const DEFAULT_PACKAGES = RAW_DEFAULT_PACKAGES.map((pkg) => ({
+  ...pkg,
+  faqs: generateDefaultPackageFAQs(pkg),
+}));
+
+export const seedFaqsForExistingPackages = async () => {
+  try {
+    const packages = await Package.find({});
+    let updatedCount = 0;
+    for (const pkg of packages) {
+      if (!Array.isArray(pkg.faqs) || pkg.faqs.length === 0) {
+        pkg.faqs = generateDefaultPackageFAQs(pkg);
+        await pkg.save();
+        updatedCount++;
+      }
+    }
+    if (updatedCount > 0) {
+      console.log(`[Seed] Successfully seeded FAQs for ${updatedCount} existing packages in MongoDB.`);
+    }
+    return updatedCount;
+  } catch (err) {
+    console.error('[Seed] Error seeding FAQs for existing packages:', err.message);
+    return 0;
+  }
+};
+
 export const seedDefaultPackages = async () => {
   try {
     const count = await Package.countDocuments();
@@ -194,6 +221,9 @@ export const seedDefaultPackages = async () => {
       console.log('[Seed] No packages found in database. Seeding initial packages...');
       await Package.insertMany(DEFAULT_PACKAGES);
       console.log(`[Seed] Successfully seeded ${DEFAULT_PACKAGES.length} packages into MongoDB!`);
+    } else {
+      // Seed FAQs for any existing packages that don't have them yet
+      await seedFaqsForExistingPackages();
     }
   } catch (err) {
     console.error('[Seed] Package seeding error:', err.message);

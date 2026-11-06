@@ -16,6 +16,10 @@ const settingSchema = new mongoose.Schema(
       type: String,
       default: '/logo/weekend-escapes-logo.svg',
     },
+    darkLogoUrl: {
+      type: String,
+      default: '/logo/weekend-escapes-logo.svg',
+    },
     siteName: {
       type: String,
       default: 'Weekend Escapes',
@@ -309,6 +313,42 @@ const settingSchema = new mongoose.Schema(
           default: '',
         },
       },
+      sectionOrder: {
+        type: [String],
+        default: [
+          'hero',
+          'reels',
+          'experiences',
+          'packages',
+          'whyChooseUs',
+          'bookingProcess',
+          'testimonials',
+          'gallery',
+          'blogs',
+          'finalCta',
+        ],
+      },
+    },
+    packageFaqSection: {
+      badge: {
+        type: String,
+        default: "Got Questions? We've Got Answers",
+      },
+      title: {
+        type: String,
+        default: 'Frequently Asked Questions',
+      },
+      subtitle: {
+        type: String,
+        default:
+          'Everything you need to know about preparation, safety, stays, permits, and booking for our expeditions.',
+      },
+      defaultFaqs: [
+        {
+          question: { type: String, default: '' },
+          answer: { type: String, default: '' },
+        },
+      ],
     },
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,

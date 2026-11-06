@@ -8,6 +8,7 @@ import { formatCurrency } from '../utils/helpers';
 import PackageCard from '../components/home/PackageCard';
 import Container from '../components/common/Container';
 import TripReelsRow from '../components/home/TripReelsRow';
+import PackageFAQ from '../components/packages/PackageFAQ';
 import {
   Search,
   RotateCcw,
@@ -273,6 +274,19 @@ export function PackagesPage({ scrollToExperiences = false }) {
                 className="px-4 py-1.5 rounded-full bg-white border border-neutral-200 text-xs font-bold text-neutral-600 hover:border-[#FF6B16] hover:text-[#FF6B16] transition-all shadow-xs"
               >
                 Curated Experiences
+              </a>
+              <a
+                href={
+                  getCustomWhatsAppUrl
+                    ? getCustomWhatsAppUrl('Hi Weekend Escapes! I would like to connect with a trip expert to help plan our tour package.')
+                    : whatsappUrl || 'https://wa.me/919876543210'
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-1.5 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-black transition-all shadow-xs flex items-center gap-1.5 hover:scale-105 active:scale-95 cursor-pointer shadow-emerald-900/20"
+              >
+                <MessageCircle className="w-3.5 h-3.5 fill-white text-[#25D366]" />
+                <span>Connect with Expert</span>
               </a>
             </div>
           </div>
@@ -714,6 +728,9 @@ export function PackagesPage({ scrollToExperiences = false }) {
           maxReels={5}
         />
       </section>
+
+      {/* ── Frequently Asked Questions Section ── */}
+      <PackageFAQ />
     </div>
   );
 }

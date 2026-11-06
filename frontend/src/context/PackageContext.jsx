@@ -314,6 +314,26 @@ export function PackageProvider({ children }) {
     return { success: false, slots: [] };
   };
 
+  const seedPackageFaqs = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/packages/seed-faqs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchPackages(true);
+      }
+      return data;
+    } catch (err) {
+      console.error('[PackageContext] seedPackageFaqs error:', err);
+      return { success: false, message: err.message };
+    }
+  };
+
   const trendingPackages = packages.filter((p) => p.isTrending !== false);
   const categoryNames = categories.map((c) => c.name);
 
@@ -331,6 +351,7 @@ export function PackageProvider({ children }) {
     updatePackage,
     deletePackage,
     seedPackages,
+    seedPackageFaqs,
     createCategory,
     updateCategory,
     deleteCategory,

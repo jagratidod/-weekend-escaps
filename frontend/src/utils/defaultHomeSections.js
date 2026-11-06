@@ -141,6 +141,20 @@ export const DEFAULT_HOME_SECTIONS = {
     whatsappButtonText: 'Talk on WhatsApp',
     whatsappUrl: '',
   },
+  sectionOrder: [
+    'hero',
+    'reels',
+    'experiences',
+    'packages',
+    'whyChooseUs',
+    'bookingProcess',
+    'testimonials',
+    'gallery',
+    'blogs',
+    'finalCta',
+  ],
 };
+
+export const DEFAULT_SECTION_ORDER = DEFAULT_HOME_SECTIONS.sectionOrder;
 
 export default DEFAULT_HOME_SECTIONS;

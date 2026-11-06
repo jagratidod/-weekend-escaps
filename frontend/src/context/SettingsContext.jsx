@@ -25,6 +25,14 @@ export const buildWhatsAppUrl = (phone, text) => {
   return `https://wa.me/${cleanNum}?text=${encodeURIComponent(message)}`;
 };
 
+export const DEFAULT_FAQ_SECTION = {
+  badge: "Got Questions? We've Got Answers",
+  title: 'Frequently Asked Questions',
+  subtitle:
+    'Everything you need to know about preparation, safety, stays, permits, and booking for our expeditions.',
+  defaultFaqs: [],
+};
+
 export const DEFAULT_CONTACT_INFO = {
   heroTitle: 'Contact us',
   heroSubtitle:
@@ -48,12 +56,15 @@ export const DEFAULT_CONTACT_INFO = {
 export function SettingsProvider({ children }) {
   const [settings, setSettings] = useState({
     logoUrl: '/logo/weekend-escapes-logo.svg',
+    footerLogoUrl: '/logo/weekend-escapes-logo.svg',
+    darkLogoUrl: '/logo/weekend-escapes-logo.svg',
     siteName: 'Weekend Escapes',
     tagline: 'Crafting Adventures',
     whatsappNumber: '+91 98765 43210',
     whatsappMessage: 'Hi Weekend Escapes! I would like to plan my next adventure.',
     contactInfo: DEFAULT_CONTACT_INFO,
     homeSections: DEFAULT_HOME_SECTIONS,
+    packageFaqSection: DEFAULT_FAQ_SECTION,
   });
   const [loading, setLoading] = useState(true);
 
@@ -127,6 +138,24 @@ export function SettingsProvider({ children }) {
               },
             },
             finalCta: { ...DEFAULT_HOME_SECTIONS.finalCta, ...(serverHome.finalCta || {}) },
+            sectionOrder: (() => {
+              if (Array.isArray(serverHome.sectionOrder) && serverHome.sectionOrder.length > 0) {
+                const merged = [...serverHome.sectionOrder];
+                DEFAULT_HOME_SECTIONS.sectionOrder.forEach((sec) => {
+                  if (!merged.includes(sec)) merged.push(sec);
+                });
+                return merged;
+              }
+              return DEFAULT_HOME_SECTIONS.sectionOrder;
+            })(),
+          },
+          packageFaqSection: {
+            ...DEFAULT_FAQ_SECTION,
+            ...(data.settings.packageFaqSection || {}),
+            defaultFaqs:
+              Array.isArray(data.settings.packageFaqSection?.defaultFaqs)
+                ? data.settings.packageFaqSection.defaultFaqs
+                : [],
           },
         });
       }
@@ -143,6 +172,7 @@ export function SettingsProvider({ children }) {
 
   const activeLogoUrl = formatLogoUrl(settings.logoUrl);
   const activeFooterLogoUrl = formatLogoUrl(settings.footerLogoUrl || settings.logoUrl);
+  const activeDarkLogoUrl = formatLogoUrl(settings.darkLogoUrl || settings.logoUrl);
   const activeContactInfo = settings.contactInfo || DEFAULT_CONTACT_INFO;
   const activeHomeSections = settings.homeSections || DEFAULT_HOME_SECTIONS;
   const activeWhatsappNumber =
@@ -158,15 +188,43 @@ export function SettingsProvider({ children }) {
     [activeWhatsappNumber]
   );
 
+  const updateFaqSectionSettings = useCallback(
+    async (token, payload) => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/settings/faq-section`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (data.success) {
+          await fetchSettings();
+        }
+        return data;
+      } catch (err) {
+        console.error('Failed to update FAQ section:', err);
+        return { success: false, message: err.message };
+      }
+    },
+    [fetchSettings]
+  );
+
   return (
     <SettingsContext.Provider
       value={{
         settings,
         homeSections: activeHomeSections,
+        packageFaqSection: settings.packageFaqSection || DEFAULT_FAQ_SECTION,
+        updateFaqSectionSettings,
         logoUrl: activeLogoUrl,
         rawLogoUrl: settings.logoUrl,
         footerLogoUrl: activeFooterLogoUrl,
         rawFooterLogoUrl: settings.footerLogoUrl || settings.logoUrl,
+        darkLogoUrl: activeDarkLogoUrl,
+        rawDarkLogoUrl: settings.darkLogoUrl || settings.logoUrl,
         siteName: settings.siteName,
         contactInfo: activeContactInfo,
         whatsappNumber: activeWhatsappNumber,

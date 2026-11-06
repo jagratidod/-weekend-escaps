@@ -2,7 +2,7 @@ import Package from '../models/Package.js';
 import PackageCategory from '../models/PackageCategory.js';
 import Booking from '../models/Booking.js';
 import mongoose from 'mongoose';
-import { DEFAULT_PACKAGES, seedDefaultPackages } from '../utils/seedPackages.js';
+import { DEFAULT_PACKAGES, seedDefaultPackages, seedFaqsForExistingPackages } from '../utils/seedPackages.js';
 
 export const DEFAULT_PACKAGE_CATEGORIES = [
   { name: 'Trekking', slug: 'trekking', description: 'Himalayan and summit treks, high altitude mountain trails.', order: 1 },
@@ -227,6 +227,9 @@ export const getPackages = async (req, res) => {
     const count = await Package.countDocuments();
     if (count === 0) {
       await seedDefaultPackages();
+    } else {
+      // Auto-ensure FAQs on existing packages if missing
+      await seedFaqsForExistingPackages();
     }
 
     const { search, type, maxPrice, trending, featured, all } = req.query;
@@ -403,6 +406,7 @@ export const createPackage = async (req, res) => {
       included: Array.isArray(included) ? included : [],
       excluded: Array.isArray(excluded) ? excluded : [],
       itinerary: Array.isArray(itinerary) ? itinerary : [],
+      faqs: Array.isArray(req.body.faqs) ? req.body.faqs : [],
       availability: req.body.availability || {
         scheduleType: 'daily',
         defaultSeatsPerBatch: 16,
@@ -482,6 +486,7 @@ export const updatePackage = async (req, res) => {
       'itinerary',
       'availability',
       'highlights',
+      'faqs',
       'description',
       'isFeatured',
       'isTrending',
@@ -579,6 +584,30 @@ export const resetToDefaultPackages = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to seed packages',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @desc    Seed FAQs for all existing packages
+ * @route   POST /api/packages/seed-faqs
+ * @access  Private (Admin)
+ */
+export const seedExistingFaqs = async (req, res) => {
+  try {
+    const updatedCount = await seedFaqsForExistingPackages();
+    const packages = await Package.find().sort({ order: 1 });
+    res.status(200).json({
+      success: true,
+      message: `Successfully seeded FAQs for ${updatedCount} package(s)!`,
+      packages,
+    });
+  } catch (error) {
+    console.error('[PackageController] seedExistingFaqs error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to seed existing FAQs',
       error: error.message,
     });
   }

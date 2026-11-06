@@ -15,7 +15,7 @@ export function Navbar({
   const [isScrolled, setIsScrolled] = useState(false);
   const [hasDarkPageAttr, setHasDarkPageAttr] = useState(false);
   const location = useLocation();
-  const { logoUrl } = useSettings();
+  const { logoUrl, darkLogoUrl } = useSettings();
   const { packages } = usePackages();
 
   useEffect(() => {
@@ -85,13 +85,13 @@ export function Navbar({
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          {/* Logo */}
+          {/* Logo - Automatically chooses Dark Background logo when un-scrolled on dark heroes */}
           <Link to="/" className="flex items-center gap-3 group focus:outline-none">
             <img
-              src={logoUrl || "/logo/weekend-escapes-logo.svg"}
+              src={useWhiteText && darkLogoUrl ? darkLogoUrl : (logoUrl || "/logo/weekend-escapes-logo.svg")}
               alt="Weekend Escapes"
-              className={`h-10 sm:h-12 w-auto transition-all duration-300 group-hover:scale-105 ${
-                useWhiteText && (!logoUrl || logoUrl.endsWith('weekend-escapes-logo.svg'))
+              className={`h-10 sm:h-12 w-auto transition-all duration-300 group-hover:scale-105 object-contain ${
+                useWhiteText && !darkLogoUrl && (!logoUrl || logoUrl.endsWith('weekend-escapes-logo.svg'))
                   ? 'bg-white/95 px-2.5 py-1 rounded-xl shadow-sm'
                   : ''
               }`}

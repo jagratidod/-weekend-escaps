@@ -9,41 +9,34 @@ import Testimonials from '../components/home/Testimonials';
 import Gallery from '../components/home/Gallery';
 import TravelBlogs from '../components/home/TravelBlogs';
 import FinalCTA from '../components/home/FinalCTA';
+import { useSettings } from '../context/SettingsContext';
+import { DEFAULT_SECTION_ORDER } from '../utils/defaultHomeSections';
+
+const SECTION_COMPONENTS = {
+  hero: <Hero key="hero" />,
+  reels: (
+    <div key="reels" className="bg-[#F7F7F5] pt-12 pb-4 w-full overflow-hidden">
+      <TripReelsRow />
+    </div>
+  ),
+  experiences: <Experiences key="experiences" />,
+  packages: <Packages key="packages" />,
+  whyChooseUs: <WhyChooseUs key="whyChooseUs" />,
+  bookingProcess: <BookingProcess key="bookingProcess" />,
+  testimonials: <Testimonials key="testimonials" />,
+  gallery: <Gallery key="gallery" />,
+  blogs: <TravelBlogs key="blogs" />,
+  finalCta: <FinalCTA key="finalCta" />,
+};
 
 export function Home() {
+  const { homeSections } = useSettings();
+  const rawOrder = homeSections?.sectionOrder;
+  const sectionOrder = Array.isArray(rawOrder) && rawOrder.length > 0 ? rawOrder : DEFAULT_SECTION_ORDER;
+
   return (
     <div className="flex flex-col min-h-screen">
-      {/* 1. Cinematic Hero Section with Integrated Bottom Search & Topography */}
-      <Hero />
-
-      {/* 2. Hero Travel Reels Showcase */}
-      <div className="bg-[#F7F7F5] pt-12 pb-4 w-full overflow-hidden">
-        <TripReelsRow />
-      </div>
-
-      {/* 3. Travel Experiences (Dark with brush strokes) */}
-      <Experiences />
-
-      {/* 4. Trending Tour Packages */}
-      <Packages />
-
-      {/* 5. Why Choose Weekend Escapes (More Than Just A Trip) */}
-      <WhyChooseUs />
-
-      {/* 6. Our Booking Process (From Dream to Destination) */}
-      <BookingProcess />
-
-      {/* 7. Traveler Testimonials (What Our Travelers Say) */}
-      <Testimonials />
-
-      {/* 8. Travel Memories Gallery (Moments From Our Trips) */}
-      <Gallery />
-
-      {/* 9. Travel Guides and Blogs (Latest Travel Stories) */}
-      <TravelBlogs />
-
-      {/* 10. Final CTA Section (Ready for Your Next Adventure?) */}
-      <FinalCTA />
+      {sectionOrder.map((sectionId) => SECTION_COMPONENTS[sectionId] || null)}
     </div>
   );
 }

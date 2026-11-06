@@ -20,6 +20,8 @@ export default function LogoManager() {
     rawLogoUrl,
     footerLogoUrl,
     rawFooterLogoUrl,
+    darkLogoUrl,
+    rawDarkLogoUrl,
     whatsappNumber,
     whatsappMessage,
     refreshSettings,
@@ -39,6 +41,13 @@ export default function LogoManager() {
   const [uploadingFooter, setUploadingFooter] = useState(false);
   const [footerStatusMessage, setFooterStatusMessage] = useState({ type: '', text: '' });
   const footerFileInputRef = useRef(null);
+
+  // Dark Background / Light Logo state
+  const [selectedDarkFile, setSelectedDarkFile] = useState(null);
+  const [previewDarkUrl, setPreviewDarkUrl] = useState(null);
+  const [uploadingDark, setUploadingDark] = useState(false);
+  const [darkStatusMessage, setDarkStatusMessage] = useState({ type: '', text: '' });
+  const darkFileInputRef = useRef(null);
 
   // WhatsApp Settings state
   const [waPhone, setWaPhone] = useState('');
@@ -234,6 +243,97 @@ export default function LogoManager() {
       setFooterStatusMessage({ type: 'error', text: err.message || 'Error resetting footer logo' });
     } finally {
       setUploadingFooter(false);
+    }
+  };
+
+  // Dark Background Logo Handlers
+  const handleDarkFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setDarkStatusMessage({ type: 'error', text: 'File size exceeds 5MB limit.' });
+      return;
+    }
+
+    setSelectedDarkFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewDarkUrl(objectUrl);
+    setDarkStatusMessage({ type: '', text: '' });
+  };
+
+  const handleDarkUpload = async () => {
+    if (!selectedDarkFile) {
+      setDarkStatusMessage({ type: 'error', text: 'Please select an image file for dark background logo first.' });
+      return;
+    }
+
+    try {
+      setUploadingDark(true);
+      setDarkStatusMessage({ type: '', text: '' });
+
+      const formData = new FormData();
+      formData.append('logo', selectedDarkFile);
+
+      const res = await fetch(`${API_BASE_URL}/settings/dark-logo`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to upload dark background logo');
+      }
+
+      await refreshSettings();
+      setSelectedDarkFile(null);
+      setPreviewDarkUrl(null);
+      if (darkFileInputRef.current) darkFileInputRef.current.value = '';
+
+      setDarkStatusMessage({
+        type: 'success',
+        text: 'Dark background logo updated successfully! Pages with dark hero backgrounds (Contact Us, About Us, etc.) and transparent headers will now display this logo clearly without background issues.',
+      });
+    } catch (err) {
+      setDarkStatusMessage({ type: 'error', text: err.message || 'Error uploading dark background logo' });
+    } finally {
+      setUploadingDark(false);
+    }
+  };
+
+  const handleResetDarkToDefault = async () => {
+    try {
+      setUploadingDark(true);
+      setDarkStatusMessage({ type: '', text: '' });
+
+      const res = await fetch(`${API_BASE_URL}/settings/dark-logo/reset`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to reset dark background logo');
+      }
+
+      await refreshSettings();
+      setSelectedDarkFile(null);
+      setPreviewDarkUrl(null);
+      if (darkFileInputRef.current) darkFileInputRef.current.value = '';
+
+      setDarkStatusMessage({
+        type: 'success',
+        text: 'Default Weekend Escapes dark background logo has been restored.',
+      });
+    } catch (err) {
+      setDarkStatusMessage({ type: 'error', text: err.message || 'Error resetting dark background logo' });
+    } finally {
+      setUploadingDark(false);
     }
   };
 
@@ -439,7 +539,164 @@ export default function LogoManager() {
     </div>
 
     {/* ══════════════════════════════════════════════════════════════════
-        2. WEBSITE FOOTER LOGO MANAGEMENT
+        2. DARK BACKGROUND / TRANSPARENT HEADER LOGO MANAGEMENT
+        ══════════════════════════════════════════════════════════════════ */}
+    <div className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-150 shadow-sm mt-8">
+      {/* Section Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-neutral-100">
+        <div>
+          <div className="inline-flex items-center gap-2 mb-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#1A384C]"></span>
+            <span className="text-[#1A384C] font-bold text-xs uppercase tracking-wider">
+              Dark Background & Transparent Header Contrast
+            </span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black text-[#111111] flex items-center gap-2.5">
+            <span>Dark Background / Light Logo Management</span>
+          </h2>
+          <p className="text-neutral-500 text-xs sm:text-sm mt-0.5">
+            Upload a light / white variant logo (with transparent background). This logo will automatically display wherever a page has a dark hero background (such as Contact Us, About Us, etc.) or transparent navigation header, ensuring crisp readability without any forced white boxes.
+          </p>
+        </div>
+
+        <button
+          onClick={handleResetDarkToDefault}
+          disabled={uploadingDark}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-neutral-200 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 text-xs font-semibold transition-all w-fit cursor-pointer disabled:opacity-50"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          Restore Default Dark Logo
+        </button>
+      </div>
+
+      {/* Dark Logo Status Alert */}
+      {darkStatusMessage.text && (
+        <div
+          className={`mt-6 p-4 rounded-2xl flex items-start gap-3 text-sm ${
+            darkStatusMessage.type === 'success'
+              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+              : 'bg-red-50 text-red-700 border border-red-200'
+          }`}
+        >
+          {darkStatusMessage.type === 'success' ? (
+            <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+          ) : (
+            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          )}
+          <span className="font-medium">{darkStatusMessage.text}</span>
+        </div>
+      )}
+
+      {/* Main Grid: Current vs New Upload */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6 items-start">
+        {/* Left Column: Current Active Dark Background Logo */}
+        <div className="lg:col-span-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500">
+              Current Dark Background Logo
+            </label>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neutral-900 text-neutral-200 border border-neutral-700">
+              Dark Backdrop Preview
+            </span>
+          </div>
+
+          <div className="p-8 rounded-2xl border border-neutral-800 bg-[#0B151D] flex flex-col items-center justify-center min-h-[190px] relative group shadow-inner">
+            <img
+              src={darkLogoUrl || logoUrl}
+              alt="Current Dark Background Logo"
+              className="max-h-16 sm:max-h-20 w-auto object-contain transition-transform group-hover:scale-105"
+            />
+            <span className="absolute bottom-3 left-4 text-[10px] font-mono text-neutral-500 truncate max-w-[240px]">
+              {rawDarkLogoUrl || rawLogoUrl}
+            </span>
+          </div>
+
+          <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-600 space-y-1.5">
+            <p className="font-semibold text-neutral-800">Where this logo appears automatically:</p>
+            <ul className="list-disc pl-4 space-y-1 text-neutral-500 text-[11px]">
+              <li><strong>Contact Page Hero</strong>: Header bar over mountain backdrop</li>
+              <li><strong>About Page Hero</strong>: Header bar over dark expedition photo</li>
+              <li><strong>Transparent Navbar Mode</strong>: Any future dark/black hero sections</li>
+            </ul>
+            <p className="text-[11px] text-emerald-700 font-semibold pt-1 border-t border-neutral-200">
+              ✓ Transparent PNG or SVG with white/light text recommended for clean contrast.
+            </p>
+          </div>
+        </div>
+
+        {/* Right Column: Upload New Dark Background Logo Box */}
+        <div className="lg:col-span-7 space-y-4">
+          <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500">
+            Upload Light / Transparent Logo for Dark Backgrounds
+          </label>
+
+          <div
+            onClick={() => darkFileInputRef.current?.click()}
+            className="border-2 border-dashed border-neutral-300 hover:border-[#FF6B16] rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer bg-white hover:bg-[#FF6B16]/5 transition-all min-h-[190px] group"
+          >
+            <input
+              ref={darkFileInputRef}
+              type="file"
+              accept=".svg,.png,.jpg,.jpeg,.webp"
+              onChange={handleDarkFileChange}
+              className="hidden"
+            />
+
+            {previewDarkUrl ? (
+              <div className="flex flex-col items-center">
+                <div className="p-4 rounded-xl bg-[#0B151D] border border-neutral-700 shadow-sm mb-3">
+                  <img
+                    src={previewDarkUrl}
+                    alt="New Dark Logo Preview"
+                    className="max-h-14 sm:max-h-16 w-auto object-contain"
+                  />
+                </div>
+                <p className="text-xs font-bold text-neutral-800">{selectedDarkFile?.name}</p>
+                <p className="text-[11px] text-neutral-400 mt-0.5">
+                  Click to choose a different image
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 rounded-2xl bg-[#1A384C]/10 text-[#1A384C] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <Upload className="w-6 h-6" />
+                </div>
+                <p className="text-sm font-bold text-neutral-800">
+                  Click or drag and drop image here
+                </p>
+                <p className="text-xs text-neutral-400 mt-1">
+                  Transparent PNG, SVG, or WebP up to 5MB
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Action Button */}
+          <div className="flex justify-end pt-2">
+            <button
+              onClick={handleDarkUpload}
+              disabled={!selectedDarkFile || uploadingDark}
+              className="h-12 px-6 bg-[#FF6B16] hover:bg-[#ff7d33] active:scale-[0.98] text-white font-bold text-sm rounded-xl shadow-lg shadow-[#FF6B16]/25 hover:shadow-[#FF6B16]/40 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {uploadingDark ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Uploading Dark Background Logo...</span>
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4" />
+                  <span>Save & Apply Dark Background Logo</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* ══════════════════════════════════════════════════════════════════
+        3. WEBSITE FOOTER LOGO MANAGEMENT
         ══════════════════════════════════════════════════════════════════ */}
     <div className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-150 shadow-sm mt-8">
       {/* Section Header */}
@@ -598,7 +855,7 @@ export default function LogoManager() {
     </div>
 
     {/* ══════════════════════════════════════════════════════════════════
-        2. WHATSAPP FLOATING BUTTON & DIRECT CHAT SETTINGS
+        4. WHATSAPP FLOATING BUTTON & DIRECT CHAT SETTINGS
         ══════════════════════════════════════════════════════════════════ */}
     <div className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-150 shadow-sm mt-8">
       {/* Section Header */}

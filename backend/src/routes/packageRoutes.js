@@ -6,6 +6,7 @@ import {
   updatePackage,
   deletePackage,
   resetToDefaultPackages,
+  seedExistingFaqs,
   getPackageCategories,
   createPackageCategory,
   updatePackageCategory,
@@ -25,6 +26,7 @@ router.delete('/categories/:id', protect, deletePackageCategory);
 
 // ── Admin Seeding Route ──
 router.post('/seed', protect, resetToDefaultPackages);
+router.post('/seed-faqs', protect, seedExistingFaqs);
 
 // ── Package Public & Admin Routes ──
 router.get('/', getPackages);

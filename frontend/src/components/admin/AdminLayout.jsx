@@ -54,6 +54,7 @@ const DEFAULT_PAGE_SUB_ITEMS = [
   { id: 'pages', label: 'Terms & Conditions', icon: FileText },
   { id: 'cancellation_policy', label: 'Cancellation Policy', icon: ShieldCheck },
   { id: 'testimonials', label: 'Testimonials', icon: MessageSquareQuote },
+  { id: 'faqs_editor', label: 'FAQ Section Editor', icon: HelpCircle },
   { id: 'contact_editor', label: 'Contact Page Info', icon: HelpCircle },
 ];
 

@@ -14,6 +14,7 @@ import ReelManager from '../../components/admin/ReelManager';
 import HomeSectionsManager from '../../components/admin/HomeSectionsManager';
 import AboutManager from '../../components/admin/AboutManager';
 import GalleryManager from '../../components/admin/GalleryManager';
+import FaqManager from '../../components/admin/FaqManager';
 import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../context/SettingsContext';
 import { formatCurrency } from '../../utils/helpers';
@@ -64,6 +65,7 @@ export default function AdminDashboardPage() {
       {activeTab === 'pages' && <PagesManager initialSlug="terms-and-conditions" />}
       {activeTab === 'cancellation_policy' && <PagesManager initialSlug="cancellation-policy" />}
       {activeTab === 'testimonials' && <TestimonialManager />}
+      {activeTab === 'faqs_editor' && <FaqManager />}
       {activeTab === 'leads' && <LeadManager />}
       {activeTab === 'contact_editor' && <ContactInfoManager />}
       {activeTab === 'home_sections' && <HomeSectionsManager />}

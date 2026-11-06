@@ -27,12 +27,30 @@ import {
   ExternalLink,
   MessageCircle,
   Film,
+  GripVertical,
+  ChevronLeft,
+  ChevronRight,
+  Star,
+  Layers,
 } from 'lucide-react';
 import ReelManager from './ReelManager';
 import { useSettings } from '../../context/SettingsContext';
 import { useAuth } from '../../context/AuthContext';
 import { AVAILABLE_ICON_OPTIONS, getHomeIcon } from '../../utils/homeIconHelper';
-import { DEFAULT_HOME_SECTIONS } from '../../utils/defaultHomeSections';
+import { DEFAULT_HOME_SECTIONS, DEFAULT_SECTION_ORDER } from '../../utils/defaultHomeSections';
+
+const SECTION_METADATA = {
+  hero: { id: 'hero', label: 'Hero Section', icon: Sparkles, editable: true },
+  reels: { id: 'reels', label: 'Travel Reels', icon: Film, editable: true },
+  experiences: { id: 'experiences', label: 'Choose Experience', icon: Compass, editable: true },
+  packages: { id: 'packages', label: 'Tour Packages', icon: Mountain, editable: false, managerLink: '/admin/packages' },
+  whyChooseUs: { id: 'whyChooseUs', label: 'Why Choose Us', icon: ShieldCheck, editable: true },
+  bookingProcess: { id: 'bookingProcess', label: 'Process & Welfare', icon: Handshake, editable: true },
+  testimonials: { id: 'testimonials', label: 'Traveler Reviews', icon: Star, editable: false, managerLink: '/admin/testimonials' },
+  gallery: { id: 'gallery', label: 'Memories Gallery', icon: ImageIcon, editable: false, managerLink: '/admin/gallery' },
+  blogs: { id: 'blogs', label: 'Travel Blogs', icon: ExternalLink, editable: false, managerLink: '/admin/blogs' },
+  finalCta: { id: 'finalCta', label: 'Ready For Adventure (CTA)', icon: Flame, editable: true },
+};
 
 export default function HomeSectionsManager() {
   const { homeSections, refreshSettings, formatImageUrl, API_BASE_URL } = useSettings();
@@ -44,6 +62,12 @@ export default function HomeSectionsManager() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
 
+  // Drag and Drop Section Reordering State
+  const [sectionOrder, setSectionOrder] = useState(DEFAULT_SECTION_ORDER);
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
+  const [savingOrder, setSavingOrder] = useState(false);
+
   // File upload input refs
   const heroImageInputRef = useRef(null);
   const whyChooseImageInputRef = useRef(null);
@@ -52,6 +76,15 @@ export default function HomeSectionsManager() {
   useEffect(() => {
     if (homeSections) {
       setFormData(JSON.parse(JSON.stringify(homeSections)));
+      if (Array.isArray(homeSections.sectionOrder) && homeSections.sectionOrder.length > 0) {
+        const merged = [...homeSections.sectionOrder];
+        DEFAULT_SECTION_ORDER.forEach((secId) => {
+          if (!merged.includes(secId)) merged.push(secId);
+        });
+        setSectionOrder(merged);
+      } else {
+        setSectionOrder(DEFAULT_SECTION_ORDER);
+      }
     }
   }, [homeSections]);
 
@@ -165,17 +198,98 @@ export default function HomeSectionsManager() {
     }
   };
 
-  const tabs = [
-    { id: 'hero', label: '1. Hero Section', icon: Sparkles },
-    { id: 'reels', label: '2. Travel Reels', icon: Film },
-    { id: 'experiences', label: '3. Choose Experience', icon: Compass },
-    { id: 'whyChooseUs', label: '4. Why Choose Us', icon: Mountain },
-    { id: 'bookingProcess', label: '5. Process & Welfare', icon: ShieldCheck },
-    { id: 'finalCta', label: '6. Ready For Adventure (CTA)', icon: Flame },
-  ];
+  // Drag and Drop Handlers for Reordering Homepage Sections
+  const handleDragStart = (e, index) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(index));
+  };
+
+  const handleDragEnter = (e, index) => {
+    e.preventDefault();
+    if (draggedIndex !== null && draggedIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = async (e, targetIndex) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targetIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const updated = [...sectionOrder];
+    const [moved] = updated.splice(draggedIndex, 1);
+    updated.splice(targetIndex, 0, moved);
+
+    setSectionOrder(updated);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+
+    await saveOrderToBackend(updated);
+  };
+
+  const moveSection = async (index, direction) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= sectionOrder.length) return;
+
+    const updated = [...sectionOrder];
+    const [moved] = updated.splice(index, 1);
+    updated.splice(targetIndex, 0, moved);
+
+    setSectionOrder(updated);
+    await saveOrderToBackend(updated);
+  };
+
+  const saveOrderToBackend = async (orderList) => {
+    try {
+      setSavingOrder(true);
+      const res = await fetch(`${API_BASE_URL}/settings/home-sections`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ sectionOrder: orderList }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to save section order');
+      }
+
+      await refreshSettings();
+      showToast('success', 'Homepage layout order updated live!');
+    } catch (err) {
+      console.error('[Save Section Order Error]:', err);
+      showToast('error', err.message || 'Failed to save section order');
+    } finally {
+      setSavingOrder(false);
+    }
+  };
+
+  const handleResetOrder = async () => {
+    if (!window.confirm('Reset the homepage section order back to default layout?')) {
+      return;
+    }
+    setSectionOrder(DEFAULT_SECTION_ORDER);
+    await saveOrderToBackend(DEFAULT_SECTION_ORDER);
+  };
 
   return (
-    <div className="space-y-6 pb-12 select-none">
+    <div className="space-y-6 pb-12">
       {/* ── Top Header ── */}
       <div className="bg-white rounded-2xl p-5 sm:p-6 border border-neutral-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -189,7 +303,7 @@ export default function HomeSectionsManager() {
         </div>
 
         {/* Global Save Button */}
-        {activeTab !== 'reels' && (
+        {activeTab !== 'reels' && !['packages', 'testimonials', 'gallery', 'blogs'].includes(activeTab) && (
           <div className="flex items-center gap-3">
             <button
               onClick={() => handleSave(activeTab)}
@@ -221,26 +335,286 @@ export default function HomeSectionsManager() {
         </div>
       )}
 
-      {/* ── Section Tabs ── */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-neutral-200/80">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
+      {/* ── 1. HOMEPAGE LAYOUT & SECTION REORDERING BAR ── */}
+      <div className="bg-white rounded-2xl p-5 border border-neutral-200/80 shadow-xs space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-neutral-150 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-orange-50 text-[#FF6B16] flex items-center justify-center shrink-0 border border-orange-200 shadow-xs">
+              <Layers className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-black text-[#1A384C]">
+                  Homepage Layout & Section Ordering
+                </h2>
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wide">
+                  Live Website
+                </span>
+              </div>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Drag cards or click the <span className="font-bold text-[#FF6B16]">Earlier ←</span> / <span className="font-bold text-[#FF6B16]">→ Later</span> buttons to change the vertical order of sections on your homepage.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0">
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-                isActive
-                  ? 'bg-[#1A384C] text-white shadow-sm'
-                  : 'bg-white text-neutral-600 hover:text-neutral-900 border border-neutral-200/80 hover:bg-neutral-50'
-              }`}
+              onClick={() => saveOrderToBackend(sectionOrder)}
+              disabled={savingOrder}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1A384C] hover:bg-[#254d66] text-white text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+              title="Save current order"
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-[#FF6B16]' : 'text-neutral-500'}`} />
-              <span>{tab.label}</span>
+              {savingOrder ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Save Order</span>
+                </>
+              )}
             </button>
-          );
-        })}
+            <button
+              onClick={handleResetOrder}
+              disabled={savingOrder}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-neutral-600 hover:text-neutral-900 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+              title="Reset layout order to default"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset Default</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Horizontal Drag & Drop / Arrow Reordering Ribbon */}
+        <div className="relative">
+          <div className="flex items-stretch gap-3 overflow-x-auto pb-3 pt-1 px-0.5 no-scrollbar">
+            {sectionOrder.map((sectionId, index) => {
+              const meta = SECTION_METADATA[sectionId] || {
+                id: sectionId,
+                label: sectionId,
+                icon: Sparkles,
+                editable: true,
+              };
+              const Icon = meta.icon;
+              const isDragging = draggedIndex === index;
+              const isDragOver = dragOverIndex === index;
+              const isFirst = index === 0;
+              const isLast = index === sectionOrder.length - 1;
+
+              return (
+                <div
+                  key={sectionId}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragEnter={(e) => handleDragEnter(e, index)}
+                  onDragOver={handleDragOver}
+                  onDragEnd={handleDragEnd}
+                  onDrop={(e) => handleDrop(e, index)}
+                  className={`group relative flex flex-col justify-between min-w-[210px] sm:min-w-[230px] p-3.5 rounded-2xl border transition-all duration-200 select-none ${
+                    isDragging
+                      ? 'opacity-30 scale-95 border-dashed border-[#FF6B16] bg-orange-50/50'
+                      : ''
+                  } ${
+                    isDragOver
+                      ? 'ring-2 ring-[#FF6B16] border-[#FF6B16] bg-orange-50/80 scale-[1.03] shadow-md z-10'
+                      : 'bg-white hover:bg-neutral-50/80 border-neutral-200/90 shadow-2xs hover:shadow-xs'
+                  }`}
+                >
+                  {/* Card Top: Position Badge, Drag Grip, and Type */}
+                  <div className="flex items-center justify-between pointer-events-none">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-6 h-6 rounded-lg bg-[#1A384C] text-white text-[11px] font-black flex items-center justify-center shadow-xs">
+                        #{index + 1}
+                      </span>
+                      <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+                        Position
+                      </span>
+                    </div>
+
+                    <div
+                      className="cursor-grab active:cursor-grabbing text-neutral-400 group-hover:text-[#FF6B16] transition-colors p-1 pointer-events-auto rounded hover:bg-neutral-100"
+                      title="Drag to reorder section"
+                    >
+                      <GripVertical className="w-4 h-4 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  {/* Card Middle: Icon & Title */}
+                  <div className="my-2.5 flex items-center gap-2.5 pointer-events-none">
+                    <div className="w-8 h-8 rounded-xl bg-orange-50 text-[#FF6B16] flex items-center justify-center shrink-0 border border-orange-100">
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-xs font-black text-[#1A384C] truncate leading-tight">
+                        {meta.label}
+                      </h4>
+                      <p className="text-[10px] text-neutral-400 truncate mt-0.5">
+                        {meta.editable ? 'Editable content' : 'Dynamic data'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Card Bottom: Always-Visible Arrow Controls & Edit Link */}
+                  <div className="flex items-center justify-between pt-2 border-t border-neutral-100 gap-1.5 pointer-events-auto">
+                    {/* Left Move Arrow */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        moveSection(index, -1);
+                      }}
+                      disabled={isFirst || savingOrder}
+                      className={`flex-1 inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all ${
+                        isFirst
+                          ? 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
+                          : 'bg-neutral-100 hover:bg-[#FF6B16] text-neutral-700 hover:text-white cursor-pointer active:scale-95'
+                      }`}
+                      title={isFirst ? 'Already first' : `Move ${meta.label} left (earlier)`}
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                      <span>Earlier</span>
+                    </button>
+
+                    {/* Right Move Arrow */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        moveSection(index, 1);
+                      }}
+                      disabled={isLast || savingOrder}
+                      className={`flex-1 inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all ${
+                        isLast
+                          ? 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
+                          : 'bg-neutral-100 hover:bg-[#FF6B16] text-neutral-700 hover:text-white cursor-pointer active:scale-95'
+                      }`}
+                      title={isLast ? 'Already last' : `Move ${meta.label} right (later)`}
+                    >
+                      <span>Later</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+
+                    {/* Quick jump to editor */}
+                    {meta.editable ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveTab(sectionId);
+                        }}
+                        className={`p-1.5 rounded-lg text-[11px] font-bold transition-all ${
+                          activeTab === sectionId
+                            ? 'bg-[#1A384C] text-white'
+                            : 'bg-orange-50 text-[#FF6B16] hover:bg-orange-100'
+                        }`}
+                        title="Edit section content below"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </button>
+                    ) : (
+                      <a
+                        href={meta.managerLink}
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-1.5 rounded-lg text-[11px] font-bold bg-neutral-100 text-neutral-500 hover:bg-neutral-200 transition-all"
+                        title="Open inventory manager"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Live Homepage Vertical Flow Timeline Indicator */}
+        <div className="pt-2 border-t border-neutral-150">
+          <div className="flex items-center gap-2 text-[11px] font-extrabold text-neutral-500 overflow-x-auto pb-1 no-scrollbar">
+            <span className="shrink-0 px-2.5 py-1 rounded-md bg-neutral-100 text-neutral-700 uppercase tracking-wider text-[10px]">
+              Page Top
+            </span>
+            {sectionOrder.map((secId, i) => {
+              const meta = SECTION_METADATA[secId];
+              return (
+                <React.Fragment key={secId}>
+                  <ChevronRight className="w-3 h-3 text-neutral-300 shrink-0" />
+                  <span
+                    onClick={() => meta?.editable && setActiveTab(secId)}
+                    className={`shrink-0 px-2 py-0.5 rounded-md cursor-pointer transition-colors ${
+                      activeTab === secId
+                        ? 'bg-[#1A384C] text-white'
+                        : 'bg-neutral-50 hover:bg-orange-50 text-neutral-600 hover:text-[#FF6B16] border border-neutral-200/60'
+                    }`}
+                  >
+                    #{i + 1} {meta?.label || secId}
+                  </span>
+                </React.Fragment>
+              );
+            })}
+            <ChevronRight className="w-3 h-3 text-neutral-300 shrink-0" />
+            <span className="shrink-0 px-2.5 py-1 rounded-md bg-neutral-100 text-neutral-700 uppercase tracking-wider text-[10px]">
+              Footer
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 2. SECTION CONTENT EDITORS (TABS) ── */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#FF6B16]" />
+            <h3 className="text-sm font-black text-[#1A384C] uppercase tracking-wider">
+              Edit Section Content
+            </h3>
+          </div>
+          <span className="text-xs text-neutral-400 font-medium">
+            Active: <strong className="text-[#1A384C]">{SECTION_METADATA[activeTab]?.label}</strong> (Homepage Position #{sectionOrder.indexOf(activeTab) + 1})
+          </span>
+        </div>
+
+        {/* Clean, dedicated Editor Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1.5 no-scrollbar border-b border-neutral-200">
+          {[
+            { id: 'hero', label: '1. Hero Section', icon: Sparkles },
+            { id: 'reels', label: '2. Travel Reels', icon: Film },
+            { id: 'experiences', label: '3. Choose Experience', icon: Compass },
+            { id: 'whyChooseUs', label: '4. Why Choose Us', icon: ShieldCheck },
+            { id: 'bookingProcess', label: '5. Process & Welfare', icon: Handshake },
+            { id: 'finalCta', label: '6. Ready For Adventure (CTA)', icon: Flame },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            const livePos = sectionOrder.indexOf(tab.id) + 1;
+
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition-all cursor-pointer border-b-2 ${
+                  isActive
+                    ? 'border-[#FF6B16] text-[#FF6B16] bg-orange-50/60 font-black'
+                    : 'border-transparent text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                }`}
+              >
+                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#FF6B16]' : 'text-neutral-400'}`} />
+                <span>{tab.label}</span>
+                <span
+                  className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
+                    isActive ? 'bg-[#FF6B16] text-white' : 'bg-neutral-200 text-neutral-600'
+                  }`}
+                  title={`Currently at position #${livePos} on homepage`}
+                >
+                  #{livePos}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* ── TAB 1: HERO SECTION ── */}
@@ -1722,6 +2096,50 @@ export default function HomeSectionsManager() {
                 <span>Save Final CTA Banner</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── INFO TABS FOR INVENTORY-DRIVEN SECTIONS ── */}
+      {['packages', 'testimonials', 'gallery', 'blogs'].includes(activeTab) && (
+        <div className="bg-white rounded-3xl p-8 sm:p-12 border border-neutral-200/80 shadow-xs max-w-2xl mx-auto text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-orange-50 text-[#FF6B16] flex items-center justify-center mx-auto shadow-xs">
+            {activeTab === 'packages' && <Mountain className="w-8 h-8" />}
+            {activeTab === 'testimonials' && <Star className="w-8 h-8" />}
+            {activeTab === 'gallery' && <ImageIcon className="w-8 h-8" />}
+            {activeTab === 'blogs' && <ExternalLink className="w-8 h-8" />}
+          </div>
+
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#FF6B16] bg-orange-100/70 px-3 py-1 rounded-full">
+              Homepage Position #{sectionOrder.indexOf(activeTab) + 1}
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black text-[#1A384C] mt-3">
+              {SECTION_METADATA[activeTab]?.label}
+            </h2>
+            <p className="text-xs sm:text-sm text-neutral-500 mt-1.5 max-w-md mx-auto">
+              This section is rendered at position <strong>#{sectionOrder.indexOf(activeTab) + 1}</strong> on your live website. Drag and drop its tab above to change where it appears on the homepage.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-neutral-50 border border-neutral-200/80 text-xs text-neutral-600 text-left space-y-1.5 max-w-md mx-auto">
+            <p className="font-bold text-neutral-800">Dynamic Content Source:</p>
+            <p className="text-neutral-500">
+              {activeTab === 'packages' && 'Displays your active tour packages and expedition itineraries.'}
+              {activeTab === 'testimonials' && 'Displays verified traveler reviews, ratings, and quotes.'}
+              {activeTab === 'gallery' && 'Displays the masonry photo gallery of memorable trip moments.'}
+              {activeTab === 'blogs' && 'Displays your published travel guide articles and stories.'}
+            </p>
+          </div>
+
+          <div className="pt-2">
+            <a
+              href={SECTION_METADATA[activeTab]?.managerLink}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#1A384C] hover:bg-[#254d66] text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+            >
+              <span>Open {SECTION_METADATA[activeTab]?.label} Manager</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
           </div>
         </div>
       )}
