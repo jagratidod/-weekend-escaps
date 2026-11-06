@@ -5,9 +5,9 @@
   "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "start": "node api.js && node src/server.js",
-    "build": "node api.js && echo 'Backend build completed successfully'",
-    "dev": "node api.js && nodemon src/server.js",
+    "start": "node init && node src/server.js",
+    "build": "node init && echo 'Backend build completed successfully'",
+    "dev": "node init && nodemon src/server.js",
     "test:db": "node src/utils/testDb.js",
     "test:notifications": "node src/utils/testNotifications.js",
     "migrate:images": "node src/utils/migrateImagesToCloudinary.js",

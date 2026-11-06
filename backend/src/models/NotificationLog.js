@@ -55,6 +55,10 @@ const notificationLogSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    clicksCount: {
+      type: Number,
+      default: 0,
+    },
     error: {
       type: String,
       default: null,
@@ -62,7 +66,7 @@ const notificationLogSchema = new mongoose.Schema(
     createdAt: {
       type: Date,
       default: Date.now,
-      expires: 86400, // 24 hours TTL auto-deletion
+      expires: 2592000, // 30 days retention for campaign analytics
     },
   },
   {

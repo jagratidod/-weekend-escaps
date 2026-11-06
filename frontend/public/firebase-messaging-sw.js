@@ -8,6 +8,14 @@
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
 
+// Immediate update activation
+self.addEventListener('install', () => {
+  self.skipWaiting();
+});
+self.addEventListener('activate', (event) => {
+  event.waitUntil(clients.claim());
+});
+
 // Layer 3 Deduplication Set (SOP Section 5 & 7)
 const shownNotifications = new Set();
 
@@ -63,10 +71,32 @@ if (messaging) {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
-  const targetLink = event.notification.data?.link || '/';
+  // Determine API tracking URL (supports localhost dev and production)
+  const isLocal = self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1';
+  const trackUrl = isLocal
+    ? 'http://localhost:5000/api/notifications/track-click'
+    : '/api/notifications/track-click';
 
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+  const notifId = event.notification.data?.notificationId || event.notification.tag;
+
+  // Track link click in backend analytics
+  const trackPromise = notifId
+    ? fetch(trackUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notificationId: notifId }),
+        keepalive: true,
+      }).catch((e) => console.warn('[SW Click Track Error]:', e))
+    : Promise.resolve();
+
+  let targetLink = event.notification.data?.link || '/';
+  if (targetLink.startsWith('www.')) {
+    targetLink = 'https://' + targetLink;
+  }
+
+  const navigatePromise = clients
+    .matchAll({ type: 'window', includeUncontrolled: true })
+    .then((windowClients) => {
       // Focus if tab with target URL or domain is already open
       for (let client of windowClients) {
         if ('focus' in client) {
@@ -79,6 +109,7 @@ self.addEventListener('notificationclick', (event) => {
       if (clients.openWindow) {
         return clients.openWindow(targetLink);
       }
-    })
-  );
+    });
+
+  event.waitUntil(Promise.all([trackPromise, navigatePromise]));
 });

@@ -240,3 +240,23 @@ export const getNotificationStats = async (req, res) => {
     });
   }
 };
+
+/**
+ * POST /api/notifications/track-click
+ * Public endpoint to track link clicks/taps from device push notifications
+ */
+export const trackNotificationClick = async (req, res) => {
+  try {
+    const { notificationId } = req.body;
+    if (notificationId) {
+      await NotificationLog.findOneAndUpdate(
+        { notificationId },
+        { $inc: { clicksCount: 1 } }
+      );
+    }
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('[trackNotificationClick Error]:', error.message);
+    res.status(200).json({ success: false });
+  }
+};

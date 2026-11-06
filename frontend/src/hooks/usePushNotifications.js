@@ -228,13 +228,39 @@ export function usePushNotifications() {
           // 2. Also trigger Real Native Browser Notification Popup (SOP Step 5)
           try {
             if ('Notification' in window && Notification.permission === 'granted') {
-              new Notification(notif.title, {
+              const nativeNotif = new Notification(notif.title, {
                 body: notif.body,
                 icon: '/logo/logowhite.png',
                 badge: '/icons/favicon-32x32.png',
                 data: notif.data,
                 tag: id || undefined,
               });
+
+              nativeNotif.onclick = function (e) {
+                e.preventDefault();
+                window.focus();
+                nativeNotif.close();
+
+                // 1. Track link click in backend analytics
+                if (id) {
+                  try {
+                    fetch(`${API_BASE_URL}/notifications/track-click`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ notificationId: id }),
+                    }).catch(() => {});
+                  } catch (_) {}
+                }
+
+                // 2. Open / Navigate to link
+                if (notif.link) {
+                  if (notif.link.startsWith('http://') || notif.link.startsWith('https://')) {
+                    window.open(notif.link, '_blank');
+                  } else {
+                    window.location.href = notif.link;
+                  }
+                }
+              };
             }
           } catch (nativeErr) {
             console.warn('[FCM] Native notification trigger fallback:', nativeErr.message);

@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import { Bell, X, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
 export default function PushNotificationToast({ notification, onDismiss }) {
   const navigate = useNavigate();
 
@@ -16,6 +18,17 @@ export default function PushNotificationToast({ notification, onDismiss }) {
   if (!notification) return null;
 
   const handleClick = () => {
+    const notifId = notification.id || notification.data?.notificationId;
+    if (notifId) {
+      try {
+        fetch(`${API_BASE_URL}/notifications/track-click`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ notificationId: notifId }),
+        }).catch(() => {});
+      } catch (_) {}
+    }
+
     if (notification.link) {
       if (notification.link.startsWith('http')) {
         window.open(notification.link, '_blank');

@@ -26,6 +26,7 @@ import ItineraryTimeline from '../components/packages/ItineraryTimeline';
 import TripReelsRow from '../components/home/TripReelsRow';
 import WhatToPack from '../components/packages/WhatToPack';
 import PackageFAQ from '../components/packages/PackageFAQ';
+import YouMayAlsoLike from '../components/packages/YouMayAlsoLike';
 
 const WhatsAppIcon = ({ className = 'w-5 h-5' }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -761,6 +762,9 @@ export function PackageDetails() {
 
       {/* ── Frequently Asked Questions Section ── */}
       <PackageFAQ packageData={pkg} />
+
+      {/* ── You May Also Like Section (Similar Category & Region Packages) ── */}
+      <YouMayAlsoLike currentPackage={pkg} />
     </div>
   );
 }

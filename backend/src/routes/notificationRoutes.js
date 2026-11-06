@@ -5,6 +5,7 @@ import {
   testFcmNotification,
   sendBroadcastNotification,
   getNotificationStats,
+  trackNotificationClick,
 } from '../controllers/notificationController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 import jwt from 'jsonwebtoken';
@@ -37,5 +38,6 @@ router.post('/test', optionalAuth, testFcmNotification);
 // Admin Broadcast & Stats Endpoints
 router.post('/broadcast', protect, sendBroadcastNotification);
 router.get('/stats', protect, getNotificationStats);
+router.post('/track-click', trackNotificationClick);
 
 export default router;

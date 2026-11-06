@@ -13,14 +13,24 @@ import {
   ExternalLink,
   Users,
   Info,
+  Link as LinkIcon,
+  HelpCircle,
+  Sparkles,
+  MousePointerClick,
+  TrendingUp,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
+import { usePackages } from '../../context/PackageContext';
+import { useSettings } from '../../context/SettingsContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 export default function BroadcastManager() {
   const { token: adminToken } = useAuth();
+  const { packages = [] } = usePackages();
+  const { whatsappUrl } = useSettings();
+  const [showUrlInstructions, setShowUrlInstructions] = useState(true);
   const {
     isSubscribed,
     permission,
@@ -75,6 +85,18 @@ export default function BroadcastManager() {
 
   useEffect(() => {
     fetchStats();
+
+    // Auto-refresh metrics whenever admin switches back to this tab
+    const handleFocus = () => fetchStats();
+    window.addEventListener('focus', handleFocus);
+
+    // Auto-poll stats every 6 seconds for live click & delivery updates
+    const interval = setInterval(fetchStats, 6000);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(interval);
+    };
   }, [adminToken]);
 
   // Handle Admin device self-registration (Forces fresh token generation)
@@ -376,33 +398,6 @@ export default function BroadcastManager() {
             }}
             className="space-y-4"
           >
-            {/* Category Selector */}
-            <div>
-              <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wider mb-1.5">
-                Campaign Category
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: 'promotion', label: 'Tour Promotion' },
-                  { id: 'announcement', label: 'Announcement' },
-                  { id: 'flash_sale', label: 'Flash Sale' },
-                ].map((cat) => (
-                  <button
-                    type="button"
-                    key={cat.id}
-                    onClick={() => setFormData({ ...formData, category: cat.id })}
-                    className={`px-3 py-2 rounded-xl text-xs font-bold text-center transition-all cursor-pointer ${
-                      formData.category === cat.id
-                        ? 'bg-[#1A384C] text-white shadow-sm'
-                        : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Notification Title */}
             <div>
               <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wider mb-1.5">
@@ -444,20 +439,170 @@ export default function BroadcastManager() {
             </div>
 
             {/* Target Link */}
-            <div>
-              <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wider mb-1.5">
-                Target URL / Route (Opened on Click)
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. /packages/kedarkantha-trek or /packages"
-                value={formData.link}
-                onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:border-[#FF6B16] focus:ring-2 focus:ring-[#FF6B16]/20 outline-none text-sm transition-all font-mono text-xs"
-              />
-              <p className="text-[11px] text-neutral-400 mt-1">
-                Where travelers land when they click the notification
-              </p>
+            <div className="space-y-3 rounded-2xl bg-neutral-50/70 p-4 border border-neutral-200/80">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <LinkIcon className="w-4 h-4 text-[#FF6B16]" />
+                  <label className="text-xs font-bold text-neutral-800 uppercase tracking-wider">
+                    Target URL / Route (Opened on Click)
+                  </label>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowUrlInstructions((prev) => !prev)}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#FF6B16] hover:text-[#e05809] hover:underline cursor-pointer"
+                >
+                  <HelpCircle className="w-3.5 h-3.5" />
+                  <span>{showUrlInstructions ? 'Hide Instructions' : 'URL Guide & Instructions'}</span>
+                </button>
+              </div>
+
+              {/* Admin Help / Instructions Card */}
+              {showUrlInstructions && (
+                <div className="p-3.5 rounded-xl bg-orange-50/80 border border-orange-200/90 text-xs space-y-2 text-neutral-700 animate-in fade-in duration-200">
+                  <div className="flex items-center gap-1.5 font-bold text-[#FF6B16]">
+                    <Info className="w-4 h-4 shrink-0" />
+                    <span>How to set your Notification Click URL:</span>
+                  </div>
+                  <p className="leading-relaxed">
+                    You can enter <strong>internal website routes</strong> (starting with <code>/</code>) or <strong>full external web links</strong> (starting with <code>https://</code>). When subscribers tap or click the notification on their device, they will be redirected here immediately.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
+                    <div className="bg-white p-2.5 rounded-lg border border-orange-100">
+                      <div className="font-sans font-bold text-neutral-800 mb-1">📌 Internal Website Pages:</div>
+                      <div className="text-neutral-600">• <code>/packages</code> (Tours list)</div>
+                      <div className="text-neutral-600">• <code>/packages/kedarkantha-trek</code> (Trek page)</div>
+                      <div className="text-neutral-600">• <code>/blogs</code> (Guides & stories)</div>
+                      <div className="text-neutral-600">• <code>/</code> (Homepage)</div>
+                    </div>
+                    <div className="bg-white p-2.5 rounded-lg border border-orange-100">
+                      <div className="font-sans font-bold text-neutral-800 mb-1">🌐 External Links / WhatsApp:</div>
+                      <div className="text-neutral-600">• <code>https://wa.me/917983695277</code> (Direct Chat)</div>
+                      <div className="text-neutral-600">• <code>https://instagram.com/...</code> (Social Page)</div>
+                      <div className="text-neutral-600">• <code>https://google.com/...</code> (Custom Link)</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* URL Input */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="e.g. /packages, /packages/tungnath, or https://wa.me/91XXXXXXXXXX"
+                  value={formData.link}
+                  onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:border-[#FF6B16] focus:ring-2 focus:ring-[#FF6B16]/20 outline-none text-sm transition-all font-mono text-xs bg-white"
+                />
+              </div>
+
+              {/* Live Preview & Destination Badge */}
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] pt-0.5">
+                <div className="flex items-center gap-1.5">
+                  {formData.link?.startsWith('http://') || formData.link?.startsWith('https://') ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold">
+                      <ExternalLink className="w-3 h-3" />
+                      <span>External Web Link (Opens in new browser tab)</span>
+                    </span>
+                  ) : formData.link?.startsWith('www.') ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 font-bold">
+                      <Info className="w-3 h-3" />
+                      <span>External URL (Auto-prefixed with https://)</span>
+                    </span>
+                  ) : formData.link?.startsWith('/') ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 font-bold">
+                      <Globe className="w-3 h-3" />
+                      <span>Internal Route (Opens on Weekend Escapes)</span>
+                    </span>
+                  ) : (
+                    <span className="text-neutral-500 font-medium">
+                      Enter relative path (e.g. <code>/packages</code>) or full URL (e.g. <code>https://...</code>)
+                    </span>
+                  )}
+                </div>
+
+                {formData.link && (
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, link: '' })}
+                    className="text-neutral-400 hover:text-neutral-600 font-medium cursor-pointer"
+                  >
+                    Clear URL
+                  </button>
+                )}
+              </div>
+
+              {/* Quick Preset Buttons & Package Selector */}
+              <div className="pt-2 border-t border-neutral-200/70 space-y-2">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] font-black uppercase text-neutral-400 mr-1">
+                    Quick Presets:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, link: '/packages' })}
+                    className="px-2.5 py-1 rounded-lg bg-white hover:bg-neutral-100 border border-neutral-200 text-neutral-700 font-bold text-[11px] transition-colors cursor-pointer"
+                  >
+                    🎒 All Packages
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, link: '/blogs' })}
+                    className="px-2.5 py-1 rounded-lg bg-white hover:bg-neutral-100 border border-neutral-200 text-neutral-700 font-bold text-[11px] transition-colors cursor-pointer"
+                  >
+                    📖 Blogs
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, link: '/' })}
+                    className="px-2.5 py-1 rounded-lg bg-white hover:bg-neutral-100 border border-neutral-200 text-neutral-700 font-bold text-[11px] transition-colors cursor-pointer"
+                  >
+                    🏠 Homepage
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        link: whatsappUrl || 'https://wa.me/917983695277',
+                      })
+                    }
+                    className="px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold text-[11px] transition-colors cursor-pointer"
+                  >
+                    💬 WhatsApp Chat
+                  </button>
+                </div>
+
+                {/* Tour Package Picker */}
+                {Array.isArray(packages) && packages.length > 0 && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="text-[10px] font-black uppercase text-neutral-400 shrink-0">
+                      Pick Tour Package:
+                    </span>
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setFormData({ ...formData, link: e.target.value });
+                        }
+                      }}
+                      className="px-2.5 py-1.5 rounded-lg bg-white border border-neutral-200 text-neutral-700 font-medium text-xs focus:outline-none focus:border-[#FF6B16] w-full max-w-xs cursor-pointer"
+                    >
+                      <option value="">-- Select a Package to auto-fill link --</option>
+                      {packages
+                        .filter((p) => p.isActive !== false)
+                        .map((p) => {
+                          const pId = p.id || p._id;
+                          return (
+                            <option key={pId} value={`/packages/${pId}`}>
+                              {p.name} ({p.location ? p.location.split(',')[0] : 'Tour'})
+                            </option>
+                          );
+                        })}
+                    </select>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Submit CTA */}
@@ -567,6 +712,7 @@ export default function BroadcastManager() {
                   <th className="py-3 px-5">Target</th>
                   <th className="py-3 px-5">Title & Message</th>
                   <th className="py-3 px-5">Delivered</th>
+                  <th className="py-3 px-5">Link Clicks & CTR</th>
                   <th className="py-3 px-5">Status</th>
                   <th className="py-3 px-5">Timestamp</th>
                 </tr>
@@ -595,14 +741,25 @@ export default function BroadcastManager() {
                       </div>
                     </td>
                     <td className="py-3.5 px-5">
-                      <span className="font-semibold text-neutral-700">
+                      <span className="font-bold text-neutral-800">
                         {log.sentCount || 0} device(s)
                       </span>
                       {log.failedCount > 0 && (
-                        <span className="text-red-500 text-[10px] block">
+                        <span className="text-red-500 text-[10px] block font-semibold">
                           ({log.failedCount} failed)
                         </span>
                       )}
+                    </td>
+                    <td className="py-3.5 px-5">
+                      <div className="flex items-center gap-1.5 font-bold text-emerald-700">
+                        <MousePointerClick className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>{log.clicksCount || 0} clicks</span>
+                      </div>
+                      <span className="text-[10px] text-neutral-400 font-semibold block mt-0.5">
+                        {log.sentCount > 0
+                          ? `${((log.clicksCount || 0) / log.sentCount * 100).toFixed(1)}% CTR`
+                          : '0% CTR'}
+                      </span>
                     </td>
                     <td className="py-3.5 px-5">
                       <span
