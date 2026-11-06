@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { X, ChevronDown, PhoneCall } from 'lucide-react';
-import { NAV_LINKS, BRAND } from '../../utils/constants';
+import { NAV_LINKS, BRAND, getPackageDropdownName } from '../../utils/constants';
 import { useSettings } from '../../context/SettingsContext';
+import { usePackages } from '../../context/PackageContext';
 
 export function MobileMenu({
   isOpen,
@@ -12,6 +13,32 @@ export function MobileMenu({
   currentPath
 }) {
   const { logoUrl } = useSettings();
+  const { packages } = usePackages();
+
+  // Dynamic Tour Packages dropdown sublinks reflecting all created/updated packages
+  const packageSublinks = useMemo(() => {
+    if (!Array.isArray(packages) || packages.length === 0) return [];
+    return packages
+      .filter((pkg) => pkg.isActive !== false)
+      .map((pkg) => ({
+        name: getPackageDropdownName(pkg),
+        path: `/packages/${pkg.id || pkg._id}`,
+      }));
+  }, [packages]);
+
+  // Merge dynamic package sublinks into NAV_LINKS
+  const navLinksToRender = useMemo(() => {
+    return NAV_LINKS.map((link) => {
+      if (link.name === 'Tour Packages' || link.path === '/packages') {
+        return {
+          ...link,
+          sublinks: packageSublinks.length > 0 ? packageSublinks : link.sublinks,
+        };
+      }
+      return link;
+    });
+  }, [packageSublinks]);
+
   return (
     <div
       className={`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden transition-opacity duration-300 ${
@@ -41,9 +68,9 @@ export function MobileMenu({
 
           {/* Links */}
           <nav className="mt-6 space-y-1">
-            {NAV_LINKS.map((link) => {
+            {navLinksToRender.map((link) => {
               const isActive = currentPath === link.path;
-              const hasSub = link.hasDropdown && link.sublinks;
+              const hasSub = link.hasDropdown && link.sublinks && link.sublinks.length > 0;
               const isSubOpen = activeDropdown === link.name;
 
               return (
@@ -71,17 +98,26 @@ export function MobileMenu({
                   </div>
 
                   {hasSub && isSubOpen && (
-                    <div className="pl-4 pb-2 space-y-2 border-l-2 border-[#FF6B16]/20 ml-2">
+                    <div className="pl-4 pb-2 space-y-2 border-l-2 border-[#FF6B16]/20 ml-2 max-h-72 overflow-y-auto">
                       {link.sublinks.map((sub) => (
                         <Link
-                          key={sub.name}
+                          key={sub.path || sub.name}
                           to={sub.path}
-                          className="block py-1 text-sm text-neutral-600 hover:text-[#FF6B16]"
+                          className="block py-1 text-sm text-neutral-600 hover:text-[#FF6B16] truncate"
                           onClick={onClose}
                         >
                           {sub.name}
                         </Link>
                       ))}
+                      {link.name === 'Tour Packages' && (
+                        <Link
+                          to="/packages"
+                          className="block py-1 text-xs font-bold text-[#FF6B16] hover:underline pt-1"
+                          onClick={onClose}
+                        >
+                          View All Packages →
+                        </Link>
+                      )}
                     </div>
                   )}
                 </div>

@@ -73,7 +73,7 @@ export function AboutPage() {
   const coreValues = aboutData.coreValues || DEFAULT_ABOUT_DATA.coreValues;
 
   return (
-    <div className="bg-[#F7F7F5] min-h-screen">
+    <div data-navbar-theme="dark" className="bg-[#F7F7F5] min-h-screen">
       {/* Full-screen Hero Carousel */}
       <AboutHero slides={heroSlides} autoInterval={heroInterval} />
 

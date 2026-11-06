@@ -112,7 +112,7 @@ export function ContactPage() {
   const socials = contactInfo?.socials || {};
 
   return (
-    <div className="bg-[#F7F7F5] min-h-screen select-none font-sans">
+    <div data-navbar-theme="dark" className="bg-[#F7F7F5] min-h-screen select-none font-sans">
       {/* ── 1. Top Hero Header Banner (Dynamic from Admin Settings) ── */}
       <section className="relative h-[380px] sm:h-[420px] w-full bg-[#111111] overflow-hidden flex items-center justify-center text-center px-4">
         <img

@@ -11,10 +11,7 @@ import {
   HelpCircle,
   Settings as SettingsIcon,
   LogOut,
-  Search,
   Bell,
-  Sun,
-  Moon,
   Menu,
   X,
   ExternalLink,
@@ -87,8 +84,6 @@ export default function AdminLayout({
   const navigate = useNavigate();
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [pagesOpen, setPagesOpen] = useState(true);
 
   // Main navigation items state with localStorage persistence
@@ -723,45 +718,8 @@ export default function AdminLayout({
             </div>
           </div>
 
-          {/* Right Search Bar, Theme Toggle, Notification Bell */}
+          {/* Right Area: Notification Bell */}
           <div className="flex items-center gap-3 sm:gap-4">
-            {/* Search Input (reference style) */}
-            <div className="relative hidden md:block">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search"
-                className="w-56 lg:w-72 h-10 pl-4 pr-10 rounded-full bg-white border border-neutral-200/80 text-xs sm:text-sm text-neutral-700 placeholder-neutral-400 focus:outline-none focus:border-[#1A384C] shadow-sm transition-all"
-              />
-              <button
-                type="button"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-[#1A384C] text-white flex items-center justify-center hover:bg-[#254c66] transition-colors"
-                aria-label="Search"
-              >
-                <Search className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            {/* Dark / Light Toggle Pill (reference style) */}
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className="h-8 px-2.5 rounded-full bg-[#1A384C] text-white flex items-center gap-1.5 text-xs shadow-sm hover:bg-[#254c66] transition-colors cursor-pointer"
-              title="Toggle theme appearance"
-            >
-              {darkMode ? (
-                <>
-                  <Sun className="w-3.5 h-3.5 text-amber-300" />
-                  <span className="hidden sm:inline text-[11px] font-bold">Light</span>
-                </>
-              ) : (
-                <>
-                  <Moon className="w-3.5 h-3.5 text-sky-200" />
-                  <span className="hidden sm:inline text-[11px] font-bold">Dark</span>
-                </>
-              )}
-            </button>
-
             {/* Notification Bell with Badge */}
             <button
               className="relative p-2 rounded-full bg-white border border-neutral-200/80 text-neutral-600 hover:text-neutral-900 shadow-sm transition-colors cursor-pointer"

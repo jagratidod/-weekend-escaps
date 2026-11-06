@@ -22,6 +22,30 @@ export const COLORS = {
   secondaryGrey: "#777777"
 };
 
+export function formatDurationBadge(durationStr) {
+  if (!durationStr) return '';
+  if (/\(\d+D\/\d+N\)/i.test(durationStr)) return durationStr;
+  if (/^\d+D\/\d+N$/i.test(durationStr)) return `(${durationStr})`;
+
+  const match = durationStr.match(/(\d+)\s*Days?\s*[\/\-&,]?\s*(\d+)\s*Nights?/i);
+  if (match) {
+    return `(${match[1]}D/${match[2]}N)`;
+  }
+  const dayMatch = durationStr.match(/(\d+)\s*Days?/i);
+  if (dayMatch) {
+    return `(${dayMatch[1]}D)`;
+  }
+  return `(${durationStr})`;
+}
+
+export function getPackageDropdownName(pkg) {
+  if (!pkg) return '';
+  const durBadge = formatDurationBadge(pkg.duration);
+  if (!durBadge) return pkg.name;
+  if (pkg.name.includes('(')) return pkg.name;
+  return `${pkg.name} ${durBadge}`;
+}
+
 export const NAV_LINKS = [
   { name: "Home", path: "/" },
   {

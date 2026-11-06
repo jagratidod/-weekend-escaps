@@ -55,12 +55,10 @@ export default function ReelManager() {
 
   // Video Upload State
   const [videoFile, setVideoFile] = useState(null);
-  const [posterFile, setPosterFile] = useState(null);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState('');
   const videoInputRef = useRef(null);
-  const posterInputRef = useRef(null);
 
   // Preview Modal
   const [previewReel, setPreviewReel] = useState(null);
@@ -125,7 +123,6 @@ export default function ReelManager() {
       duration: 0,
     });
     setVideoFile(null);
-    setPosterFile(null);
     setUploadError('');
     setIsModalOpen(true);
   };
@@ -146,7 +143,6 @@ export default function ReelManager() {
       duration: reel.duration || 0,
     });
     setVideoFile(null);
-    setPosterFile(null);
     setUploadError('');
     setIsModalOpen(true);
   };
@@ -170,26 +166,11 @@ export default function ReelManager() {
     setVideoFile(file);
 
     // Auto upload directly to Cloudinary via backend
-    await uploadFileToBackend(file, 'video');
+    await uploadFileToBackend(file);
   };
 
-  // Handle Poster Selection
-  const handlePosterSelect = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadError('Poster image must be less than 5MB.');
-      if (posterInputRef.current) posterInputRef.current.value = '';
-      return;
-    }
-
-    setPosterFile(file);
-    await uploadFileToBackend(file, 'poster');
-  };
-
-  // Upload file helper
-  const uploadFileToBackend = async (file, type) => {
+  // Upload video helper (auto generates poster thumbnail from video starting frame)
+  const uploadFileToBackend = async (file) => {
     try {
       setUploadingVideo(true);
       setUploadProgress(20);
@@ -216,24 +197,18 @@ export default function ReelManager() {
 
       setUploadProgress(100);
 
-      if (type === 'video') {
-        setFormData((prev) => ({
-          ...prev,
-          video: data.url,
-          videoPublicId: data.publicId || '',
-          poster: prev.poster || data.posterUrl || '',
-          fileSize: data.fileSize || file.size,
-          duration: data.duration || 0,
-        }));
-        showAlert(`Video uploaded successfully to Cloudinary! (${(file.size / (1024 * 1024)).toFixed(1)} MB)`, 'success');
-      } else {
-        setFormData((prev) => ({
-          ...prev,
-          poster: data.url,
-          posterPublicId: data.publicId || '',
-        }));
-        showAlert('Poster image uploaded successfully!', 'success');
-      }
+      // Auto-derive poster image from Cloudinary video first frame
+      const derivedPoster = data.posterUrl || (data.url && data.url.includes('cloudinary.com') ? data.url.replace(/\.[^/.]+$/, '.jpg') : '');
+
+      setFormData((prev) => ({
+        ...prev,
+        video: data.url,
+        videoPublicId: data.publicId || '',
+        poster: derivedPoster,
+        fileSize: data.fileSize || file.size,
+        duration: data.duration || 0,
+      }));
+      showAlert(`Video uploaded successfully to Cloudinary! (${(file.size / (1024 * 1024)).toFixed(1)} MB)`, 'success');
     } catch (err) {
       console.error('Upload Error:', err);
       setUploadError(err.message || 'Failed to upload file to Cloudinary.');
@@ -260,6 +235,18 @@ export default function ReelManager() {
 
     try {
       setUploadingVideo(true);
+
+      // Auto-derive poster from Cloudinary video first frame if not set
+      let autoPoster = formData.poster;
+      if (!autoPoster && formData.video && formData.video.includes('cloudinary.com')) {
+        autoPoster = formData.video.replace(/\.[^/.]+$/, '.jpg');
+      }
+
+      const payload = {
+        ...formData,
+        poster: autoPoster,
+      };
+
       const url = editingReel
         ? `${API_BASE_URL}/reels/${editingReel._id}`
         : `${API_BASE_URL}/reels`;
@@ -272,7 +259,7 @@ export default function ReelManager() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -532,20 +519,14 @@ export default function ReelManager() {
             >
               {/* Aspect 9:16 Video Poster Preview */}
               <div className="relative aspect-[9/16] bg-neutral-950 overflow-hidden cursor-pointer">
-                {reel.poster ? (
-                  <img
-                    src={reel.poster}
-                    alt={reel.author}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <video
-                    src={reel.video}
-                    muted
-                    preload="metadata"
-                    className="w-full h-full object-cover"
-                  />
-                )}
+                <video
+                  src={`${reel.video}#t=0.001`}
+                  poster={reel.poster || (reel.video?.includes('cloudinary.com') ? reel.video.replace(/\.(mp4|mov|webm|mkv)$/i, '.jpg') : undefined)}
+                  muted
+                  preload="metadata"
+                  playsInline
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none"
+                />
 
                 {/* Status Badge */}
                 <div className="absolute top-3 left-3 z-10">
@@ -770,37 +751,31 @@ export default function ReelManager() {
                 </div>
               </div>
 
-              {/* Poster Image Section */}
-              <div>
-                <label className="block text-xs font-bold text-neutral-700 mb-1.5">
-                  Static Poster Thumbnail (Optional)
-                </label>
-                <div className="flex items-center gap-3">
-                  <div
-                    onClick={() => posterInputRef.current?.click()}
-                    className="flex-1 border border-neutral-200 rounded-xl p-2.5 bg-neutral-50 hover:bg-white text-xs font-semibold text-neutral-600 flex items-center justify-between cursor-pointer"
-                  >
-                    <input
-                      ref={posterInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePosterSelect}
-                      className="hidden"
-                    />
-                    <span className="truncate">
-                      {posterFile ? posterFile.name : formData.poster ? 'Poster Set' : 'Auto-derived from video (or pick image)'}
-                    </span>
-                    <span className="text-[#FF6B16] font-bold text-xs shrink-0">Upload Poster</span>
+              {/* Auto First Frame Poster Info */}
+              <div className="p-3 bg-neutral-50 rounded-2xl border border-neutral-200/80 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-4 h-4" />
                   </div>
-
-                  {formData.poster && (
-                    <img
-                      src={formData.poster}
-                      alt="Thumbnail preview"
-                      className="w-10 h-14 rounded-lg object-cover border border-neutral-200 shrink-0"
-                    />
-                  )}
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-neutral-800">Auto Starting Frame Poster</p>
+                    <p className="text-[11px] text-neutral-400 truncate">
+                      Starting frame of the video is captured automatically as the thumbnail
+                    </p>
+                  </div>
                 </div>
+                {formData.video && (
+                  <div className="w-10 h-14 rounded-lg overflow-hidden border border-neutral-300 shrink-0 bg-black">
+                    <video
+                      src={`${formData.video}#t=0.001`}
+                      poster={formData.poster || (formData.video.includes('cloudinary.com') ? formData.video.replace(/\.[^/.]+$/, '.jpg') : undefined)}
+                      preload="metadata"
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover pointer-events-none"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Order & Active Options */}

@@ -7,6 +7,7 @@ import { getImageUrl } from '../utils/imageHelper';
 import { formatCurrency } from '../utils/helpers';
 import PackageCard from '../components/home/PackageCard';
 import Container from '../components/common/Container';
+import TripReelsRow from '../components/home/TripReelsRow';
 import {
   Search,
   RotateCcw,
@@ -704,6 +705,15 @@ export function PackagesPage({ scrollToExperiences = false }) {
           </div>
         </div>
       </Container>
+
+      {/* ── Travel Reels Showcase Section (5 Reels, Dynamic from Admin, Above Footer) ── */}
+      <section className="w-full pt-10 pb-2 mt-10 border-t border-neutral-200/70 overflow-hidden bg-[#F7F7F5]">
+        <TripReelsRow
+          title="What Our Travellers Say"
+          subtitle="Real moments and unfiltered trail memories captured by explorers"
+          maxReels={5}
+        />
+      </section>
     </div>
   );
 }

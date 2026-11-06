@@ -23,6 +23,7 @@ import { formatCurrency } from '../utils/helpers';
 import { BRAND } from '../utils/constants';
 import { useSettings } from '../context/SettingsContext';
 import ItineraryTimeline from '../components/packages/ItineraryTimeline';
+import TripReelsRow from '../components/home/TripReelsRow';
 
 export function PackageDetails() {
   const { id } = useParams();
@@ -774,6 +775,15 @@ export function PackageDetails() {
           </div>
         </div>
       </Container>
+
+      {/* ── Travel Reels Showcase Section (5 Reels, Dynamic from Admin, Same for all Packages) ── */}
+      <section className="w-full pt-10 pb-2 mt-10 border-t border-neutral-200/70 overflow-hidden bg-[#F7F7F5]">
+        <TripReelsRow
+          title="What Our Travellers Say"
+          subtitle="Real moments and unfiltered trail memories captured by explorers"
+          maxReels={5}
+        />
+      </section>
     </div>
   );
 }

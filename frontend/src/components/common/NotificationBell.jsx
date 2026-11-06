@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Bell, BellRing, BellOff, Check, Loader2 } from 'lucide-react';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 
-export default function NotificationBell({ className = '' }) {
+export default function NotificationBell({ className = '', isLight = false }) {
   const {
     permission,
     isSubscribed,
@@ -30,7 +30,11 @@ export default function NotificationBell({ className = '' }) {
         disabled={loading}
         className={`relative p-2.5 rounded-full transition-all duration-200 cursor-pointer ${
           isSubscribed
-            ? 'bg-[#FF6B16]/10 text-[#FF6B16] hover:bg-[#FF6B16]/20'
+            ? isLight
+              ? 'bg-[#FF6B16]/20 text-[#FF6B16] ring-1 ring-[#FF6B16]/40 hover:bg-[#FF6B16]/30'
+              : 'bg-[#FF6B16]/10 text-[#FF6B16] hover:bg-[#FF6B16]/20'
+            : isLight
+            ? 'bg-white/15 text-white hover:bg-white/25 border border-white/20 backdrop-blur-sm shadow-sm'
             : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
         }`}
         aria-label={isSubscribed ? 'Notifications enabled' : 'Enable notifications'}
