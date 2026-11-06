@@ -131,6 +131,58 @@ export const DEFAULT_HOME_SECTIONS = {
       ],
     },
   },
+  gallery: {
+    eyebrow: 'Memories For A Lifetime',
+    title: 'Moments From Our Trips',
+    subtitle: 'Real people. Real adventures. Real memories.',
+    buttonText: 'View Gallery',
+    buttonLink: '/about#gallery',
+    snapshotsLabel: 'Captured Snapshots',
+    items: [
+      {
+        id: 'g1',
+        title: 'Kedarkantha Summit Ridge',
+        category: 'Mountain Trekking',
+        image: '/newimage/exploresection/kedarkantha.png',
+        location: 'Uttarakhand, 12,500 ft',
+      },
+      {
+        id: 'g2',
+        title: 'Sunset Shikara on Dal Lake',
+        category: 'Lakes & Valleys',
+        image: '/newimage/exploresection/kashmir.png',
+        location: 'Srinagar, Kashmir',
+      },
+      {
+        id: 'g3',
+        title: 'Mountain Expedition Camp',
+        category: 'Camping Stories',
+        image: '/newimage/photos/image1.png',
+        location: 'High Altitude Basecamp',
+      },
+      {
+        id: 'g4',
+        title: 'Spiti High Altitude Valley',
+        category: 'Expeditions',
+        image: '/newimage/exploresection/vally.png',
+        location: 'Spiti Valley, Himachal',
+      },
+      {
+        id: 'g5',
+        title: 'Beas River Adventure Valley',
+        category: 'Group Adventures',
+        image: '/newimage/exploresection/manali.png',
+        location: 'Manali, Himachal',
+      },
+      {
+        id: 'g6',
+        title: 'Floating Temple of Beratan',
+        category: 'Tropical Serenity',
+        image: '/newimage/exploresection/bali.png',
+        location: 'Bedugul, Bali',
+      },
+    ],
+  },
   finalCta: {
     heading: 'Ready for Your Next Adventure?',
     subtitle:

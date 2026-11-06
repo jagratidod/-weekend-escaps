@@ -144,6 +144,14 @@ export function SettingsProvider({ children }) {
                     : DEFAULT_HOME_SECTIONS.bookingProcess.welfare.items,
               },
             },
+            gallery: {
+              ...DEFAULT_HOME_SECTIONS.gallery,
+              ...(serverHome.gallery || {}),
+              items:
+                Array.isArray(serverHome.gallery?.items) && serverHome.gallery.items.length > 0
+                  ? serverHome.gallery.items
+                  : DEFAULT_HOME_SECTIONS.gallery.items,
+            },
             finalCta: { ...DEFAULT_HOME_SECTIONS.finalCta, ...(serverHome.finalCta || {}) },
             sectionOrder: (() => {
               if (Array.isArray(serverHome.sectionOrder) && serverHome.sectionOrder.length > 0) {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout';
 import LogoManager from '../../components/admin/LogoManager';
 import ContactInfoManager from '../../components/admin/ContactInfoManager';
@@ -42,20 +43,132 @@ import {
   Tag,
 } from 'lucide-react';
 
+const VALID_TABS = [
+  'dashboard',
+  'bookings',
+  'payments',
+  'broadcast',
+  'blogs',
+  'pages',
+  'cancellation_policy',
+  'testimonials',
+  'faqs_editor',
+  'leads',
+  'contact_editor',
+  'home_sections',
+  'about_editor',
+  'gallery_editor',
+  'settings',
+  'packages',
+  'reels',
+];
+
+const TAB_ALIASES = {
+  'home': 'home_sections',
+  'home-sections': 'home_sections',
+  'homesections': 'home_sections',
+  'about': 'about_editor',
+  'about-editor': 'about_editor',
+  'gallery': 'gallery_editor',
+  'gallery-editor': 'gallery_editor',
+  'faqs': 'faqs_editor',
+  'faq': 'faqs_editor',
+  'faqs-editor': 'faqs_editor',
+  'contact': 'contact_editor',
+  'contact-editor': 'contact_editor',
+  'cancellation': 'cancellation_policy',
+  'cancellation-policy': 'cancellation_policy',
+  'push': 'broadcast',
+  'notifications': 'broadcast',
+  'inquiries': 'leads',
+  'package': 'packages',
+  'booking': 'bookings',
+  'payment': 'payments',
+  'reel': 'reels',
+  'blog': 'blogs',
+};
+
+const resolveTab = (raw) => {
+  if (!raw) return null;
+  const lower = String(raw).toLowerCase().trim();
+  if (VALID_TABS.includes(lower)) return lower;
+  if (TAB_ALIASES[lower]) return TAB_ALIASES[lower];
+  return null;
+};
+
 export default function AdminDashboardPage() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { tab: paramTab } = useParams();
+
+  const getInitialTab = () => {
+    const fromParam = resolveTab(paramTab);
+    if (fromParam) return fromParam;
+
+    const fromSearch = resolveTab(searchParams.get('tab'));
+    if (fromSearch) return fromSearch;
+
+    try {
+      const fromStorage = resolveTab(localStorage.getItem('admin_active_tab'));
+      if (fromStorage) return fromStorage;
+    } catch (e) {}
+
+    return 'dashboard';
+  };
+
+  const [activeTab, setActiveTabState] = useState(getInitialTab);
+
+  const handleTabChange = useCallback((newTab) => {
+    const valid = resolveTab(newTab) || 'dashboard';
+    setActiveTabState(valid);
+    try {
+      localStorage.setItem('admin_active_tab', valid);
+    } catch (e) {}
+
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (valid === 'dashboard') {
+        next.delete('tab');
+      } else {
+        next.set('tab', valid);
+      }
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  // Keep state in sync on URL change or refresh
+  useEffect(() => {
+    const tabFromUrl = resolveTab(paramTab) || resolveTab(searchParams.get('tab'));
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTabState(tabFromUrl);
+      try {
+        localStorage.setItem('admin_active_tab', tabFromUrl);
+      } catch (e) {}
+    } else if (!tabFromUrl && !paramTab && !searchParams.get('tab')) {
+      try {
+        const saved = resolveTab(localStorage.getItem('admin_active_tab'));
+        if (saved && saved !== 'dashboard') {
+          setActiveTabState(saved);
+          setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+            next.set('tab', saved);
+            return next;
+          }, { replace: true });
+        }
+      } catch (e) {}
+    }
+  }, [paramTab, searchParams, activeTab, setSearchParams]);
 
   return (
-    <AdminLayout activeTab={activeTab} onTabChange={setActiveTab}>
+    <AdminLayout activeTab={activeTab} onTabChange={handleTabChange}>
       {activeTab === 'dashboard' && (
         <DashboardView
-          onGoToLeads={() => setActiveTab('leads')}
-          onGoToContact={() => setActiveTab('contact_editor')}
-          onGoToTestimonials={() => setActiveTab('testimonials')}
-          onGoToBookings={() => setActiveTab('bookings')}
-          onGoToHomeSections={() => setActiveTab('home_sections')}
-          onGoToPackages={() => setActiveTab('packages')}
-          onGoToPayments={() => setActiveTab('payments')}
+          onGoToLeads={() => handleTabChange('leads')}
+          onGoToContact={() => handleTabChange('contact_editor')}
+          onGoToTestimonials={() => handleTabChange('testimonials')}
+          onGoToBookings={() => handleTabChange('bookings')}
+          onGoToHomeSections={() => handleTabChange('home_sections')}
+          onGoToPackages={() => handleTabChange('packages')}
+          onGoToPayments={() => handleTabChange('payments')}
         />
       )}
       {activeTab === 'bookings' && <BookingManager />}

@@ -321,6 +321,41 @@ const settingSchema = new mongoose.Schema(
           default: '',
         },
       },
+      gallery: {
+        eyebrow: {
+          type: String,
+          default: 'Memories For A Lifetime',
+        },
+        title: {
+          type: String,
+          default: 'Moments From Our Trips',
+        },
+        subtitle: {
+          type: String,
+          default: 'Real people. Real adventures. Real memories.',
+        },
+        buttonText: {
+          type: String,
+          default: 'View Gallery',
+        },
+        buttonLink: {
+          type: String,
+          default: '/about#gallery',
+        },
+        snapshotsLabel: {
+          type: String,
+          default: 'Captured Snapshots',
+        },
+        items: [
+          {
+            id: { type: String, default: '' },
+            title: { type: String, default: '' },
+            category: { type: String, default: '' },
+            image: { type: String, default: '' },
+            location: { type: String, default: '' },
+          },
+        ],
+      },
       sectionOrder: {
         type: [String],
         default: [

@@ -218,7 +218,7 @@ export default function GalleryPage() {
   const heroBg = getImageUrl(galleryData.hero?.bgImage || DEFAULT_GALLERY_DATA.hero.bgImage);
 
   return (
-    <div className="bg-[#F7F7F5] text-[#111111] font-sans selection:bg-[#FF6B16] selection:text-white overflow-x-hidden pt-20 md:pt-24">
+    <div className="bg-[#F7F7F5] text-[#111111] font-sans overflow-x-hidden pt-20 md:pt-24">
       {/* ============================================================== */}
       {/* ── SECTION 1: CINEMATIC LIGHT HERO (Reference 3 Aesthetic) ── */}
       {/* ============================================================== */}

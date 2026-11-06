@@ -141,6 +141,58 @@ export const DEFAULT_HOME_SECTIONS = {
       ],
     },
   },
+  gallery: {
+    eyebrow: 'Memories For A Lifetime',
+    title: 'Moments From Our Trips',
+    subtitle: 'Real people. Real adventures. Real memories.',
+    buttonText: 'View Gallery',
+    buttonLink: '/about#gallery',
+    snapshotsLabel: 'Captured Snapshots',
+    items: [
+      {
+        id: 'g1',
+        title: 'Kedarkantha Summit Ridge',
+        category: 'Mountain Trekking',
+        image: '/newimage/exploresection/kedarkantha.png',
+        location: 'Uttarakhand, 12,500 ft',
+      },
+      {
+        id: 'g2',
+        title: 'Sunset Shikara on Dal Lake',
+        category: 'Lakes and Valleys',
+        image: '/newimage/exploresection/kashmir.png',
+        location: 'Srinagar, Kashmir',
+      },
+      {
+        id: 'g3',
+        title: 'Mountain Expedition Camp',
+        category: 'Camping Stories',
+        image: '/newimage/photos/image1.png',
+        location: 'High Altitude Basecamp',
+      },
+      {
+        id: 'g4',
+        title: 'Spiti High Altitude Valley',
+        category: 'Expeditions',
+        image: '/newimage/exploresection/vally.png',
+        location: 'Spiti Valley, Himachal',
+      },
+      {
+        id: 'g5',
+        title: 'Beas River Adventure Valley',
+        category: 'Group Adventures',
+        image: '/newimage/exploresection/manali.png',
+        location: 'Manali, Himachal',
+      },
+      {
+        id: 'g6',
+        title: 'Floating Temple of Beratan',
+        category: 'Tropical Serenity',
+        image: '/newimage/exploresection/bali.png',
+        location: 'Bedugul, Bali',
+      },
+    ],
+  },
   finalCta: {
     heading: 'Ready for Your Next Adventure?',
     subtitle:
@@ -217,12 +269,35 @@ const getOrCreateDefaultSettings = async () => {
       settings.homeSections = DEFAULT_HOME_SECTIONS;
       needsSave = true;
     } else {
-      ['hero', 'experiences', 'whyChooseUs', 'bookingProcess', 'finalCta'].forEach((sec) => {
+      ['hero', 'experiences', 'whyChooseUs', 'bookingProcess', 'gallery', 'finalCta'].forEach((sec) => {
         if (!settings.homeSections[sec]) {
           settings.homeSections[sec] = DEFAULT_HOME_SECTIONS[sec];
           needsSave = true;
         }
       });
+      if (
+        !settings.homeSections.gallery ||
+        !Array.isArray(settings.homeSections.gallery.items) ||
+        settings.homeSections.gallery.items.length < 6
+      ) {
+        const existingItems = Array.isArray(settings.homeSections.gallery?.items)
+          ? settings.homeSections.gallery.items
+          : [];
+        const fixedItems = [];
+        for (let i = 0; i < 6; i++) {
+          fixedItems.push(
+            existingItems[i] && (existingItems[i].image || existingItems[i].title)
+              ? existingItems[i]
+              : DEFAULT_HOME_SECTIONS.gallery.items[i]
+          );
+        }
+        settings.homeSections.gallery = {
+          ...DEFAULT_HOME_SECTIONS.gallery,
+          ...(settings.homeSections.gallery || {}),
+          items: fixedItems,
+        };
+        needsSave = true;
+      }
       if (
         !settings.homeSections.sectionOrder ||
         !Array.isArray(settings.homeSections.sectionOrder) ||
@@ -742,10 +817,46 @@ export const updateHomeSections = async (req, res) => {
       };
     }
 
+    // 6. Memories Gallery (Moments From Our Trips) update (Strictly 6 slots)
+    if (updates.gallery) {
+      const submittedItems = Array.isArray(updates.gallery.items) ? updates.gallery.items : [];
+      const currentGallery = settings.homeSections?.gallery
+        ? (typeof settings.homeSections.gallery.toObject === 'function'
+            ? settings.homeSections.gallery.toObject()
+            : settings.homeSections.gallery)
+        : DEFAULT_HOME_SECTIONS.gallery;
+      const currentItems = Array.isArray(currentGallery?.items) && currentGallery.items.length === 6
+        ? currentGallery.items
+        : DEFAULT_HOME_SECTIONS.gallery.items;
+
+      const fixedItems = [];
+      for (let i = 0; i < 6; i++) {
+        fixedItems.push(
+          submittedItems[i] || currentItems[i] || DEFAULT_HOME_SECTIONS.gallery.items[i]
+        );
+      }
+
+      settings.homeSections.gallery = {
+        ...currentGallery,
+        ...updates.gallery,
+        items: fixedItems,
+      };
+    }
+
     settings.updatedBy = req.admin ? req.admin._id : null;
     settings.markModified('homeSections');
     settings.markModified('homeSections.sectionOrder');
+    if (updates.gallery) {
+      settings.markModified('homeSections.gallery');
+    }
     await settings.save();
+
+    if (updates.gallery) {
+      await Setting.updateOne(
+        { key: 'site_settings' },
+        { $set: { 'homeSections.gallery': settings.homeSections.gallery } }
+      );
+    }
 
     if (updates.sectionOrder && Array.isArray(updates.sectionOrder)) {
       await Setting.updateOne(

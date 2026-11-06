@@ -52,6 +52,7 @@ export function AppRoutes() {
       <Route path="/admin/reset-password/:token" element={<AdminResetPassword />} />
       <Route path="/admin" element={<AdminDashboardPage />} />
       <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
+      <Route path="/admin/:tab" element={<AdminDashboardPage />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

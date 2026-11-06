@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Sparkles,
   Mountain,
@@ -47,17 +48,79 @@ const SECTION_METADATA = {
   whyChooseUs: { id: 'whyChooseUs', label: 'Why Choose Us', icon: ShieldCheck, editable: true },
   bookingProcess: { id: 'bookingProcess', label: 'Process & Welfare', icon: Handshake, editable: true },
   testimonials: { id: 'testimonials', label: 'Traveler Reviews', icon: Star, editable: false, managerLink: '/admin/testimonials' },
-  gallery: { id: 'gallery', label: 'Memories Gallery', icon: ImageIcon, editable: false, managerLink: '/admin/gallery' },
+  gallery: { id: 'gallery', label: 'Memories Gallery', icon: ImageIcon, editable: true },
   blogs: { id: 'blogs', label: 'Travel Blogs', icon: ExternalLink, editable: false, managerLink: '/admin/blogs' },
   finalCta: { id: 'finalCta', label: 'Ready For Adventure (CTA)', icon: Flame, editable: true },
+};
+
+export const ensureSixGalleryItems = (existing) => {
+  const defaults = DEFAULT_HOME_SECTIONS.gallery?.items || [];
+  const list = Array.isArray(existing) ? existing : [];
+  const res = [];
+  for (let i = 0; i < 6; i++) {
+    const item = list[i];
+    const def = defaults[i] || {
+      id: `g${i + 1}`,
+      title: `Trip Photo ${i + 1}`,
+      category: 'Mountain Trekking',
+      image: '/newimage/exploresection/kedarkantha.png',
+      location: 'India',
+    };
+    if (item && (item.image || item.title)) {
+      res.push({
+        id: item.id || `g${i + 1}`,
+        title: item.title !== undefined ? item.title : def.title,
+        category: item.category !== undefined ? item.category : def.category,
+        image: item.image || def.image,
+        location: item.location !== undefined ? item.location : def.location,
+      });
+    } else {
+      res.push({ ...def });
+    }
+  }
+  return res;
 };
 
 export default function HomeSectionsManager() {
   const { homeSections, refreshSettings, formatImageUrl, API_BASE_URL } = useSettings();
   const { token } = useAuth();
 
-  const [activeTab, setActiveTab] = useState('hero');
-  const [formData, setFormData] = useState(DEFAULT_HOME_SECTIONS);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const getInitialSectionTab = () => {
+    const fromSearch = searchParams.get('section');
+    if (fromSearch && SECTION_METADATA[fromSearch]) return fromSearch;
+    try {
+      const saved = localStorage.getItem('admin_home_section_tab');
+      if (saved && SECTION_METADATA[saved]) return saved;
+    } catch (e) {}
+    return 'hero';
+  };
+
+  const [activeTab, setActiveTabState] = useState(getInitialSectionTab);
+
+  const setActiveTab = (newTab) => {
+    setActiveTabState(newTab);
+    try {
+      localStorage.setItem('admin_home_section_tab', newTab);
+    } catch (e) {}
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (newTab === 'hero') {
+        next.delete('section');
+      } else {
+        next.set('section', newTab);
+      }
+      return next;
+    }, { replace: true });
+  };
+  const [formData, setFormData] = useState(() => {
+    const init = JSON.parse(JSON.stringify(DEFAULT_HOME_SECTIONS));
+    if (init.gallery) {
+      init.gallery.items = ensureSixGalleryItems(init.gallery.items);
+    }
+    return init;
+  });
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
@@ -75,7 +138,13 @@ export default function HomeSectionsManager() {
 
   useEffect(() => {
     if (homeSections) {
-      setFormData(JSON.parse(JSON.stringify(homeSections)));
+      const cloned = JSON.parse(JSON.stringify(homeSections));
+      cloned.gallery = {
+        ...DEFAULT_HOME_SECTIONS.gallery,
+        ...(cloned.gallery || {}),
+        items: ensureSixGalleryItems(cloned.gallery?.items),
+      };
+      setFormData(cloned);
       if (Array.isArray(homeSections.sectionOrder) && homeSections.sectionOrder.length > 0) {
         const merged = [...homeSections.sectionOrder];
         DEFAULT_SECTION_ORDER.forEach((secId) => {
@@ -138,6 +207,12 @@ export default function HomeSectionsManager() {
       setStatusMessage({ type: '', text: '' });
 
       const payload = sectionKey ? { [sectionKey]: formData[sectionKey] } : formData;
+      if (sectionKey === 'gallery' && payload.gallery) {
+        payload.gallery = {
+          ...payload.gallery,
+          items: ensureSixGalleryItems(payload.gallery.items),
+        };
+      }
 
       const res = await fetch(`${API_BASE_URL}/settings/home-sections`, {
         method: 'PUT',
@@ -187,7 +262,13 @@ export default function HomeSectionsManager() {
 
       await refreshSettings();
       if (data.homeSections) {
-        setFormData(data.homeSections);
+        const updated = JSON.parse(JSON.stringify(data.homeSections));
+        updated.gallery = {
+          ...DEFAULT_HOME_SECTIONS.gallery,
+          ...(updated.gallery || {}),
+          items: ensureSixGalleryItems(updated.gallery?.items),
+        };
+        setFormData(updated);
       }
       showToast('success', `"${sectionKey}" reset to default values!`);
     } catch (err) {
@@ -303,7 +384,7 @@ export default function HomeSectionsManager() {
         </div>
 
         {/* Global Save Button */}
-        {activeTab !== 'reels' && !['packages', 'testimonials', 'gallery', 'blogs'].includes(activeTab) && (
+        {activeTab !== 'reels' && !['packages', 'testimonials', 'blogs'].includes(activeTab) && (
           <div className="flex items-center gap-3">
             <button
               onClick={() => handleSave(activeTab)}
@@ -585,7 +666,8 @@ export default function HomeSectionsManager() {
             { id: 'experiences', label: '3. Choose Experience', icon: Compass },
             { id: 'whyChooseUs', label: '4. Why Choose Us', icon: ShieldCheck },
             { id: 'bookingProcess', label: '5. Process & Welfare', icon: Handshake },
-            { id: 'finalCta', label: '6. Ready For Adventure (CTA)', icon: Flame },
+            { id: 'gallery', label: '6. Memories Gallery', icon: ImageIcon },
+            { id: 'finalCta', label: '7. Ready For Adventure (CTA)', icon: Flame },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -2100,14 +2182,380 @@ export default function HomeSectionsManager() {
         </div>
       )}
 
+      
+      {/* ── 7. MEMORIES GALLERY SECTION EDITOR ── */}
+      {activeTab === 'gallery' && (
+        <div className="bg-white rounded-2xl p-5 sm:p-7 border border-neutral-200/80 shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-150 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <ImageIcon className="w-5 h-5 text-[#FF6B16]" />
+                <h2 className="text-lg font-black text-[#1A384C]">
+                  Moments From Our Trips (Memories Gallery)
+                </h2>
+              </div>
+              <p className="text-xs text-neutral-500 mt-1">
+                Customize the snapshots strip, section headlines, and destination tags rendered on your homepage.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => handleReset('gallery')}
+                disabled={saving}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-neutral-600 hover:text-neutral-900 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset Default</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSave('gallery')}
+                disabled={saving || uploadingImage}
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-[#FF6B16] hover:bg-[#e05809] text-white text-xs font-bold transition-all shadow-md shadow-[#FF6B16]/25 cursor-pointer disabled:opacity-50"
+              >
+                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                <span>Save Gallery</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Section Headers & CTA Settings */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-black text-[#1A384C] uppercase tracking-wider text-neutral-400">
+              1. Section Header & Actions
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-neutral-700 mb-1">
+                  Eyebrow Tag
+                </label>
+                <input
+                  type="text"
+                  value={formData.gallery?.eyebrow || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      gallery: { ...formData.gallery, eyebrow: e.target.value },
+                    })
+                  }
+                  placeholder="Memories For A Lifetime"
+                  className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:border-[#FF6B16]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-neutral-700 mb-1">
+                  Section Title
+                </label>
+                <input
+                  type="text"
+                  value={formData.gallery?.title || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      gallery: { ...formData.gallery, title: e.target.value },
+                    })
+                  }
+                  placeholder="Moments From Our Trips"
+                  className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:border-[#FF6B16]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-neutral-700 mb-1">
+                  Snapshots Subtitle Label
+                </label>
+                <input
+                  type="text"
+                  value={formData.gallery?.snapshotsLabel || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      gallery: { ...formData.gallery, snapshotsLabel: e.target.value },
+                    })
+                  }
+                  placeholder="Captured Snapshots"
+                  className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:border-[#FF6B16]"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="sm:col-span-1">
+                <label className="block text-xs font-bold text-neutral-700 mb-1">
+                  Button Text
+                </label>
+                <input
+                  type="text"
+                  value={formData.gallery?.buttonText || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      gallery: { ...formData.gallery, buttonText: e.target.value },
+                    })
+                  }
+                  placeholder="View Gallery"
+                  className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:border-[#FF6B16]"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-bold text-neutral-700 mb-1">
+                  Button Link Target
+                </label>
+                <input
+                  type="text"
+                  value={formData.gallery?.buttonLink || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      gallery: { ...formData.gallery, buttonLink: e.target.value },
+                    })
+                  }
+                  placeholder="/about#gallery"
+                  className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:border-[#FF6B16]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-neutral-700 mb-1">
+                Subtitle Description
+              </label>
+              <textarea
+                rows={2}
+                value={formData.gallery?.subtitle || ''}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    gallery: { ...formData.gallery, subtitle: e.target.value },
+                  })
+                }
+                placeholder="Real people. Real adventures. Real memories."
+                className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:border-[#FF6B16]"
+              />
+            </div>
+          </div>
+
+          {/* Snapshot Photos Cards Editor (6 Fixed Slots Matching UI) */}
+          <div className="space-y-4 pt-3 border-t border-neutral-150">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-black text-[#1A384C]">
+                    Homepage Snapshot Photos (6 Photos)
+                  </h3>
+                  <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-orange-100 text-[#FF6B16]">
+                    6 Slots Fixed
+                  </span>
+                </div>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Change any of the 6 trip photos displayed in the homepage snapshot row. Replace images, edit captions, tags, and locations.
+                </p>
+              </div>
+            </div>
+
+            {/* List of 6 Photo Cards */}
+            <div className="space-y-3.5">
+              {ensureSixGalleryItems(formData.gallery?.items).map((item, idx) => (
+                <div
+                  key={item.id || idx}
+                  className="p-4 bg-neutral-50 rounded-2xl border border-neutral-200/80 flex flex-col md:flex-row gap-4 items-start md:items-center"
+                >
+                  {/* Photo Slot Badge & Preview */}
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="w-8 h-8 rounded-xl bg-orange-100 text-[#FF6B16] font-black text-xs flex items-center justify-center shrink-0 border border-orange-200">
+                      #{idx + 1}
+                    </div>
+                    <div className="relative w-28 sm:w-32 aspect-[4/3] rounded-xl overflow-hidden bg-neutral-900 border border-neutral-300 shrink-0 group">
+                      <img
+                        src={formatImageUrl(item.image)}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer text-white text-[11px] font-bold p-1 text-center">
+                        <Upload className="w-4 h-4 mb-1 text-[#FF6B16]" />
+                        <span>Change Photo</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              handleUploadImage(file, (url) => {
+                                const currentList = ensureSixGalleryItems(formData.gallery?.items);
+                                const updated = [...currentList];
+                                updated[idx] = { ...updated[idx], image: url };
+                                setFormData({
+                                  ...formData,
+                                  gallery: { ...formData.gallery, items: updated },
+                                });
+                              });
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Photo Details Inputs */}
+                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
+                    <div>
+                      <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-0.5">
+                        Title / Caption
+                      </label>
+                      <input
+                        type="text"
+                        value={item.title || ''}
+                        onChange={(e) => {
+                          const currentList = ensureSixGalleryItems(formData.gallery?.items);
+                          const updated = [...currentList];
+                          updated[idx] = { ...updated[idx], title: e.target.value };
+                          setFormData({
+                            ...formData,
+                            gallery: { ...formData.gallery, items: updated },
+                          });
+                        }}
+                        className="w-full px-2.5 py-1.5 text-xs bg-white border border-neutral-200 rounded-lg focus:outline-none focus:border-[#FF6B16]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-0.5">
+                        Category Tag
+                      </label>
+                      <input
+                        type="text"
+                        value={item.category || ''}
+                        onChange={(e) => {
+                          const currentList = ensureSixGalleryItems(formData.gallery?.items);
+                          const updated = [...currentList];
+                          updated[idx] = { ...updated[idx], category: e.target.value };
+                          setFormData({
+                            ...formData,
+                            gallery: { ...formData.gallery, items: updated },
+                          });
+                        }}
+                        className="w-full px-2.5 py-1.5 text-xs bg-white border border-neutral-200 rounded-lg focus:outline-none focus:border-[#FF6B16]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-0.5">
+                        Location Details
+                      </label>
+                      <input
+                        type="text"
+                        value={item.location || ''}
+                        onChange={(e) => {
+                          const currentList = ensureSixGalleryItems(formData.gallery?.items);
+                          const updated = [...currentList];
+                          updated[idx] = { ...updated[idx], location: e.target.value };
+                          setFormData({
+                            ...formData,
+                            gallery: { ...formData.gallery, items: updated },
+                          });
+                        }}
+                        className="w-full px-2.5 py-1.5 text-xs bg-white border border-neutral-200 rounded-lg focus:outline-none focus:border-[#FF6B16]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-0.5">
+                        Image URL / Cloudinary
+                      </label>
+                      <input
+                        type="text"
+                        value={item.image || ''}
+                        onChange={(e) => {
+                          const currentList = ensureSixGalleryItems(formData.gallery?.items);
+                          const updated = [...currentList];
+                          updated[idx] = { ...updated[idx], image: e.target.value };
+                          setFormData({
+                            ...formData,
+                            gallery: { ...formData.gallery, items: updated },
+                          });
+                        }}
+                        className="w-full px-2.5 py-1.5 text-xs bg-white border border-neutral-200 rounded-lg focus:outline-none focus:border-[#FF6B16]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Actions (Reorder Photo Slots) */}
+                  <div className="flex items-center gap-1 shrink-0 self-end md:self-center">
+                    <button
+                      type="button"
+                      disabled={idx === 0}
+                      onClick={() => {
+                        const currentList = ensureSixGalleryItems(formData.gallery?.items);
+                        const updated = [...currentList];
+                        const temp = updated[idx];
+                        updated[idx] = updated[idx - 1];
+                        updated[idx - 1] = temp;
+                        setFormData({
+                          ...formData,
+                          gallery: { ...formData.gallery, items: updated },
+                        });
+                      }}
+                      className="p-1.5 text-neutral-500 hover:text-neutral-900 disabled:opacity-30 cursor-pointer"
+                      title="Move photo left"
+                    >
+                      <ArrowUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={idx === 5}
+                      onClick={() => {
+                        const currentList = ensureSixGalleryItems(formData.gallery?.items);
+                        const updated = [...currentList];
+                        const temp = updated[idx];
+                        updated[idx] = updated[idx + 1];
+                        updated[idx + 1] = temp;
+                        setFormData({
+                          ...formData,
+                          gallery: { ...formData.gallery, items: updated },
+                        });
+                      }}
+                      className="p-1.5 text-neutral-500 hover:text-neutral-900 disabled:opacity-30 cursor-pointer"
+                      title="Move photo right"
+                    >
+                      <ArrowDown className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom Save Bar */}
+          <div className="pt-4 border-t border-neutral-150 flex items-center justify-between">
+            <span className="text-xs text-neutral-500">
+              Changes will immediately reflect on the live homepage.
+            </span>
+            <button
+              type="button"
+              onClick={() => handleSave('gallery')}
+              disabled={saving || uploadingImage}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#FF6B16] hover:bg-[#e05809] text-white text-xs font-bold transition-all shadow-md shadow-[#FF6B16]/30 cursor-pointer disabled:opacity-50"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              <span>Save Memories Gallery</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── INFO TABS FOR INVENTORY-DRIVEN SECTIONS ── */}
-      {['packages', 'testimonials', 'gallery', 'blogs'].includes(activeTab) && (
+      {['packages', 'testimonials', 'blogs'].includes(activeTab) && (
         <div className="bg-white rounded-3xl p-8 sm:p-12 border border-neutral-200/80 shadow-xs max-w-2xl mx-auto text-center space-y-4">
           <div className="w-16 h-16 rounded-2xl bg-orange-50 text-[#FF6B16] flex items-center justify-center mx-auto shadow-xs">
             {activeTab === 'packages' && <Mountain className="w-8 h-8" />}
             {activeTab === 'testimonials' && <Star className="w-8 h-8" />}
-            {activeTab === 'gallery' && <ImageIcon className="w-8 h-8" />}
-            {activeTab === 'blogs' && <ExternalLink className="w-8 h-8" />}
+                        {activeTab === 'blogs' && <ExternalLink className="w-8 h-8" />}
           </div>
 
           <div>
@@ -2127,8 +2575,7 @@ export default function HomeSectionsManager() {
             <p className="text-neutral-500">
               {activeTab === 'packages' && 'Displays your active tour packages and expedition itineraries.'}
               {activeTab === 'testimonials' && 'Displays verified traveler reviews, ratings, and quotes.'}
-              {activeTab === 'gallery' && 'Displays the masonry photo gallery of memorable trip moments.'}
-              {activeTab === 'blogs' && 'Displays your published travel guide articles and stories.'}
+                            {activeTab === 'blogs' && 'Displays your published travel guide articles and stories.'}
             </p>
           </div>
 
