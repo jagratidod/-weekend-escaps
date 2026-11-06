@@ -1,6 +1,5 @@
 import React from 'react';
 import Hero from '../components/home/Hero';
-import Destinations from '../components/home/Destinations';
 import Experiences from '../components/home/Experiences';
 import Packages from '../components/home/Packages';
 import WhyChooseUs from '../components/home/WhyChooseUs';
@@ -16,10 +15,7 @@ export function Home() {
       {/* 1. Cinematic Hero Section with Integrated Bottom Search & Topography */}
       <Hero />
 
-      {/* 2. Top Destinations */}
-      <Destinations />
-
-      {/* 3. Travel Experiences (Dark with brush strokes) */}
+      {/* 2. Travel Experiences (Dark with brush strokes) */}
       <Experiences />
 
       {/* 4. Trending Tour Packages */}

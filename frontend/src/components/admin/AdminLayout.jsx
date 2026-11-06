@@ -46,13 +46,13 @@ const DEFAULT_MAIN_NAV_ITEMS = [
   { id: 'reels', label: 'Travel Reels', icon: Film },
   { id: 'broadcast', label: 'Push & Broadcast', icon: Radio },
   { id: 'leads', label: 'Inquiries & Leads', icon: ShoppingCart },
-  { id: 'destinations', label: 'Destinations', icon: Compass },
   { id: 'packages', label: 'Tour Packages', icon: Package },
   { id: 'settings', label: 'Settings & WhatsApp', icon: SettingsIcon },
 ];
 
 const DEFAULT_PAGE_SUB_ITEMS = [
   { id: 'home_sections', label: 'Home Page Editor', icon: Sparkles },
+  { id: 'about_editor', label: 'About Page Editor', icon: Compass },
   { id: 'gallery_editor', label: 'Gallery Page Editor', icon: Camera },
   { id: 'pages', label: 'Terms & Conditions', icon: FileText },
   { id: 'cancellation_policy', label: 'Cancellation Policy', icon: ShieldCheck },

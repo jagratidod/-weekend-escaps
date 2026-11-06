@@ -117,11 +117,6 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/destinations" className="text-neutral-400 hover:text-[#FF6B16] transition-colors">
-                  Destinations
-                </Link>
-              </li>
-              <li>
                 <Link to="/packages" className="text-neutral-400 hover:text-[#FF6B16] transition-colors">
                   Tour Packages
                 </Link>

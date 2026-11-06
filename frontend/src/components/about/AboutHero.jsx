@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const slides = [
+const DEFAULT_SLIDES = [
   {
     image: '/newimage/about/bali.png',
     subtitle: 'Tropical Paradise',
@@ -46,13 +46,17 @@ const slides = [
   },
 ];
 
-const AUTO_INTERVAL = 4500;
+const DEFAULT_AUTO_INTERVAL = 4500;
 const DURATION_MS = 1100;
 const CARD_WIDTH = 195; // px
 const CARD_GAP = 16; // px
 const SHIFT_DISTANCE = CARD_WIDTH + CARD_GAP; // ~211px
 
-export default function AboutHero() {
+export default function AboutHero({ slides: propSlides, autoInterval: propInterval }) {
+  const slides = propSlides && propSlides.length > 0 ? propSlides : DEFAULT_SLIDES;
+  const AUTO_INTERVAL = propInterval || DEFAULT_AUTO_INTERVAL;
+  const totalSlides = slides.length;
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [textVisible, setTextVisible] = useState(true);
 
@@ -65,18 +69,28 @@ export default function AboutHero() {
   const timerRef = useRef(null);
   const slot0Ref = useRef(null);
   const sectionRef = useRef(null);
-  const totalSlides = slides.length;
 
-  // Preload all images on mount
+  // Keep activeIndex within bounds if slide count changes
+  useEffect(() => {
+    if (activeIndex >= totalSlides) {
+      setActiveIndex(0);
+    }
+  }, [totalSlides, activeIndex]);
+
+  // Preload all images on mount or when slides change
   useEffect(() => {
     slides.forEach((s) => {
-      const img = new Image();
-      img.src = s.image;
+      if (s.image) {
+        const img = new Image();
+        img.src = s.image;
+      }
     });
-  }, []);
+  }, [slides]);
 
-  // Four upcoming cards: Slot 0 (expands), Slot 1 (moves to Slot 0), Slot 2 (moves to Slot 1), Slot 3 (enters from right into Slot 2)
-  const thumbIndices = [1, 2, 3, 4].map((offset) => (activeIndex + offset) % totalSlides);
+  // Upcoming cards: up to 4 upcoming thumbnail offsets
+  const thumbIndices = [1, 2, 3, 4]
+    .slice(0, Math.min(4, Math.max(1, totalSlides - 1)))
+    .map((offset) => (activeIndex + offset) % totalSlides);
 
   const runNextTransition = useCallback(() => {
     if (isTransitioning) return;
@@ -202,7 +216,7 @@ export default function AboutHero() {
     [isTransitioning, thumbIndices, runNextTransition]
   );
 
-  const currentSlide = slides[activeIndex];
+  const currentSlide = slides[activeIndex] || slides[0] || {};
 
   return (
     <section
@@ -213,8 +227,8 @@ export default function AboutHero() {
       <div className="absolute inset-0 z-0">
         <img
           key={`hero-bg-${activeIndex}`}
-          src={currentSlide.image}
-          alt={currentSlide.title}
+          src={currentSlide.image || '/newimage/about/bali.png'}
+          alt={currentSlide.title || 'Hero slide'}
           className="w-full h-full object-cover animate-kenBurns"
         />
       </div>

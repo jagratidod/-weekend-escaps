@@ -58,10 +58,10 @@ export function Destinations() {
                 </div>
 
                 <Link
-                  to="/destinations"
+                  to="/packages"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-neutral-300 hover:border-[#FF6B16] text-xs font-bold text-neutral-800 hover:text-[#FF6B16] transition-all bg-white shadow-xs group"
                 >
-                  <span>View All Destinations</span>
+                  <span>View All Packages</span>
                   <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </div>
@@ -108,7 +108,7 @@ export function Destinations() {
               return (
                 <SwiperSlide key={dest.id} className="h-auto select-none">
                   <div
-                    onClick={() => navigate(`/destinations/${dest.id}`)}
+                    onClick={() => navigate(`/packages/${dest.id}`)}
                     className="group relative block w-full aspect-[3/4.4] max-h-[440px] rounded-3xl overflow-hidden shadow-2xl border border-white/20 bg-neutral-900 cursor-pointer select-none"
                   >
                     {/* Background Image - pointer-events-none & draggable=false prevent browser image drag hijacking */}

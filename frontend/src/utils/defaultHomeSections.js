@@ -6,8 +6,8 @@ export const DEFAULT_HOME_SECTIONS = {
     titleLine2: 'Awaits',
     subtitle:
       'From majestic mountains to serene valleys, we craft unforgettable travel experiences for every explorer.',
-    primaryButtonText: 'Explore Destinations',
-    primaryButtonLink: '/destinations',
+    primaryButtonText: 'Explore Packages',
+    primaryButtonLink: '/packages',
     heroImage: '/newimage/herosecction/heroimage.png',
     socialProof: {
       travelersText: '500+ Happy Travelers',

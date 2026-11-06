@@ -280,7 +280,7 @@ export default function HomeSectionsManager() {
                 </p>
                 <div className="mt-4">
                   <span className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-[#FF6B16] text-white text-xs font-bold shadow-md">
-                    {formData.hero?.primaryButtonText || 'Explore Destinations'}
+                    {formData.hero?.primaryButtonText || 'Explore Packages'}
                   </span>
                 </div>
                 <div className="mt-4 flex items-center gap-2 text-xs font-bold text-neutral-800">

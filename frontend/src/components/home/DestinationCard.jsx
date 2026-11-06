@@ -7,7 +7,7 @@ export function DestinationCard({ destination }) {
 
   return (
     <Link
-      to={`/destinations/${id}`}
+      to={`/packages/${id}`}
       className="group flex flex-col rounded-2xl overflow-hidden bg-white p-2 shadow-xs hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-neutral-100"
     >
       {/* Image container with rounded top and zoom effect */}

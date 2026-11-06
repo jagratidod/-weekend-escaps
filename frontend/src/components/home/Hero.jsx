@@ -17,8 +17,14 @@ export function Hero() {
   const subtitle =
     heroData.subtitle ||
     'From majestic mountains to serene valleys, we craft unforgettable travel experiences for every explorer.';
-  const primaryButtonText = heroData.primaryButtonText || 'Explore Destinations';
-  const primaryButtonLink = heroData.primaryButtonLink || '/destinations';
+  const primaryButtonText =
+    heroData.primaryButtonText === 'Explore Destinations'
+      ? 'Explore Packages'
+      : (heroData.primaryButtonText || 'Explore Packages');
+  const primaryButtonLink =
+    heroData.primaryButtonLink === '/destinations'
+      ? '/packages'
+      : (heroData.primaryButtonLink || '/packages');
 
   const socialProof = heroData.socialProof || {};
   const travelersText = socialProof.travelersText || '500+ Happy Travelers';

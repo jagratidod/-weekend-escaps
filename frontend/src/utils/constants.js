@@ -25,18 +25,6 @@ export const COLORS = {
 export const NAV_LINKS = [
   { name: "Home", path: "/" },
   {
-    name: "Destinations",
-    path: "/destinations",
-    hasDropdown: true,
-    sublinks: [
-      { name: "Kedarkantha Trek", path: "/destinations/kedarkantha" },
-      { name: "Kashmir Valley", path: "/destinations/kashmir" },
-      { name: "Manali Adventure", path: "/destinations/manali" },
-      { name: "Spiti Valley Expedition", path: "/destinations/spiti" },
-      { name: "Bali Paradise", path: "/destinations/bali" }
-    ]
-  },
-  {
     name: "Tour Packages",
     path: "/packages",
     hasDropdown: true,

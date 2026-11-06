@@ -450,7 +450,7 @@ export default function BroadcastManager() {
               </label>
               <input
                 type="text"
-                placeholder="e.g. /packages/kedarkantha-trek or /destinations"
+                placeholder="e.g. /packages/kedarkantha-trek or /packages"
                 value={formData.link}
                 onChange={(e) => setFormData({ ...formData, link: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:border-[#FF6B16] focus:ring-2 focus:ring-[#FF6B16]/20 outline-none text-sm transition-all font-mono text-xs"

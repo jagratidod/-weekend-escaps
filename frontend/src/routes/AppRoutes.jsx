@@ -1,7 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Home from '../pages/Home';
-import DestinationsPage from '../pages/DestinationsPage';
 import PackagesPage from '../pages/PackagesPage';
 import PackageDetails from '../pages/PackageDetails';
 import BookingPage from '../pages/BookingPage';
@@ -23,7 +22,7 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/destinations" element={<DestinationsPage />} />
+      <Route path="/destinations" element={<Navigate to="/packages" replace />} />
       <Route path="/destinations/:id" element={<PackageDetails />} />
       <Route path="/packages" element={<PackagesPage />} />
       <Route path="/packages/:id" element={<PackageDetails />} />
