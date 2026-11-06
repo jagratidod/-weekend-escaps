@@ -4,7 +4,6 @@ import { ArrowRight, Maximize2, X, ChevronLeft, ChevronRight, MapPin, Camera } f
 import { GALLERY_ITEMS } from '../../data/gallery';
 import SectionHeading from '../common/SectionHeading';
 import Container from '../common/Container';
-import TripReelsRow from './TripReelsRow';
 
 export function Gallery() {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(null);
@@ -23,15 +22,10 @@ export function Gallery() {
   };
 
   return (
-    <section className="pt-12 md:pt-16 pb-6 md:pb-8 bg-[#F7F7F5] overflow-hidden w-full">
-      {/* 1. Full Screen Width "What Our Travellers Say" 3D Video Reels */}
-      <div className="w-full overflow-hidden">
-        <TripReelsRow />
-      </div>
-
-      {/* 2. Photo Snapshots Gallery */}
+    <section className="pt-10 md:pt-14 pb-6 md:pb-8 bg-[#F7F7F5] overflow-hidden w-full">
+      {/* Photo Snapshots Gallery */}
       <Container>
-        <div className="pt-8 mt-6 border-t border-neutral-200/80">
+        <div>
           <SectionHeading
             size="compact"
             eyebrow="Memories For A Lifetime"

@@ -1,5 +1,6 @@
 import React from 'react';
 import Hero from '../components/home/Hero';
+import TripReelsRow from '../components/home/TripReelsRow';
 import Experiences from '../components/home/Experiences';
 import Packages from '../components/home/Packages';
 import WhyChooseUs from '../components/home/WhyChooseUs';
@@ -15,7 +16,12 @@ export function Home() {
       {/* 1. Cinematic Hero Section with Integrated Bottom Search & Topography */}
       <Hero />
 
-      {/* 2. Travel Experiences (Dark with brush strokes) */}
+      {/* 2. Hero Travel Reels Showcase */}
+      <div className="bg-[#F7F7F5] pt-12 pb-4 w-full overflow-hidden">
+        <TripReelsRow />
+      </div>
+
+      {/* 3. Travel Experiences (Dark with brush strokes) */}
       <Experiences />
 
       {/* 4. Trending Tour Packages */}

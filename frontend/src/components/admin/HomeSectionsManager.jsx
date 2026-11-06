@@ -26,7 +26,9 @@ import {
   CalendarDays,
   ExternalLink,
   MessageCircle,
+  Film,
 } from 'lucide-react';
+import ReelManager from './ReelManager';
 import { useSettings } from '../../context/SettingsContext';
 import { useAuth } from '../../context/AuthContext';
 import { AVAILABLE_ICON_OPTIONS, getHomeIcon } from '../../utils/homeIconHelper';
@@ -165,10 +167,11 @@ export default function HomeSectionsManager() {
 
   const tabs = [
     { id: 'hero', label: '1. Hero Section', icon: Sparkles },
-    { id: 'experiences', label: '2. Choose Experience', icon: Compass },
-    { id: 'whyChooseUs', label: '3. Why Choose Us', icon: Mountain },
-    { id: 'bookingProcess', label: '4. Process & Welfare', icon: ShieldCheck },
-    { id: 'finalCta', label: '5. Ready For Adventure (CTA)', icon: Flame },
+    { id: 'reels', label: '2. Travel Reels', icon: Film },
+    { id: 'experiences', label: '3. Choose Experience', icon: Compass },
+    { id: 'whyChooseUs', label: '4. Why Choose Us', icon: Mountain },
+    { id: 'bookingProcess', label: '5. Process & Welfare', icon: ShieldCheck },
+    { id: 'finalCta', label: '6. Ready For Adventure (CTA)', icon: Flame },
   ];
 
   return (
@@ -186,16 +189,18 @@ export default function HomeSectionsManager() {
         </div>
 
         {/* Global Save Button */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => handleSave(activeTab)}
-            disabled={saving || uploadingImage}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF6B16] hover:bg-[#e05809] text-white font-extrabold text-xs sm:text-sm shadow-md shadow-[#FF6B16]/30 hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer"
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            <span>Save This Section</span>
-          </button>
-        </div>
+        {activeTab !== 'reels' && (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => handleSave(activeTab)}
+              disabled={saving || uploadingImage}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF6B16] hover:bg-[#e05809] text-white font-extrabold text-xs sm:text-sm shadow-md shadow-[#FF6B16]/30 hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              <span>Save This Section</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── Toast Notification ── */}
@@ -572,7 +577,14 @@ export default function HomeSectionsManager() {
         </div>
       )}
 
-      {/* ── TAB 2: CHOOSE YOUR EXPERIENCE ── */}
+      {/* ── TAB 2: TRAVEL REELS ── */}
+      {activeTab === 'reels' && (
+        <div>
+          <ReelManager />
+        </div>
+      )}
+
+      {/* ── TAB 3: CHOOSE YOUR EXPERIENCE ── */}
       {activeTab === 'experiences' && (
         <div className="space-y-6">
           {/* Live Preview Box */}

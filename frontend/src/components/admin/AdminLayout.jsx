@@ -34,16 +34,14 @@ import {
   RotateCcw,
 } from 'lucide-react';
 
-const MAIN_NAV_ORDER_KEY = 'admin_sidebar_main_order';
-const SUB_NAV_PAGES_KEY = 'admin_sidebar_pages_order';
+const MAIN_NAV_ORDER_KEY = 'admin_sidebar_main_order_v3';
+const SUB_NAV_PAGES_KEY = 'admin_sidebar_pages_order_v3';
 
 const DEFAULT_MAIN_NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'bookings', label: 'Bookings', icon: CalendarCheck },
   { id: 'payments', label: 'Payments', icon: CreditCard },
-  { id: 'blogs', label: 'Blogs & Journal', icon: BookOpen },
   { id: 'pages_group', label: 'Pages', icon: FileText, isGroup: true },
-  { id: 'reels', label: 'Travel Reels', icon: Film },
   { id: 'broadcast', label: 'Push & Broadcast', icon: Radio },
   { id: 'leads', label: 'Inquiries & Leads', icon: ShoppingCart },
   { id: 'packages', label: 'Tour Packages', icon: Package },
@@ -54,6 +52,8 @@ const DEFAULT_PAGE_SUB_ITEMS = [
   { id: 'home_sections', label: 'Home Page Editor', icon: Sparkles },
   { id: 'about_editor', label: 'About Page Editor', icon: Compass },
   { id: 'gallery_editor', label: 'Gallery Page Editor', icon: Camera },
+  { id: 'reels', label: 'Travel Reels', icon: Film },
+  { id: 'blogs', label: 'Blogs & Journal', icon: BookOpen },
   { id: 'pages', label: 'Terms & Conditions', icon: FileText },
   { id: 'cancellation_policy', label: 'Cancellation Policy', icon: ShieldCheck },
   { id: 'testimonials', label: 'Testimonials', icon: MessageSquareQuote },
@@ -341,7 +341,7 @@ export default function AdminLayout({
   const adminInitial = adminName.charAt(0).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-[#EBF2F7] flex text-neutral-800 font-sans antialiased overflow-x-hidden">
+    <div className="h-screen w-full bg-[#EBF2F7] flex text-neutral-800 font-sans antialiased overflow-hidden">
       {/* ── Mobile Sidebar Overlay ── */}
       {mobileSidebarOpen && (
         <div
@@ -350,15 +350,15 @@ export default function AdminLayout({
         />
       )}
 
-      {/* ── Deep Slate Left Sidebar ── */}
+      {/* ── Deep Slate Left Sidebar (Fixed & Stays Anchored) ── */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-[#1A384C] text-white flex flex-col justify-between transition-transform duration-300 ease-out select-none flex-shrink-0 ${
+        className={`fixed lg:static top-0 left-0 z-50 h-screen w-64 bg-[#1A384C] text-white flex flex-col justify-between transition-transform duration-300 ease-out select-none flex-shrink-0 ${
           mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="flex flex-col h-full overflow-y-auto">
-          {/* User Profile Card (Reference Header) */}
-          <div className="p-6 pb-4 flex flex-col items-center text-center border-b border-white/10 relative">
+        <div className="flex flex-col h-full overflow-hidden">
+          {/* User Profile Card (Pinned at top - never scrolls away) */}
+          <div className="p-6 pb-4 flex flex-col items-center text-center border-b border-white/10 relative flex-shrink-0">
             <button
               onClick={() => setMobileSidebarOpen(false)}
               className="lg:hidden absolute top-4 right-4 text-white/70 hover:text-white"
@@ -384,8 +384,8 @@ export default function AdminLayout({
             </p>
           </div>
 
-          {/* Navigation Section Header with Drag Hint & Reset Order */}
-          <div className="px-4 pt-3 pb-1 flex items-center justify-between text-[11px] font-semibold text-white/50 tracking-wider">
+          {/* Navigation Section Header with Drag Hint & Reset Order (Pinned) */}
+          <div className="px-4 pt-3 pb-1 flex items-center justify-between text-[11px] font-semibold text-white/50 tracking-wider flex-shrink-0">
             <div className="flex items-center gap-1.5">
               <span className="uppercase text-[10px] text-white/40 font-bold">Menu</span>
               <span className="text-[10px] text-white/30 hidden sm:inline">• Drag to reorder</span>
@@ -403,8 +403,8 @@ export default function AdminLayout({
             )}
           </div>
 
-          {/* Reorderable Navigation Links */}
-          <nav className="mt-2 flex-1 space-y-1.5 pl-4 pr-0">
+          {/* Reorderable Navigation Links (Scrolls internally if menu overflows) */}
+          <nav className="mt-2 flex-1 space-y-1.5 pl-4 pr-1 overflow-y-auto min-h-0 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.2)_transparent]">
             {mainNavItems.map((item, index) => {
               const isDraggingThis =
                 draggingInfo?.type === 'main' && draggingInfo?.index === index;
@@ -680,8 +680,8 @@ export default function AdminLayout({
             })}
           </nav>
 
-          {/* Bottom Controls (Live Site + Logout) */}
-          <div className="p-4 border-t border-white/10 space-y-1">
+          {/* Bottom Controls (Live Site + Logout) (Pinned at bottom) */}
+          <div className="p-4 border-t border-white/10 space-y-1 flex-shrink-0">
             <Link
               to="/"
               target="_blank"
@@ -702,10 +702,10 @@ export default function AdminLayout({
         </div>
       </aside>
 
-      {/* ── Main Workspace Area ── */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        {/* Top Header Bar (from reference) */}
-        <header className="px-5 sm:px-8 py-5 flex items-center justify-between gap-4 select-none">
+      {/* ── Main Workspace Area (Independent Smooth Scroll) ── */}
+      <div className="flex-1 h-screen flex flex-col min-w-0 overflow-y-auto">
+        {/* Top Header Bar (Pinned with frosted glass effect) */}
+        <header className="px-5 sm:px-8 py-5 flex items-center justify-between gap-4 select-none flex-shrink-0 sticky top-0 bg-[#EBF2F7]/95 backdrop-blur-md z-30">
           {/* Left Greeting & Mobile Toggle */}
           <div className="flex items-center gap-3">
             <button
