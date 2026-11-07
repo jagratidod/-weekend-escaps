@@ -1,12 +1,13 @@
 import Booking from '../models/Booking.js';
 import Lead from '../models/Lead.js';
 import { notifyAdmins, notifyCustomer } from '../services/firebaseNotificationService.js';
+import { sendOfflineRegistrationEmail } from '../services/emailService.js';
 
 // Helper to generate a unique human-friendly booking reference
-const generateBookingRef = () => {
+const generateBookingRef = (prefix = 'TRK') => {
   const year = new Date().getFullYear();
   const randomPart = Math.floor(10000 + Math.random() * 90000);
-  return `WE-${year}-${randomPart}`;
+  return `${prefix}-${year}-${randomPart}`;
 };
 
 // Helper to check if any traveler has medical disclosures
@@ -352,6 +353,195 @@ export const deleteBooking = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to delete booking',
+      error: error.message,
+    });
+  }
+};
+
+// POST /api/bookings/offline-register (Public - Dedicated Offline Registration Flow)
+export const createOfflineRegistration = async (req, res) => {
+  try {
+    const {
+      tripName,
+      packageId,
+      travelDate,
+      friendlyTravelDate,
+      bookingType = 'group',
+      totalPersons = 1,
+      primaryContact,
+      travelers = [],
+      emergencyContact,
+      payment,
+    } = req.body;
+
+    // Strict validation
+    if (!tripName || !travelDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'Trip name and departure date are required.',
+      });
+    }
+
+    if (!primaryContact?.name || !primaryContact?.email || !primaryContact?.phone) {
+      return res.status(400).json({
+        success: false,
+        message: 'Primary traveler name, email, and phone number are required.',
+      });
+    }
+
+    if (!payment?.utrNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'Payment UTR or transaction reference number is required.',
+      });
+    }
+
+    const companyName = process.env.COMPANY_NAME || 'Treki Travels';
+    const prefix = companyName.toLowerCase().includes('treki') ? 'TRK' : 'WE';
+
+    // Generate unique collision-free booking reference
+    let bookingRef = generateBookingRef(prefix);
+    let existing = await Booking.findOne({ bookingRef });
+    while (existing) {
+      bookingRef = generateBookingRef(prefix);
+      existing = await Booking.findOne({ bookingRef });
+    }
+
+    const personsCount = Math.max(1, Number(totalPersons) || (travelers.length > 0 ? travelers.length : 1));
+    const amountPaid = Number(payment.amountPaid) || 0;
+
+    // Detect medical alerts
+    const hasTravelerMedical = detectMedicalAlert(travelers);
+    const hasEmergencyHealth = Boolean(emergencyContact?.healthInfo && emergencyContact.healthInfo.trim().length > 2);
+    const hasMedicalAlert = hasTravelerMedical || hasEmergencyHealth;
+
+    // Build travelers array ensuring Traveler 1 is included
+    const allTravelers = (Array.isArray(travelers) && travelers.length > 0)
+      ? travelers
+      : [
+          {
+            id: 1,
+            name: primaryContact.name.trim(),
+            email: primaryContact.email.trim(),
+            phone: primaryContact.phone.trim(),
+            gender: primaryContact.gender || '',
+            age: primaryContact.age ? Number(primaryContact.age) : null,
+            medical: emergencyContact?.healthInfo || '',
+          },
+        ];
+
+    // Create Booking model
+    const newBooking = new Booking({
+      bookingRef,
+      packageId: packageId || 'offline-custom',
+      packageName: tripName.trim(),
+      travelDate,
+      friendlyTravelDate: friendlyTravelDate || travelDate,
+      totalPersons: personsCount,
+      sharingType: bookingType === 'solo' ? 'Solo Traveler' : 'Group Booking',
+      bookingType: bookingType === 'solo' ? 'solo' : 'group',
+      bookingSource: 'offline_registration',
+
+      primaryContact: {
+        name: primaryContact.name.trim(),
+        email: primaryContact.email.trim(),
+        phone: primaryContact.phone.trim(),
+        gender: primaryContact.gender || '',
+        age: primaryContact.age ? Number(primaryContact.age) : null,
+      },
+
+      travelers: allTravelers.map((t, idx) => ({
+        id: t.id || idx + 1,
+        name: t.name ? t.name.trim() : `Traveler ${idx + 1}`,
+        email: t.email ? t.email.trim() : (idx === 0 ? primaryContact.email.trim() : ''),
+        gender: t.gender || '',
+        age: t.age ? Number(t.age) : null,
+        phone: t.phone ? t.phone.trim() : (idx === 0 ? primaryContact.phone.trim() : ''),
+        medical: t.medical ? t.medical.trim() : (idx === 0 ? (emergencyContact?.healthInfo || '') : ''),
+      })),
+
+      emergencyContact: {
+        name: emergencyContact?.name ? emergencyContact.name.trim() : '',
+        phone: emergencyContact?.phone ? emergencyContact.phone.trim() : '',
+        relationship: emergencyContact?.relationship || 'Parent',
+        healthInfo: emergencyContact?.healthInfo ? emergencyContact.healthInfo.trim() : '',
+      },
+
+      pricing: {
+        pricePerPerson: amountPaid > 0 && personsCount > 0 ? Math.round(amountPaid / personsCount) : 0,
+        subtotal: amountPaid,
+        couponCode: '',
+        discountAmount: 0,
+        totalPayable: amountPaid,
+        advanceAmount: amountPaid,
+        remainingBalance: 0,
+        paymentOption: 'advance',
+        amountPaidNow: amountPaid,
+      },
+
+      paymentDetails: {
+        utrNumber: payment.utrNumber.trim(),
+        paymentMethod: payment.paymentMethod || 'UPI',
+        amountPaid,
+        remarks: payment.remarks ? payment.remarks.trim() : '',
+      },
+
+      paymentMethod: `Offline (${payment.paymentMethod || 'UPI'}) - UTR: ${payment.utrNumber.trim()}`,
+      bookingStatus: 'confirmed',
+      paymentStatus: 'advance_paid',
+      paymentVerifiedAt: new Date(),
+      hasMedicalAlert,
+      adminNotes: `Registered via /registration. UTR: ${payment.utrNumber.trim()}${payment.remarks ? ` | Remarks: ${payment.remarks.trim()}` : ''}`,
+    });
+
+    await newBooking.save();
+
+    // Mirror to Leads collection for CRM visibility
+    try {
+      await Lead.create({
+        name: primaryContact.name.trim(),
+        email: primaryContact.email.trim(),
+        phone: primaryContact.phone.trim(),
+        company: `${personsCount} Traveler(s) [Offline: ${bookingRef}]`,
+        subject: `Offline Registration: ${tripName} (Ref: ${bookingRef})`,
+        message: `Booking Ref: ${bookingRef}\nTrip: ${tripName}\nDate: ${friendlyTravelDate || travelDate}\nTravelers: ${personsCount}\nUTR / Ref: ${payment.utrNumber}\nAmount Paid: ₹${amountPaid}\nPayment Method: ${payment.paymentMethod || 'UPI'}\nEmergency Contact: ${emergencyContact?.name || 'N/A'} (${emergencyContact?.phone || 'N/A'})\nMedical Notes: ${emergencyContact?.healthInfo || 'None'}`,
+        source: 'offline_registration',
+      });
+    } catch (leadErr) {
+      console.warn('[createOfflineRegistration] Lead mirror warning:', leadErr.message);
+    }
+
+    // Send the requested confirmation email via Gmail/SMTP (or simulation fallback)
+    const emailResult = await sendOfflineRegistrationEmail(newBooking);
+
+    // Push notification to Admin dashboard
+    try {
+      await notifyAdmins({
+        title: '📋 New Offline Registration!',
+        body: `${primaryContact.name} submitted registration for ${tripName} (${personsCount} Travelers). UTR: ${payment.utrNumber}`,
+        data: {
+          type: 'admin_booking',
+          id: bookingRef,
+          link: '/admin',
+        },
+        notificationId: `offline_reg_${bookingRef}`,
+      });
+    } catch (notifErr) {
+      console.warn('[createOfflineRegistration] Push notification warning:', notifErr.message);
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: 'Registration completed successfully! Confirmation email dispatched.',
+      bookingRef,
+      booking: newBooking,
+      emailStatus: emailResult,
+    });
+  } catch (error) {
+    console.error('[createOfflineRegistration Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to process registration. Please try again.',
       error: error.message,
     });
   }

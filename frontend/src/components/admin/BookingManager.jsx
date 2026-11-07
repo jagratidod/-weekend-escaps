@@ -436,6 +436,11 @@ export default function BookingManager() {
                         <span className="text-[10px] text-neutral-400 font-sans block">
                           {new Date(booking.createdAt).toLocaleDateString('en-GB')}
                         </span>
+                        {booking.bookingSource === 'offline_registration' && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-purple-50 text-purple-700 border border-purple-200 mt-1">
+                            Offline (UTR)
+                          </span>
+                        )}
                       </td>
 
                       {/* Customer / Primary Contact */}
@@ -475,6 +480,11 @@ export default function BookingManager() {
                         <p className="font-black text-[#1A384C]">
                           Paid: {formatCurrency(pricing.amountPaidNow || 0)}
                         </p>
+                        {booking.paymentDetails?.utrNumber && (
+                          <p className="text-[10px] font-mono text-sky-700 font-bold truncate max-w-[140px]" title={`UTR: ${booking.paymentDetails.utrNumber}`}>
+                            UTR: {booking.paymentDetails.utrNumber}
+                          </p>
+                        )}
                         {pricing.remainingBalance > 0 ? (
                           <p className="text-[10px] font-bold text-amber-700">
                             Due: {formatCurrency(pricing.remainingBalance)} (Basecamp)
@@ -627,6 +637,7 @@ export default function BookingManager() {
                 </div>
               </div>
 
+              
               {/* Primary Contact Card */}
               <div className="p-4 rounded-xl border border-neutral-200 space-y-2">
                 <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-400">
@@ -648,6 +659,47 @@ export default function BookingManager() {
                 </div>
               </div>
 
+              {/* Emergency Contact & Payment UTR (For Offline Registrations) */}
+              {(selectedBooking.emergencyContact?.name || selectedBooking.paymentDetails?.utrNumber) && (
+                <div className="p-4 rounded-xl border border-sky-200 bg-sky-50/50 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-sky-800">
+                      Emergency Contact &amp; Offline Verification
+                    </span>
+                    {selectedBooking.paymentDetails?.utrNumber && (
+                      <span className="font-mono text-xs font-black px-2 py-0.5 rounded bg-sky-200 text-sky-900">
+                        UTR: {selectedBooking.paymentDetails.utrNumber} ({selectedBooking.paymentDetails.paymentMethod || 'UPI'})
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
+                    <div>
+                      <p className="text-[10px] text-sky-600 font-medium">Contact Person</p>
+                      <p className="font-bold text-neutral-900">{selectedBooking.emergencyContact?.name || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-sky-600 font-medium">Relationship</p>
+                      <p className="font-bold text-neutral-900">{selectedBooking.emergencyContact?.relationship || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-sky-600 font-medium">Emergency Phone</p>
+                      <p className="font-bold text-neutral-900">{selectedBooking.emergencyContact?.phone || 'N/A'}</p>
+                    </div>
+                  </div>
+                  {selectedBooking.emergencyContact?.healthInfo && (
+                    <div className="mt-2 text-xs bg-white p-2.5 rounded-lg border border-sky-100 text-neutral-700">
+                      <span className="font-bold text-rose-600">Health Disclosures:</span> {selectedBooking.emergencyContact.healthInfo}
+                    </div>
+                  )}
+                  {selectedBooking.paymentDetails?.remarks && (
+                    <div className="text-xs text-neutral-600">
+                      <span className="font-semibold">Customer Remarks:</span> {selectedBooking.paymentDetails.remarks}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              
               {/* Travelers Manifest */}
               <div className="space-y-3">
                 <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-400 block">
@@ -690,6 +742,7 @@ export default function BookingManager() {
                 </div>
               </div>
 
+              
               {/* Pricing & Financial Breakdown */}
               <div className="p-4 rounded-xl border border-neutral-200 space-y-2 bg-[#FAFBFD]">
                 <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-400">
@@ -723,6 +776,7 @@ export default function BookingManager() {
                 </div>
               </div>
 
+              
               {/* Admin Internal Notes */}
               <div className="space-y-2">
                 <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-400 block">
@@ -746,7 +800,8 @@ export default function BookingManager() {
                   </button>
                 </div>
               </div>
-            </div>
+
+                          </div>
 
             {/* Modal Footer */}
             <div className="p-4 border-t border-neutral-100 flex items-center justify-between bg-neutral-50">

@@ -15,6 +15,9 @@ import PushNotificationToast from './components/common/PushNotificationToast';
 function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const isRegistrationRoute = location.pathname.startsWith('/registration');
+  const hideGlobalLayout = isAdminRoute || isRegistrationRoute;
+
   const { whatsappUrl } = useSettings();
   const { foregroundNotification, dismissForegroundNotification } = usePushNotifications();
 
@@ -26,19 +29,19 @@ function AppContent() {
         onDismiss={dismissForegroundNotification}
       />
 
-      {/* Sticky Header Navbar (hidden on /admin routes) */}
-      {!isAdminRoute && <Header />}
+      {/* Sticky Header Navbar (hidden on /admin and /registration routes) */}
+      {!hideGlobalLayout && <Header />}
 
       {/* Dynamic Route Pages */}
       <main className="flex-grow">
         <AppRoutes />
       </main>
 
-      {/* Footer (hidden on /admin routes) */}
-      {!isAdminRoute && <Footer />}
+      {/* Footer (hidden on /admin and /registration routes) */}
+      {!hideGlobalLayout && <Footer />}
 
-      {/* Floating WhatsApp Action Button (hidden on /admin routes) */}
-      {!isAdminRoute && (
+      {/* Floating WhatsApp Action Button (hidden on /admin and /registration routes) */}
+      {!hideGlobalLayout && (
         <a
           href={whatsappUrl || BRAND.whatsappUrl}
           target="_blank"

@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   createBooking,
+  createOfflineRegistration,
   getBookings,
   getBookingById,
   updateBookingStatus,
@@ -12,6 +13,9 @@ const router = express.Router();
 
 // Public checkout submission
 router.post('/', createBooking);
+
+// Public offline registration submission (dedicated hidden flow)
+router.post('/offline-register', createOfflineRegistration);
 
 // Protected admin endpoints
 router.get('/', protect, getBookings);

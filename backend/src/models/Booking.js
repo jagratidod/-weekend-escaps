@@ -97,9 +97,32 @@ const bookingSchema = new mongoose.Schema(
       default: 'unpaid',
       index: true,
     },
+    bookingSource: {
+      type: String,
+      enum: ['online_checkout', 'offline_registration'],
+      default: 'online_checkout',
+      index: true,
+    },
+    bookingType: {
+      type: String,
+      enum: ['solo', 'group'],
+      default: 'group',
+    },
     paymentMethod: {
       type: String,
       default: 'PhonePe Standard Checkout',
+    },
+    paymentDetails: {
+      utrNumber: { type: String, default: '', trim: true },
+      paymentMethod: { type: String, default: 'UPI' },
+      amountPaid: { type: Number, default: 0 },
+      remarks: { type: String, default: '' },
+    },
+    emergencyContact: {
+      name: { type: String, default: '', trim: true },
+      phone: { type: String, default: '', trim: true },
+      relationship: { type: String, default: '' },
+      healthInfo: { type: String, default: '' },
     },
     merchantOrderId: {
       type: String,

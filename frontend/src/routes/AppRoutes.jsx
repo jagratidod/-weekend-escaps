@@ -13,6 +13,7 @@ import CancellationPolicyPage from '../pages/CancellationPolicyPage';
 import PaymentReturnPage from '../pages/PaymentReturnPage';
 import PhonePeCheckoutPage from '../pages/PhonePeCheckoutPage';
 import GalleryPage from '../pages/GalleryPage';
+import OfflineRegistrationPage from '../pages/OfflineRegistrationPage';
 import AdminLoginPage from '../pages/admin/AdminLoginPage';
 import AdminForgotPassword from '../pages/admin/AdminForgotPassword';
 import AdminResetPassword from '../pages/admin/AdminResetPassword';
@@ -45,6 +46,9 @@ export function AppRoutes() {
       <Route path="/checkout/phonepe" element={<PhonePeCheckoutPage />} />
       <Route path="/payment/phonepe/return" element={<PaymentReturnPage />} />
       <Route path="/plan-trip" element={<Navigate to="/" replace />} />
+
+      {/* Dedicated Offline Registration (Hidden direct URL route) */}
+      <Route path="/registration" element={<OfflineRegistrationPage />} />
 
       {/* Admin Portal Routes */}
       <Route path="/admin/login" element={<AdminLoginPage />} />
