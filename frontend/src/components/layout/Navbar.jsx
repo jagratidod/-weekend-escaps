@@ -4,7 +4,6 @@ import { ChevronDown, Menu, X } from 'lucide-react';
 import { NAV_LINKS, getPackageDropdownName } from '../../utils/constants';
 import { useSettings } from '../../context/SettingsContext';
 import { usePackages } from '../../context/PackageContext';
-import NotificationBell from '../common/NotificationBell';
 
 export function Navbar({
   mobileMenuOpen = false,
@@ -179,15 +178,8 @@ export function Navbar({
             })}
           </nav>
 
-          {/* Right CTAs */}
-          <div className="hidden sm:flex items-center gap-3">
-            {/* Push Notification Toggle Bell */}
-            <NotificationBell isLight={useWhiteText} />
-          </div>
-
           {/* Mobile Hamburger Toggle */}
           <div className="flex lg:hidden items-center gap-2">
-            <NotificationBell isLight={useWhiteText} />
             <button
               type="button"
               onClick={onToggleMobileMenu}
