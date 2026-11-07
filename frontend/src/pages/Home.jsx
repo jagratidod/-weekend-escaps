@@ -15,7 +15,7 @@ import { DEFAULT_SECTION_ORDER } from '../utils/defaultHomeSections';
 const SECTION_COMPONENTS = {
   hero: <Hero key="hero" />,
   reels: (
-    <div key="reels" className="bg-[#F7F7F5] pt-12 pb-4 w-full overflow-hidden" style={{ overflowX: 'clip' }}>
+    <div key="reels" className="bg-white py-10 sm:py-14 md:py-16 w-full overflow-hidden" style={{ overflowX: 'clip' }}>
       <TripReelsRow />
     </div>
   ),

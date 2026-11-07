@@ -1,17 +1,20 @@
 export const TRIP_REELS = [
   {
     id: "reel-1",
+    author: "Jove Singh",
+    trek: "KEDARKANTHA TREK",
+    location: "JUDA KA TALAB",
+    video: "/videos/reels/trip-reel-1.mp4",
+    poster: "/newimage/exploresection/kedarkantha.png",
+    timeOffset: 0.001,
+  },
+  {
+    id: "reel-2",
     author: "Xplorer Anil",
     trek: "KEDARKANTHA TREK",
     video: "/videos/reels/trip-reel-1.mp4",
     poster: "/newimage/exploresection/kedarkantha.png",
-  },
-  {
-    id: "reel-2",
-    author: "Jove Singh",
-    trek: "KEDARKANTHA TREK",
-    video: "/videos/reels/trip-reel-1.mp4",
-    poster: "/newimage/about/kedarkantha.png",
+    timeOffset: 1.2,
   },
   {
     id: "reel-3",
@@ -19,6 +22,7 @@ export const TRIP_REELS = [
     trek: "KEDARKANTHA TREK",
     video: "/videos/reels/trip-reel-1.mp4",
     poster: "/newimage/exploresection/manali.png",
+    timeOffset: 2.5,
   },
   {
     id: "reel-4",
@@ -26,19 +30,31 @@ export const TRIP_REELS = [
     trek: "KEDARKANTHA TREK",
     video: "/videos/reels/trip-reel-1.mp4",
     poster: "/newimage/about/image1.png",
+    timeOffset: 3.8,
   },
   {
     id: "reel-5",
+    author: "Jove Singh",
+    trek: "KEDARKANTHA TREK",
+    location: "JUDA KA TALAB",
+    video: "/videos/reels/trip-reel-1.mp4",
+    poster: "/newimage/about/kedarkantha.png",
+    timeOffset: 0.001,
+  },
+  {
+    id: "reel-6",
     author: "Priya Sharma",
     trek: "KEDARKANTHA TREK",
     video: "/videos/reels/trip-reel-1.mp4",
     poster: "/newimage/about/kashmir.png",
+    timeOffset: 1.5,
   },
   {
-    id: "reel-6",
+    id: "reel-7",
     author: "Vikram Singhania",
     trek: "SPITI VALLEY EXPEDITION",
     video: "/videos/reels/trip-reel-1.mp4",
     poster: "/newimage/about/vally.png",
+    timeOffset: 2.8,
   },
 ];

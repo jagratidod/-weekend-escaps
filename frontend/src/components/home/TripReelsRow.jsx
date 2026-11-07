@@ -4,8 +4,6 @@ import {
   Pause,
   Volume2,
   VolumeX,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { EffectCoverflow, Navigation, Mousewheel } from 'swiper/modules';
@@ -15,7 +13,6 @@ import { getImageUrl } from '../../utils/imageHelper';
 // Swiper styles
 import 'swiper/css';
 import 'swiper/css/effect-coverflow';
-import 'swiper/css/navigation';
 
 /**
  * Returns a lightweight static poster image for side cards or fallback
@@ -33,43 +30,43 @@ const getReelThumbnail = (reel) => {
 };
 
 /**
- * Robust Reel Card Media that guarantees the starting frame is displayed
- * without any black screen or broken image icons.
+ * Reel Card Media for Side Cards:
+ * Shows the video frame cued to its starting timestamp, or poster fallback.
  */
 function ReelCardMedia({ reel, alt = '' }) {
   const [imgError, setImgError] = useState(false);
   const posterUrl = getReelThumbnail(reel);
+  const timeOffset = reel?.timeOffset ?? 0.001;
 
   return (
     <div className="relative w-full h-full bg-neutral-900 overflow-hidden pointer-events-none">
-      {/* Starting frame video fallback: immediately cues to 0.001s without autoplay */}
-      {reel?.video && (
+      {reel?.video ? (
         <video
-          src={`${reel.video}#t=0.001`}
+          src={`${reel.video}#t=${timeOffset}`}
           preload="metadata"
           muted
           playsInline
           className="absolute inset-0 w-full h-full object-cover pointer-events-none"
         />
-      )}
-      {/* Poster image overlay if valid */}
-      {!imgError && posterUrl && (
-        <img
-          src={posterUrl}
-          alt={alt || reel?.author || 'Travel Reel'}
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 pointer-events-none"
-          loading="lazy"
-          onError={() => setImgError(true)}
-        />
+      ) : (
+        !imgError && posterUrl && (
+          <img
+            src={posterUrl}
+            alt={alt || reel?.author || 'Travel Reel'}
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+            loading="lazy"
+            onError={() => setImgError(true)}
+          />
+        )
       )}
     </div>
   );
 }
 
 /**
- * Active Center Reel Card
- * Permanently anchored in the center of the viewport by Swiper centeredSlides.
- * Plays/pauses in-place without opening any fullscreen modal.
+ * Active Center Reel Card:
+ * Centered prominently in the viewport with higher elevation and scale.
+ * Plays the reel in loop. Tapping toggles play/pause, top-right toggles audio.
  */
 function ActiveCenterReelCard({
   reel,
@@ -86,9 +83,6 @@ function ActiveCenterReelCard({
 
     if (!isPlaying) {
       video.pause();
-      try {
-        if (video.currentTime === 0) video.currentTime = 0.001;
-      } catch (_) {}
       return;
     }
 
@@ -102,111 +96,114 @@ function ActiveCenterReelCard({
   return (
     <div
       onClick={onTogglePlay}
-      className="group relative z-30 w-full h-[330px] sm:h-[385px] md:h-[425px] lg:h-[465px] xl:h-[490px] rounded-[22px] sm:rounded-[26px] overflow-hidden shadow-2xl shadow-black/45 ring-3 ring-white/95 border border-white/20 bg-neutral-950 transition-all duration-300 transform scale-100 cursor-pointer"
+      className="group relative z-30 w-full h-[360px] xs:h-[400px] sm:h-[450px] md:h-[490px] lg:h-[520px] rounded-[24px] sm:rounded-[28px] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.38)] bg-neutral-950 transition-all duration-300 cursor-pointer select-none"
     >
       <video
         ref={videoRef}
         key={reel.video}
-        src={`${reel.video}#t=0.001`}
+        src={reel.video}
         loop
         playsInline
         preload="auto"
         poster={getReelThumbnail(reel)}
         muted={!isAudioOn}
-        className="w-full h-full object-cover"
-        onLoadedData={(e) => {
-          if (!isPlaying && e.target.currentTime === 0) {
-            try {
-              e.target.currentTime = 0.001;
-            } catch (_) {}
-          }
-        }}
+        className="w-full h-full object-cover pointer-events-none"
       />
 
-      {/* Center Play Button Overlay when paused */}
-      {!isPlaying && (
-        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-          <div className="w-12 h-12 rounded-full bg-black/65 backdrop-blur-md text-white flex items-center justify-center shadow-xl ring-2 ring-white/60 transition-transform group-hover:scale-110">
-            <Play className="w-5 h-5 fill-white text-white ml-0.5" />
-          </div>
-        </div>
-      )}
-
-      {/* Top-Left: Play / Pause Toggle Button */}
+      {/* Top-Left: Play / Pause Icon (clean white, matching screenshot) */}
       <button
         type="button"
         onClick={(e) => {
           e.stopPropagation();
           onTogglePlay();
         }}
-        className="absolute top-3 left-3 z-20 w-7 h-7 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center hover:scale-110 transition-transform cursor-pointer shadow-md"
+        className="absolute top-3.5 left-3.5 sm:top-4 sm:left-4 z-20 text-white/95 hover:text-white transition-transform hover:scale-110 cursor-pointer drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
         title={isPlaying ? 'Pause video' : 'Play video'}
       >
         {isPlaying ? (
-          <Pause className="w-3.5 h-3.5 text-white fill-white" />
+          <Pause className="w-4 h-4 sm:w-[18px] sm:h-[18px] stroke-[2.2] fill-transparent" />
         ) : (
-          <Play className="w-3.5 h-3.5 text-white fill-white ml-0.5" />
+          <Play className="w-4 h-4 sm:w-[18px] sm:h-[18px] stroke-[2.2] fill-white/20 ml-0.5" />
         )}
       </button>
 
-      {/* Top-Right: Sound Toggle Button */}
+      {/* Top-Right: Sound Toggle Button (clean white, matching screenshot) */}
       <button
         type="button"
         onClick={(e) => {
           e.stopPropagation();
           onToggleSound();
         }}
-        className="absolute top-3 right-3 z-20 w-7 h-7 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center hover:scale-110 transition-transform cursor-pointer shadow-md"
+        className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 z-20 text-white/95 hover:text-white transition-transform hover:scale-110 cursor-pointer drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
         title={isAudioOn ? 'Mute audio' : 'Play audio with sound'}
       >
         {isAudioOn ? (
-          <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+          <Volume2 className="w-4 h-4 sm:w-[18px] sm:h-[18px] stroke-[2]" />
         ) : (
-          <VolumeX className="w-3.5 h-3.5 text-white" />
+          <VolumeX className="w-4 h-4 sm:w-[18px] sm:h-[18px] stroke-[2]" />
         )}
       </button>
 
-      {/* Bottom Overlay: Author & Trek Name */}
-      <div className="absolute bottom-0 inset-x-0 p-3.5 sm:p-4 bg-gradient-to-t from-black/90 via-black/45 to-transparent text-white z-20 pointer-events-none">
-        <h3 className="text-sm sm:text-base font-black text-white leading-tight drop-shadow-md truncate">
-          {reel.author}
-        </h3>
-        <p className="text-[10px] font-bold text-neutral-300 uppercase tracking-wider mt-0.5 drop-shadow-sm truncate">
-          {reel.trek}
-        </p>
+      {/* Bottom Overlay: Author & Trek Name with smooth fade */}
+      <div className="absolute bottom-0 inset-x-0 p-4 sm:p-5 pb-5 sm:pb-6 bg-gradient-to-t from-black/85 via-black/35 to-transparent text-white z-20 pointer-events-none">
+        <div className="flex items-end justify-between gap-2">
+          <div className="min-w-0">
+            <h3 className="text-base sm:text-lg lg:text-[19px] font-bold text-white tracking-wide leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] truncate">
+              {reel.author}
+            </h3>
+            <p className="text-[10px] sm:text-[11px] font-semibold text-neutral-300 uppercase tracking-wider drop-shadow-sm mt-0.5 truncate">
+              {reel.trek}
+            </p>
+          </div>
+          {reel.location && (
+            <span className="shrink-0 text-[9px] sm:text-[10px] font-bold text-neutral-300/90 tracking-wide uppercase drop-shadow-sm flex items-center gap-0.5 pb-0.5">
+              📍 {reel.location}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
 /**
- * Side Poster Card
- * Lightweight static thumbnail. Clicking it smoothly glides it into the center.
+ * Side Poster Card:
+ * Scaled-down side preview card with flat front-facing perspective.
+ * Clicking glides it smoothly into the center.
  */
 function SidePosterCard({ reel }) {
   return (
-    <div className="group relative w-full h-[330px] sm:h-[385px] md:h-[425px] lg:h-[465px] xl:h-[490px] rounded-[22px] sm:rounded-[26px] overflow-hidden shadow-lg shadow-black/25 bg-neutral-900 border border-white/20 cursor-pointer transition-all duration-300 hover:border-white/40">
+    <div className="group relative w-full h-[360px] xs:h-[400px] sm:h-[450px] md:h-[490px] lg:h-[520px] rounded-[22px] sm:rounded-[26px] overflow-hidden shadow-[0_10px_25px_rgba(0,0,0,0.2)] bg-neutral-900 cursor-pointer select-none transition-all duration-300">
       <ReelCardMedia reel={reel} alt={reel.author} />
-      <div className="absolute inset-0 bg-black/35 group-hover:bg-black/15 transition-colors pointer-events-none" />
+      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors pointer-events-none" />
 
       {/* Top-Left: Play Outline Icon */}
-      <div className="absolute top-2.5 left-2.5 z-10 pointer-events-none drop-shadow-md opacity-80">
-        <Play className="w-3.5 h-3.5 text-white stroke-[2.2] fill-transparent" />
+      <div className="absolute top-3.5 left-3.5 sm:top-4 sm:left-4 z-10 pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] opacity-85">
+        <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white stroke-[2.2] fill-transparent" />
       </div>
 
       {/* Top-Right: Sound Icon */}
-      <div className="absolute top-2.5 right-2.5 z-10 pointer-events-none drop-shadow-md opacity-80">
-        <VolumeX className="w-3.5 h-3.5 text-white" />
+      <div className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 z-10 pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] opacity-85">
+        <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white stroke-[2]" />
       </div>
 
-      {/* Bottom Overlay */}
-      <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/85 via-black/40 to-transparent text-white z-10 pointer-events-none">
-        <h3 className="text-xs sm:text-sm font-bold text-white leading-tight drop-shadow-md truncate">
-          {reel.author}
-        </h3>
-        <p className="text-[9px] font-semibold text-neutral-300 uppercase tracking-wider mt-0.5 drop-shadow-sm truncate">
-          {reel.trek}
-        </p>
+      {/* Bottom Overlay: Author & Trek Name */}
+      <div className="absolute bottom-0 inset-x-0 p-3.5 sm:p-4 pb-4 sm:pb-5 bg-gradient-to-t from-black/85 via-black/35 to-transparent text-white z-10 pointer-events-none">
+        <div className="flex items-end justify-between gap-1.5">
+          <div className="min-w-0">
+            <h3 className="text-xs sm:text-sm md:text-[15px] font-bold text-white leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] truncate">
+              {reel.author}
+            </h3>
+            <p className="text-[9px] sm:text-[10px] font-semibold text-neutral-300 uppercase tracking-wider mt-0.5 drop-shadow-sm truncate">
+              {reel.trek}
+            </p>
+          </div>
+          {reel.location && (
+            <span className="shrink-0 text-[8px] sm:text-[9px] font-semibold text-neutral-300/80 uppercase tracking-wide drop-shadow-sm flex items-center gap-0.5 pb-0.5">
+              📍 {reel.location}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -215,13 +212,12 @@ function SidePosterCard({ reel }) {
 export function TripReelsRow({
   title = 'What Our Travellers Say',
   subtitle = '',
-  maxReels = 5,
+  maxReels = 10,
   className = '',
 }) {
   const [allReels, setAllReels] = useState(TRIP_REELS);
-  const [activeRealIndex, setActiveRealIndex] = useState(0);
   const [isAudioOn, setIsAudioOn] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
 
   const swiperRef = useRef(null);
 
@@ -252,7 +248,13 @@ export function TripReelsRow({
     return maxReels && list.length > maxReels ? list.slice(0, maxReels) : list;
   }, [allReels, maxReels]);
 
-  const baseTotal = reels.length;
+  // Find index of Anil Yogi to start centered as in screenshot, or default to index 2
+  const centerItemIndex = useMemo(() => {
+    const foundIdx = reels.findIndex(
+      (r) => (r.author || '').toLowerCase().includes('anil yogi')
+    );
+    return foundIdx !== -1 ? foundIdx : Math.min(2, Math.max(0, reels.length - 1));
+  }, [reels]);
 
   // Prepare display array for seamless infinite looping in Swiper Coverflow
   const displayReels = useMemo(() => {
@@ -266,10 +268,10 @@ export function TripReelsRow({
 
   const initialSlideIndex = useMemo(() => {
     if (reels.length < 6) {
-      return reels.length; // Start in middle set
+      return reels.length + centerItemIndex; // Start in middle set at centerItemIndex
     }
-    return 0;
-  }, [reels.length]);
+    return centerItemIndex;
+  }, [reels.length, centerItemIndex]);
 
   // Toggle play/pause for active center video
   const handleTogglePlay = useCallback(() => {
@@ -297,11 +299,11 @@ export function TripReelsRow({
   if (!reels || reels.length === 0) return null;
 
   return (
-    <div className={`mb-8 w-full ${className}`}>
+    <div className={`w-full bg-white ${className}`}>
       {/* ── Section Title ── */}
       {title && (
-        <div className="text-center mb-5 px-4">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#111111] tracking-tight">
+        <div className="text-center mb-6 sm:mb-10 px-4">
+          <h2 className="text-2xl sm:text-3xl md:text-[34px] font-bold text-[#111111] tracking-tight">
             {title}
           </h2>
           {subtitle && (
@@ -312,30 +314,9 @@ export function TripReelsRow({
         </div>
       )}
 
-      {/* ── 3D Coverflow Stage with Visibly Animated Scrolling ── */}
-      <div className="relative flex items-center justify-center min-h-[350px] sm:min-h-[400px] md:min-h-[440px] lg:min-h-[480px] w-full px-2 sm:px-4 md:px-6 overflow-hidden select-none py-2">
-        {/* Navigation Arrow Left */}
-        <button
-          type="button"
-          onClick={() => swiperRef.current?.slidePrev()}
-          className="absolute left-2 sm:left-4 md:left-6 z-40 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white/95 hover:bg-[#FF6B16] text-neutral-800 hover:text-white shadow-xl flex items-center justify-center transition-all cursor-pointer border border-neutral-200/80 active:scale-95"
-          aria-label="Previous reel"
-        >
-          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-        </button>
-
-        {/* Navigation Arrow Right */}
-        <button
-          type="button"
-          onClick={() => swiperRef.current?.slideNext()}
-          className="absolute right-2 sm:right-4 md:right-6 z-40 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white/95 hover:bg-[#FF6B16] text-neutral-800 hover:text-white shadow-xl flex items-center justify-center transition-all cursor-pointer border border-neutral-200/80 active:scale-95"
-          aria-label="Next reel"
-        >
-          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-        </button>
-
-        {/* Swiper Coverflow Carousel */}
-        <div className="w-full max-w-[1380px] mx-auto overflow-hidden">
+      {/* ── Carousel Stage with Centered Focus ── */}
+      <div className="relative flex items-center justify-center min-h-[380px] xs:min-h-[420px] sm:min-h-[470px] md:min-h-[510px] lg:min-h-[550px] w-full px-2 sm:px-4 md:px-6 overflow-hidden select-none py-2">
+        <div className="w-full max-w-[1400px] mx-auto overflow-hidden">
           <Swiper
             onSwiper={(swiper) => {
               swiperRef.current = swiper;
@@ -345,11 +326,11 @@ export function TripReelsRow({
             grabCursor={true}
             centeredSlides={true}
             slidesPerView="auto"
-            spaceBetween={14}
+            spaceBetween={20}
             slideToClickedSlide={true}
             loop={displayReels.length >= 6}
             initialSlide={initialSlideIndex}
-            speed={550}
+            speed={500}
             mousewheel={{
               forceToAxis: true,
               releaseOnEdges: true,
@@ -358,13 +339,10 @@ export function TripReelsRow({
             coverflowEffect={{
               rotate: 0,
               stretch: 0,
-              depth: 95,
-              modifier: 1.3,
-              scale: 0.88,
+              depth: 60,
+              modifier: 1,
+              scale: 0.84,
               slideShadows: false,
-            }}
-            onSlideChange={(swiper) => {
-              setActiveRealIndex(swiper.realIndex % baseTotal);
             }}
             className="w-full py-4 select-none !overflow-visible"
           >
@@ -373,7 +351,7 @@ export function TripReelsRow({
               return (
                 <SwiperSlide
                   key={slideKey}
-                  className="!w-[190px] xs:!w-[215px] sm:!w-[240px] md:!w-[265px] lg:!w-[285px] !shrink-0"
+                  className="!w-[195px] xs:!w-[220px] sm:!w-[245px] md:!w-[270px] lg:!w-[290px] !shrink-0"
                 >
                   {({ isActive }) =>
                     isActive ? (
@@ -393,30 +371,6 @@ export function TripReelsRow({
             })}
           </Swiper>
         </div>
-      </div>
-
-      {/* ── Dot Indicators ── */}
-      <div className="flex items-center justify-center gap-2 mt-4">
-        {reels.map((_, idx) => {
-          const isCurrent = activeRealIndex === idx;
-          return (
-            <button
-              key={`reel-dot-${idx}`}
-              type="button"
-              onClick={() => {
-                if (swiperRef.current) {
-                  swiperRef.current.slideToLoop(idx);
-                }
-              }}
-              className={`transition-all duration-300 rounded-full cursor-pointer ${
-                isCurrent
-                  ? 'w-7 h-2 bg-[#FF6B16]'
-                  : 'w-2 h-2 bg-neutral-300 hover:bg-neutral-400'
-              }`}
-              aria-label={`Go to slide ${idx + 1}`}
-            />
-          );
-        })}
       </div>
     </div>
   );
