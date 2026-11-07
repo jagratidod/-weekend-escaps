@@ -256,22 +256,65 @@ export function TripReelsRow({
     return foundIdx !== -1 ? foundIdx : Math.min(2, Math.max(0, reels.length - 1));
   }, [reels]);
 
+  // Number of times to cycle the reels to maintain an infinite runway buffer
+  const repeatCount = useMemo(() => {
+    if (!reels || reels.length === 0) return 1;
+    // Provide at least 35-42 slides (5-6 cycles) for unbreakable infinite looping
+    return Math.max(6, Math.ceil(36 / reels.length));
+  }, [reels]);
+
+  // Middle cycle for starting and seamless repositioning
+  const middleCycle = useMemo(() => Math.floor(repeatCount / 2), [repeatCount]);
+
+  // Center on middle cycle's centerItemIndex so user has deep buffer on both sides
+  const initialSlideIndex = useMemo(() => {
+    return middleCycle * reels.length + centerItemIndex;
+  }, [middleCycle, reels.length, centerItemIndex]);
+
   // Prepare display array for seamless infinite looping in Swiper Coverflow
   const displayReels = useMemo(() => {
     if (!reels || reels.length === 0) return [];
-    if (reels.length < 6) {
-      // Repeat 3 times to provide plenty of perspective slides on both sides
-      return [...reels, ...reels, ...reels];
+    const repeated = [];
+    for (let r = 0; r < repeatCount; r++) {
+      reels.forEach((item, originalIndex) => {
+        repeated.push({
+          ...item,
+          _displayId: `reel-rep-${r}-${item.id || item._id || originalIndex}`,
+          _originalIndex: originalIndex,
+          _cycle: r,
+        });
+      });
     }
-    return [...reels, ...reels];
-  }, [reels]);
+    return repeated;
+  }, [reels, repeatCount]);
 
-  const initialSlideIndex = useMemo(() => {
-    if (reels.length < 6) {
-      return reels.length + centerItemIndex; // Start in middle set at centerItemIndex
+  // Seamless treadmill safety guard:
+  // When swiper transition ends, if user swiped near either edge of the array,
+  // silently teleport them (0ms speed) back to the middle cycle.
+  const handleTransitionEnd = useCallback((swiper) => {
+    if (!swiper || swiper.destroyed) return;
+    if (typeof swiper.loopFix === 'function') {
+      try {
+        swiper.loopFix();
+      } catch (err) {}
     }
-    return centerItemIndex;
-  }, [reels.length, centerItemIndex]);
+
+    const currentIdx = swiper.activeIndex;
+    const totalSlides = displayReels.length;
+    const len = reels.length;
+    if (len <= 0 || totalSlides <= 0) return;
+
+    const lowerBound = Math.ceil(len * 1.5);
+    const upperBound = totalSlides - Math.ceil(len * 1.5);
+
+    if (currentIdx < lowerBound || currentIdx > upperBound) {
+      const activeOriginalIdx = displayReels[currentIdx]?._originalIndex ?? (currentIdx % len);
+      const safeTargetIndex = middleCycle * len + activeOriginalIdx;
+      if (safeTargetIndex !== currentIdx) {
+        swiper.slideTo(safeTargetIndex, 0, false);
+      }
+    }
+  }, [displayReels, reels.length, middleCycle]);
 
   // Toggle play/pause for active center video
   const handleTogglePlay = useCallback(() => {
@@ -316,8 +359,9 @@ export function TripReelsRow({
 
       {/* ── Carousel Stage with Centered Focus ── */}
       <div className="relative flex items-center justify-center min-h-[380px] xs:min-h-[420px] sm:min-h-[470px] md:min-h-[510px] lg:min-h-[550px] w-full px-2 sm:px-4 md:px-6 overflow-hidden select-none py-2">
-        <div className="w-full max-w-[1400px] mx-auto overflow-hidden">
+        <div className="w-full max-w-[1550px] mx-auto overflow-hidden">
           <Swiper
+            key={`reels-swiper-${reels.length}-${reels[0]?._id || reels[0]?.id || 'def'}`}
             onSwiper={(swiper) => {
               swiperRef.current = swiper;
             }}
@@ -328,12 +372,16 @@ export function TripReelsRow({
             slidesPerView="auto"
             spaceBetween={20}
             slideToClickedSlide={true}
-            loop={displayReels.length >= 6}
+            loop={true}
+            loopedSlides={Math.max(6, reels.length)}
+            loopAdditionalSlides={4}
+            loopPreventsSliding={false}
+            watchSlidesProgress={true}
             initialSlide={initialSlideIndex}
-            speed={500}
+            speed={450}
             mousewheel={{
               forceToAxis: true,
-              releaseOnEdges: true,
+              releaseOnEdges: false,
               sensitivity: 0.8,
             }}
             coverflowEffect={{
@@ -344,31 +392,29 @@ export function TripReelsRow({
               scale: 0.84,
               slideShadows: false,
             }}
+            onSlideChangeTransitionEnd={handleTransitionEnd}
             className="w-full py-4 select-none !overflow-visible"
           >
-            {displayReels.map((reel, idx) => {
-              const slideKey = `reel-slide-${reel._id || reel.id || 'item'}-${idx}`;
-              return (
-                <SwiperSlide
-                  key={slideKey}
-                  className="!w-[195px] xs:!w-[220px] sm:!w-[245px] md:!w-[270px] lg:!w-[290px] !shrink-0"
-                >
-                  {({ isActive }) =>
-                    isActive ? (
-                      <ActiveCenterReelCard
-                        reel={reel}
-                        isPlaying={isPlaying}
-                        isAudioOn={isAudioOn}
-                        onTogglePlay={handleTogglePlay}
-                        onToggleSound={handleToggleSound}
-                      />
-                    ) : (
-                      <SidePosterCard reel={reel} />
-                    )
-                  }
-                </SwiperSlide>
-              );
-            })}
+            {displayReels.map((reel) => (
+              <SwiperSlide
+                key={reel._displayId}
+                className="!w-[195px] xs:!w-[220px] sm:!w-[245px] md:!w-[270px] lg:!w-[290px] !shrink-0"
+              >
+                {({ isActive }) =>
+                  isActive ? (
+                    <ActiveCenterReelCard
+                      reel={reel}
+                      isPlaying={isPlaying}
+                      isAudioOn={isAudioOn}
+                      onTogglePlay={handleTogglePlay}
+                      onToggleSound={handleToggleSound}
+                    />
+                  ) : (
+                    <SidePosterCard reel={reel} />
+                  )
+                }
+              </SwiperSlide>
+            ))}
           </Swiper>
         </div>
       </div>
