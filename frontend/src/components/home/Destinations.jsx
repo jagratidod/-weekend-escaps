@@ -38,32 +38,46 @@ export function Destinations() {
             subtitle="Discover breathtaking places handpicked for your perfect getaway."
             size="compact"
             action={
-              <div className="flex items-center gap-2">
-                {/* Mobile Quick Arrow Navigation */}
-                <div className="flex sm:hidden items-center gap-1.5 mr-1">
-                  <button
-                    onClick={() => swiperInstance?.slidePrev()}
-                    className="w-8 h-8 rounded-full bg-white border border-neutral-200 hover:border-[#FF6B16] text-neutral-700 hover:text-[#FF6B16] flex items-center justify-center transition-all shadow-xs cursor-pointer"
-                    aria-label="Previous destination"
+              <div className="w-full sm:w-auto">
+                {/* ── Mobile View Control Bar (Full-Width, Balanced & Touch-Friendly) ── */}
+                <div className="flex sm:hidden items-center justify-between w-full pt-1">
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => swiperInstance?.slidePrev()}
+                      className="w-9 h-9 rounded-full bg-white border border-neutral-200 hover:border-[#FF6B16] text-neutral-700 hover:text-[#FF6B16] flex items-center justify-center transition-all shadow-xs cursor-pointer active:scale-95"
+                      aria-label="Previous destination"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => swiperInstance?.slideNext()}
+                      className="w-9 h-9 rounded-full bg-white border border-neutral-200 hover:border-[#FF6B16] text-neutral-700 hover:text-[#FF6B16] flex items-center justify-center transition-all shadow-xs cursor-pointer active:scale-95"
+                      aria-label="Next destination"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <Link
+                    to="/packages"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-neutral-200 hover:border-[#FF6B16] bg-white text-xs font-bold text-neutral-800 hover:text-[#FF6B16] transition-all shadow-xs active:scale-95 group"
                   >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => swiperInstance?.slideNext()}
-                    className="w-8 h-8 rounded-full bg-white border border-neutral-200 hover:border-[#FF6B16] text-neutral-700 hover:text-[#FF6B16] flex items-center justify-center transition-all shadow-xs cursor-pointer"
-                    aria-label="Next destination"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+                    <span className="hidden xs:inline">View All Packages</span>
+                    <span className="xs:hidden inline">View All</span>
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                  </Link>
                 </div>
 
-                <Link
-                  to="/packages"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-neutral-300 hover:border-[#FF6B16] text-xs font-bold text-neutral-800 hover:text-[#FF6B16] transition-all bg-white shadow-xs group"
-                >
-                  <span>View All Packages</span>
-                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-                </Link>
+                {/* ── Desktop & Tablet View Button (sm and up) ── */}
+                <div className="hidden sm:flex items-center gap-2">
+                  <Link
+                    to="/packages"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-neutral-300 hover:border-[#FF6B16] text-xs font-bold text-neutral-800 hover:text-[#FF6B16] transition-all bg-white shadow-xs group"
+                  >
+                    <span>View All Packages</span>
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </div>
               </div>
             }
           />

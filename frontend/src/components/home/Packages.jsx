@@ -14,12 +14,13 @@ export function Packages() {
   const scrollContainerRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // Track active slide on scroll for mobile pagination dots
+  // Track active slide on scroll for mobile pagination dots & controls
   const handleScroll = () => {
     if (!scrollContainerRef.current) return;
-    const { scrollLeft } = scrollContainerRef.current;
-    const cardWidth = 300; // approximate card width + gap
-    const newIndex = Math.round(scrollLeft / cardWidth);
+    const container = scrollContainerRef.current;
+    const card = container.children[0];
+    const cardWidth = card ? card.offsetWidth + 16 : 295;
+    const newIndex = Math.round(container.scrollLeft / cardWidth);
     setActiveIndex(Math.min(Math.max(newIndex, 0), displayPackages.length - 1));
   };
 
@@ -32,18 +33,20 @@ export function Packages() {
     }
   };
 
-  const scrollLeft = () => {
+  const handlePrev = () => {
     if (!scrollContainerRef.current) return;
-    scrollContainerRef.current.scrollBy({ left: -280, behavior: 'smooth' });
+    const prevIdx = Math.max(activeIndex - 1, 0);
+    scrollToIndex(prevIdx);
   };
 
-  const scrollRight = () => {
+  const handleNext = () => {
     if (!scrollContainerRef.current) return;
-    scrollContainerRef.current.scrollBy({ left: 280, behavior: 'smooth' });
+    const nextIdx = Math.min(activeIndex + 1, displayPackages.length - 1);
+    scrollToIndex(nextIdx);
   };
 
   return (
-    <section className="py-10 md:py-14 bg-[#F7F7F5]">
+    <section className="py-8 sm:py-10 md:py-14 bg-[#F7F7F5]">
       <Container>
         {/* Section Heading matching screenshot */}
         <FadeIn direction="up">
@@ -53,32 +56,67 @@ export function Packages() {
             subtitle="Handpicked trips with the best experiences, explorations and value."
             size="compact"
             action={
-              <div className="flex items-center gap-2">
-                {/* Mobile Scroll Arrow Buttons */}
-                <div className="flex sm:hidden items-center gap-1.5 mr-1">
-                  <button
-                    onClick={scrollLeft}
-                    className="w-8 h-8 rounded-full bg-white border border-neutral-200 hover:border-[#FF6B16] text-neutral-700 hover:text-[#FF6B16] flex items-center justify-center transition-all shadow-xs cursor-pointer"
-                    aria-label="Previous package"
+              <div className="w-full sm:w-auto">
+                {/* ── Mobile View Control Bar (Full Width, Balanced & Touch-Friendly) ── */}
+                <div className="flex sm:hidden items-center justify-between w-full pt-1">
+                  {/* Left: Quick Navigation Arrows + Slide Counter */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={handlePrev}
+                        disabled={activeIndex === 0}
+                        className={`w-9 h-9 rounded-full bg-white border flex items-center justify-center transition-all shadow-xs cursor-pointer ${
+                          activeIndex === 0
+                            ? 'border-neutral-200 text-neutral-300 opacity-40 cursor-not-allowed'
+                            : 'border-neutral-200 hover:border-[#FF6B16] text-neutral-700 hover:text-[#FF6B16] active:scale-95'
+                        }`}
+                        aria-label="Previous package"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={handleNext}
+                        disabled={activeIndex === displayPackages.length - 1}
+                        className={`w-9 h-9 rounded-full bg-white border flex items-center justify-center transition-all shadow-xs cursor-pointer ${
+                          activeIndex === displayPackages.length - 1
+                            ? 'border-neutral-200 text-neutral-300 opacity-40 cursor-not-allowed'
+                            : 'border-neutral-200 hover:border-[#FF6B16] text-neutral-700 hover:text-[#FF6B16] active:scale-95'
+                        }`}
+                        aria-label="Next package"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Active slide badge */}
+                    <span className="text-[11px] font-bold text-neutral-400 pl-0.5 tracking-wider tabular-nums">
+                      <span className="text-neutral-900 font-extrabold">{String(activeIndex + 1).padStart(2, '0')}</span>
+                      {' / '}
+                      {String(displayPackages.length).padStart(2, '0')}
+                    </span>
+                  </div>
+
+                  {/* Right: View All Pill Button */}
+                  <Link
+                    to="/packages"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-neutral-200 hover:border-[#FF6B16] bg-white text-xs font-bold text-neutral-800 hover:text-[#FF6B16] transition-all shadow-xs active:scale-95 group"
                   >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={scrollRight}
-                    className="w-8 h-8 rounded-full bg-white border border-neutral-200 hover:border-[#FF6B16] text-neutral-700 hover:text-[#FF6B16] flex items-center justify-center transition-all shadow-xs cursor-pointer"
-                    aria-label="Next package"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+                    <span className="hidden xs:inline">View All Packages</span>
+                    <span className="xs:hidden inline">View All</span>
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                  </Link>
                 </div>
 
-                <Link
-                  to="/packages"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-neutral-300 hover:border-[#FF6B16] text-xs font-bold text-neutral-800 hover:text-[#FF6B16] transition-all bg-white shadow-xs group"
-                >
-                  <span>View All Packages</span>
-                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-                </Link>
+                {/* ── Desktop & Tablet View Button (sm and up) ── */}
+                <div className="hidden sm:flex items-center gap-2">
+                  <Link
+                    to="/packages"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-neutral-300 hover:border-[#FF6B16] text-xs font-bold text-neutral-800 hover:text-[#FF6B16] transition-all bg-white shadow-xs group"
+                  >
+                    <span>View All Packages</span>
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </div>
               </div>
             }
           />
