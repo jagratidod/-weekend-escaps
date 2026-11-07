@@ -371,6 +371,18 @@ const settingSchema = new mongoose.Schema(
           'finalCta',
         ],
       },
+      sectionVisibility: {
+        hero: { type: Boolean, default: true },
+        reels: { type: Boolean, default: true },
+        experiences: { type: Boolean, default: true },
+        packages: { type: Boolean, default: true },
+        whyChooseUs: { type: Boolean, default: true },
+        bookingProcess: { type: Boolean, default: true },
+        testimonials: { type: Boolean, default: true },
+        gallery: { type: Boolean, default: true },
+        blogs: { type: Boolean, default: true },
+        finalCta: { type: Boolean, default: true },
+      },
     },
     packageFaqSection: {
       badge: {

@@ -3,6 +3,9 @@ import { useSearchParams } from 'react-router-dom';
 import {
   Sparkles,
   Mountain,
+  EyeOff,
+  ToggleLeft,
+  ToggleRight,
   Compass,
   Heart,
   Save,
@@ -38,7 +41,7 @@ import ReelManager from './ReelManager';
 import { useSettings } from '../../context/SettingsContext';
 import { useAuth } from '../../context/AuthContext';
 import { AVAILABLE_ICON_OPTIONS, getHomeIcon } from '../../utils/homeIconHelper';
-import { DEFAULT_HOME_SECTIONS, DEFAULT_SECTION_ORDER } from '../../utils/defaultHomeSections';
+import { DEFAULT_HOME_SECTIONS, DEFAULT_SECTION_ORDER, DEFAULT_SECTION_VISIBILITY } from '../../utils/defaultHomeSections';
 
 const SECTION_METADATA = {
   hero: { id: 'hero', label: 'Hero Section', icon: Sparkles, editable: true },
@@ -82,7 +85,7 @@ export const ensureSixGalleryItems = (existing) => {
 };
 
 export default function HomeSectionsManager() {
-  const { homeSections, refreshSettings, formatImageUrl, API_BASE_URL } = useSettings();
+  const { homeSections, refreshSettings, formatImageUrl, API_BASE_URL, updateHomeSectionVisibility } = useSettings();
   const { token } = useAuth();
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -125,6 +128,10 @@ export default function HomeSectionsManager() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
 
+  // Section Visibility (Active / Inactive Toggle) State
+  const [sectionVisibility, setSectionVisibility] = useState(DEFAULT_SECTION_VISIBILITY);
+  const [togglingSection, setTogglingSection] = useState(null);
+
   // Drag and Drop Section Reordering State
   const [sectionOrder, setSectionOrder] = useState(DEFAULT_SECTION_ORDER);
   const [draggedIndex, setDraggedIndex] = useState(null);
@@ -153,6 +160,12 @@ export default function HomeSectionsManager() {
         setSectionOrder(merged);
       } else {
         setSectionOrder(DEFAULT_SECTION_ORDER);
+      }
+      if (homeSections.sectionVisibility && typeof homeSections.sectionVisibility === 'object') {
+        setSectionVisibility({
+          ...DEFAULT_SECTION_VISIBILITY,
+          ...homeSections.sectionVisibility,
+        });
       }
     }
   }, [homeSections]);
@@ -334,6 +347,35 @@ export default function HomeSectionsManager() {
     await saveOrderToBackend(updated);
   };
 
+  // Toggle Section Visibility (Active / Inactive on Homepage)
+  const handleToggleSectionVisibility = async (sectionId) => {
+    const currentVal = sectionVisibility[sectionId] !== false;
+    const newVal = !currentVal;
+    const updated = {
+      ...sectionVisibility,
+      [sectionId]: newVal,
+    };
+    setSectionVisibility(updated);
+    setTogglingSection(sectionId);
+
+    try {
+      const res = await updateHomeSectionVisibility(token, updated);
+      if (res && res.success) {
+        showToast(
+          'success',
+          `${SECTION_METADATA[sectionId]?.label || sectionId} is now ${newVal ? 'ACTIVE (Visible)' : 'INACTIVE (Hidden)'} on homepage!`
+        );
+      } else {
+        throw new Error(res?.message || 'Failed to update section visibility');
+      }
+    } catch (err) {
+      setSectionVisibility((prev) => ({ ...prev, [sectionId]: currentVal }));
+      showToast('error', err.message || 'Failed to update section status');
+    } finally {
+      setTogglingSection(null);
+    }
+  };
+
   const saveOrderToBackend = async (orderList) => {
     try {
       setSavingOrder(true);
@@ -485,6 +527,8 @@ export default function HomeSectionsManager() {
               const isFirst = index === 0;
               const isLast = index === sectionOrder.length - 1;
 
+              const isSectionActive = sectionVisibility[sectionId] !== false;
+
               return (
                 <div
                   key={sectionId}
@@ -494,47 +538,86 @@ export default function HomeSectionsManager() {
                   onDragOver={handleDragOver}
                   onDragEnd={handleDragEnd}
                   onDrop={(e) => handleDrop(e, index)}
-                  className={`group relative flex flex-col justify-between min-w-[210px] sm:min-w-[230px] p-3.5 rounded-2xl border transition-all duration-200 select-none ${
+                  className={`group relative flex flex-col justify-between min-w-[220px] sm:min-w-[245px] p-3.5 rounded-2xl border transition-all duration-200 select-none ${
                     isDragging
                       ? 'opacity-30 scale-95 border-dashed border-[#FF6B16] bg-orange-50/50'
                       : ''
                   } ${
                     isDragOver
                       ? 'ring-2 ring-[#FF6B16] border-[#FF6B16] bg-orange-50/80 scale-[1.03] shadow-md z-10'
+                      : !isSectionActive
+                      ? 'bg-neutral-100/70 border-dashed border-neutral-300 opacity-70 shadow-2xs hover:opacity-90'
                       : 'bg-white hover:bg-neutral-50/80 border-neutral-200/90 shadow-2xs hover:shadow-xs'
                   }`}
                 >
-                  {/* Card Top: Position Badge, Drag Grip, and Type */}
-                  <div className="flex items-center justify-between pointer-events-none">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-6 h-6 rounded-lg bg-[#1A384C] text-white text-[11px] font-black flex items-center justify-center shadow-xs">
+                  {/* Card Top: Position Badge, Active Toggle Switch, and Drag Grip */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 pointer-events-none">
+                      <span className={`w-6 h-6 rounded-lg text-[11px] font-black flex items-center justify-center shadow-xs ${
+                        isSectionActive ? 'bg-[#1A384C] text-white' : 'bg-neutral-300 text-neutral-600'
+                      }`}>
                         #{index + 1}
                       </span>
                       <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
-                        Position
+                        Pos
                       </span>
                     </div>
 
-                    <div
-                      className="cursor-grab active:cursor-grabbing text-neutral-400 group-hover:text-[#FF6B16] transition-colors p-1 pointer-events-auto rounded hover:bg-neutral-100"
-                      title="Drag to reorder section"
-                    >
-                      <GripVertical className="w-4 h-4 pointer-events-none" />
+                    <div className="flex items-center gap-2 pointer-events-auto">
+                      {/* Active / Inactive Toggle Switch */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleSectionVisibility(sectionId);
+                        }}
+                        disabled={togglingSection === sectionId}
+                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                          isSectionActive ? 'bg-emerald-500' : 'bg-neutral-300'
+                        } ${togglingSection === sectionId ? 'opacity-50 cursor-wait' : ''}`}
+                        title={isSectionActive ? 'Section is Active (Click to hide from homepage)' : 'Section is Inactive (Click to show on homepage)'}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+                            isSectionActive ? 'translate-x-4' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+
+                      <div
+                        className="cursor-grab active:cursor-grabbing text-neutral-400 group-hover:text-[#FF6B16] transition-colors p-1 rounded hover:bg-neutral-100"
+                        title="Drag to reorder section"
+                      >
+                        <GripVertical className="w-4 h-4 pointer-events-none" />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Card Middle: Icon & Title */}
+                  {/* Card Middle: Icon, Title, and Status Badge */}
                   <div className="my-2.5 flex items-center gap-2.5 pointer-events-none">
-                    <div className="w-8 h-8 rounded-xl bg-orange-50 text-[#FF6B16] flex items-center justify-center shrink-0 border border-orange-100">
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${
+                      isSectionActive
+                        ? 'bg-orange-50 text-[#FF6B16] border-orange-100'
+                        : 'bg-neutral-200 text-neutral-500 border-neutral-300'
+                    }`}>
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h4 className="text-xs font-black text-[#1A384C] truncate leading-tight">
+                      <h4 className={`text-xs font-black truncate leading-tight ${
+                        isSectionActive ? 'text-[#1A384C]' : 'text-neutral-500 line-through'
+                      }`}>
                         {meta.label}
                       </h4>
-                      <p className="text-[10px] text-neutral-400 truncate mt-0.5">
-                        {meta.editable ? 'Editable content' : 'Dynamic data'}
-                      </p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className={`text-[9px] font-black px-1.5 py-0.2 rounded-full inline-flex items-center gap-1 ${
+                          isSectionActive
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-neutral-200/80 text-neutral-600 border border-neutral-300'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${isSectionActive ? 'bg-emerald-500' : 'bg-neutral-400'}`} />
+                          {isSectionActive ? 'Active' : 'Off / Hidden'}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -696,6 +779,62 @@ export default function HomeSectionsManager() {
               </button>
             );
           })}
+        </div>
+      </div>
+
+      {/* ── ACTIVE SECTION STATUS & QUICK TOGGLE BAR ── */}
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-neutral-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className={`w-3.5 h-3.5 rounded-full shrink-0 ${
+            sectionVisibility[activeTab] !== false
+              ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]'
+              : 'bg-neutral-300'
+          }`} />
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-sm font-black text-[#1A384C]">
+                {SECTION_METADATA[activeTab]?.label || activeTab}
+              </h3>
+              <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border uppercase tracking-wider inline-flex items-center gap-1.5 ${
+                sectionVisibility[activeTab] !== false
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : 'bg-neutral-100 text-neutral-600 border-neutral-300'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${sectionVisibility[activeTab] !== false ? 'bg-emerald-500' : 'bg-neutral-400'}`} />
+                {sectionVisibility[activeTab] !== false ? 'Active on Homepage' : 'Inactive (Hidden from Homepage)'}
+              </span>
+            </div>
+            <p className="text-xs text-neutral-500 mt-0.5">
+              {sectionVisibility[activeTab] !== false
+                ? 'Visitors will see this section on the live homepage.'
+                : 'This section is currently disabled and hidden from visitors on the live homepage.'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={() => handleToggleSectionVisibility(activeTab)}
+            disabled={togglingSection === activeTab}
+            className={`inline-flex items-center gap-2.5 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer ${
+              sectionVisibility[activeTab] !== false
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                : 'bg-neutral-200 hover:bg-neutral-300 text-neutral-800'
+            } ${togglingSection === activeTab ? 'opacity-50 cursor-wait' : ''}`}
+            title={sectionVisibility[activeTab] !== false ? 'Click to turn off this section' : 'Click to turn on this section'}
+          >
+            <span className={`relative inline-flex h-4 w-7 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+              sectionVisibility[activeTab] !== false ? 'bg-white/40' : 'bg-neutral-400'
+            }`}>
+              <span
+                className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+                  sectionVisibility[activeTab] !== false ? 'translate-x-3' : 'translate-x-0'
+                }`}
+              />
+            </span>
+            <span>{sectionVisibility[activeTab] !== false ? 'Section Active (Click to Hide)' : 'Section Hidden (Click to Show)'}</span>
+          </button>
         </div>
       </div>
 

@@ -43,7 +43,7 @@ export function Navbar({
   }, [location.pathname]);
 
   const normalizedPath = location.pathname.replace(/\/$/, '') || '/';
-  const DARK_HERO_ROUTES = ['/contact', '/about'];
+  const DARK_HERO_ROUTES = ['/contact', '/about', '/my-bookings', '/bookings'];
   const isDarkHeroPage = DARK_HERO_ROUTES.includes(normalizedPath) || hasDarkPageAttr;
 
   // Use crisp white text only when the navbar is un-scrolled over a dark/black hero
@@ -116,8 +116,10 @@ export function Navbar({
                 >
                   <Link
                     to={link.path}
-                    className={`inline-flex items-center gap-1.5 text-sm font-semibold tracking-wide transition-colors duration-200 py-2 ${
-                      isActive
+                    className={`inline-flex items-center gap-1.5 text-sm font-semibold tracking-wide transition-all duration-200 py-1.5 ${
+                      isActive && link.path === '/my-bookings' && useWhiteText
+                        ? 'bg-white text-[#FF6B16] px-3.5 rounded-full font-bold shadow-md'
+                        : isActive
                         ? 'text-[#FF6B16] font-bold'
                         : useWhiteText
                         ? 'text-white/90 hover:text-[#FF6B16] drop-shadow-sm'

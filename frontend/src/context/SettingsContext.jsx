@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { DEFAULT_HOME_SECTIONS } from '../utils/defaultHomeSections';
+import { DEFAULT_HOME_SECTIONS, DEFAULT_SECTION_VISIBILITY } from '../utils/defaultHomeSections';
 import {
   applyThemeColor,
   DEFAULT_THEME_COLOR,
@@ -163,6 +163,10 @@ export function SettingsProvider({ children }) {
               }
               return DEFAULT_HOME_SECTIONS.sectionOrder;
             })(),
+            sectionVisibility: {
+              ...DEFAULT_SECTION_VISIBILITY,
+              ...(serverHome.sectionVisibility || {}),
+            },
           },
           packageFaqSection: {
             ...DEFAULT_FAQ_SECTION,
@@ -268,6 +272,30 @@ export function SettingsProvider({ children }) {
     [activeWhatsappNumber]
   );
 
+  const updateHomeSectionVisibility = useCallback(
+    async (token, sectionVisibility) => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/settings/home-sections`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ sectionVisibility }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          await fetchSettings();
+        }
+        return data;
+      } catch (err) {
+        console.error('Failed to update home section visibility:', err);
+        return { success: false, message: err.message };
+      }
+    },
+    [fetchSettings]
+  );
+
   const updateFaqSectionSettings = useCallback(
     async (token, payload) => {
       try {
@@ -298,6 +326,7 @@ export function SettingsProvider({ children }) {
         settings,
         homeSections: activeHomeSections,
         packageFaqSection: settings.packageFaqSection || DEFAULT_FAQ_SECTION,
+        updateHomeSectionVisibility,
         updateFaqSectionSettings,
         themeColor: activeThemeColor,
         themeColorHover: activeThemeColorHover,

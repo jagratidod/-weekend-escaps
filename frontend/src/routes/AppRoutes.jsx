@@ -14,6 +14,7 @@ import PaymentReturnPage from '../pages/PaymentReturnPage';
 import PhonePeCheckoutPage from '../pages/PhonePeCheckoutPage';
 import GalleryPage from '../pages/GalleryPage';
 import OfflineRegistrationPage from '../pages/OfflineRegistrationPage';
+import MyBookingsPage from '../pages/MyBookingsPage';
 import AdminLoginPage from '../pages/admin/AdminLoginPage';
 import AdminForgotPassword from '../pages/admin/AdminForgotPassword';
 import AdminResetPassword from '../pages/admin/AdminResetPassword';
@@ -32,6 +33,9 @@ export function AppRoutes() {
       <Route path="/package/:id/book" element={<BookingPage />} />
       <Route path="/book/:id" element={<BookingPage />} />
       <Route path="/experiences" element={<PackagesPage scrollToExperiences={true} />} />
+      <Route path="/my-bookings" element={<MyBookingsPage />} />
+      <Route path="/bookings" element={<Navigate to="/my-bookings" replace />} />
+      <Route path="/my-booking" element={<Navigate to="/my-bookings" replace />} />
       <Route path="/blogs" element={<BlogsPage />} />
       <Route path="/blogs/:id" element={<BlogsPage />} />
       <Route path="/about" element={<AboutPage />} />

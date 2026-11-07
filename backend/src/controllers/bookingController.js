@@ -1,3 +1,4 @@
+import Package from '../models/Package.js';
 import Booking from '../models/Booking.js';
 import Lead from '../models/Lead.js';
 import { notifyAdmins, notifyCustomer } from '../services/firebaseNotificationService.js';
@@ -299,7 +300,7 @@ export const getBookingById = async (req, res) => {
 export const updateBookingStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { bookingStatus, paymentStatus, adminNotes } = req.body;
+    const { bookingStatus, paymentStatus, tripStatus, adminNotes, amountPaid } = req.body;
 
     const booking = await Booking.findById(id);
     if (!booking) {
@@ -311,7 +312,24 @@ export const updateBookingStatus = async (req, res) => {
 
     if (bookingStatus !== undefined) booking.bookingStatus = bookingStatus;
     if (paymentStatus !== undefined) booking.paymentStatus = paymentStatus;
+    if (tripStatus !== undefined) booking.tripStatus = tripStatus;
     if (adminNotes !== undefined) booking.adminNotes = adminNotes;
+    if (amountPaid !== undefined) {
+      const amt = Number(amountPaid);
+      if (!isNaN(amt)) {
+        if (!booking.pricing) booking.pricing = {};
+        if (!booking.paymentDetails) booking.paymentDetails = {};
+        booking.pricing.amountPaidNow = amt;
+        booking.paymentDetails.amountPaid = amt;
+        const total = Number(booking.pricing.totalPayable) || 0;
+        booking.pricing.remainingBalance = Math.max(0, total - amt);
+        if (total > 0 && amt >= total) {
+          booking.paymentStatus = 'paid';
+        } else if (amt > 0) {
+          booking.paymentStatus = 'advance_paid';
+        }
+      }
+    }
 
     await booking.save();
 
@@ -542,6 +560,214 @@ export const createOfflineRegistration = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Failed to process registration. Please try again.',
+      error: error.message,
+    });
+  }
+};
+
+
+// Helper to parse multiple date formats (YYYY-MM-DD, DD Mon YYYY, etc.)
+const parseTravelDate = (dateStr) => {
+  if (!dateStr) return new Date();
+  const d = new Date(dateStr);
+  if (!isNaN(d.getTime())) return d;
+  return new Date();
+};
+
+// Helper to format date into friendly e.g. "21 Nov 2026"
+const formatFriendlyDate = (dateObj) => {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${dateObj.getDate()} ${months[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
+};
+
+// Helper to calculate stage and itinerary
+export const calculateTripProgress = (booking, packageData = null) => {
+  const travelDateObj = parseTravelDate(booking.travelDate);
+  const now = new Date();
+  
+  // Set to midnight for date-based comparisons
+  const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const todayZero = startOfDay(now);
+  const travelDateZero = startOfDay(travelDateObj);
+
+  // Determine duration
+  let durationDays = 5;
+  const rawItinerary = packageData?.itinerary || [];
+  if (rawItinerary.length > 0) {
+    durationDays = rawItinerary.length;
+  } else if (packageData?.duration) {
+    const match = packageData.duration.match(/(\d+)\s*Days?/i);
+    if (match) durationDays = parseInt(match[1], 10);
+  }
+
+  // End of trip
+  const endDateZero = new Date(travelDateZero);
+  endDateZero.setDate(endDateZero.getDate() + (durationDays - 1));
+
+  // Determine stage (1: BOOKED, 2: DEPARTURE, 3: EXPLORING, 4: COMPLETED / EXPLORED)
+  let stageKey = 'BOOKED';
+  let step = 1;
+
+  if (booking.tripStatus && booking.tripStatus !== 'AUTO') {
+    stageKey = booking.tripStatus;
+    if (stageKey === 'BOOKED') step = 1;
+    else if (stageKey === 'DEPARTURE') step = 2;
+    else if (stageKey === 'EXPLORING') step = 3;
+    else if (stageKey === 'COMPLETED' || stageKey === 'EXPLORED') step = 4;
+  } else {
+    // Automated based on live date
+    if (todayZero < travelDateZero) {
+      stageKey = 'BOOKED';
+      step = 1;
+    } else if (todayZero.getTime() === travelDateZero.getTime()) {
+      stageKey = 'DEPARTURE';
+      step = 2;
+    } else if (todayZero > travelDateZero && todayZero <= endDateZero) {
+      stageKey = 'EXPLORING';
+      step = 3;
+    } else if (todayZero > endDateZero) {
+      stageKey = 'COMPLETED';
+      step = 4;
+    }
+  }
+
+  // Generate dated itinerary
+  const fallbackItinerary = [
+    { day: 'Day 0', title: 'Reporting & Departure', desc: 'Meet your trip captain and assemble at the boarding point. Journey begins towards basecamp.' },
+    { day: 'Day 1', title: 'Basecamp Arrival & Acclimatization', desc: 'Reach basecamp, settle in campsites and participate in the orientation & gear check session.' },
+    { day: 'Day 2', title: 'Trek to Juda Ka Talab / High Campsite', desc: 'Trek through pine forests and snowy meadows. Camp by the scenic alpine lake.' },
+    { day: 'Day 3', title: 'Summit Ascent & Ridge Walk', desc: 'Early morning summit push to witness breathtaking 360-degree Himalayan sunrise views.' },
+    { day: 'Day 4', title: 'Descent & Farewell Celebration', desc: 'Descend back with unforgettable memories and certificate distribution.' }
+  ];
+
+  const sourceItinerary = (rawItinerary.length > 0 ? rawItinerary : fallbackItinerary);
+
+  const datedItinerary = sourceItinerary.map((item, idx) => {
+    const itemDate = new Date(travelDateZero);
+    itemDate.setDate(itemDate.getDate() + idx);
+    const itemZero = startOfDay(itemDate);
+    const isLiveToday = todayZero.getTime() === itemZero.getTime();
+    const isPassed = todayZero > itemZero;
+
+    return {
+      dayIndex: idx,
+      dayLabel: item.day || `Day ${idx}`,
+      title: item.title,
+      desc: item.desc,
+      formattedDate: formatFriendlyDate(itemDate),
+      isLiveToday,
+      isPassed,
+    };
+  });
+
+  return {
+    stageKey,
+    stageLabel: stageKey === 'COMPLETED' ? 'EXPLORED' : stageKey,
+    step, // 1 to 4
+    durationDays,
+    startDateFormatted: formatFriendlyDate(travelDateZero),
+    endDateFormatted: formatFriendlyDate(endDateZero),
+    datedItinerary,
+  };
+};
+
+// GET /api/bookings/my-bookings (Public - Find customer bookings by 10-digit mobile)
+export const getMyBookingsByPhone = async (req, res) => {
+  try {
+    const rawPhone = req.query.phone || req.body?.phone || '';
+    const cleanDigits = String(rawPhone).replace(/\D/g, '');
+    const last10 = cleanDigits.slice(-10);
+
+    if (!last10 || last10.length < 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid 10-digit mobile number.',
+      });
+    }
+
+    // Search in primaryContact.phone OR travelers.phone
+    const phoneRegex = new RegExp(last10, 'i');
+    const bookings = await Booking.find({
+      $or: [
+        { 'primaryContact.phone': phoneRegex },
+        { 'travelers.phone': phoneRegex },
+      ],
+    }).sort({ createdAt: -1 });
+
+    if (!bookings || bookings.length === 0) {
+      return res.status(200).json({
+        success: true,
+        count: 0,
+        customerName: '',
+        bookings: [],
+        upcoming: [],
+        ongoing: [],
+        past: [],
+      });
+    }
+
+    // Fetch associated packages for itineraries
+    const packageIds = [...new Set(bookings.map((b) => b.packageId).filter(Boolean))];
+    const packagesList = await Package.find({
+      $or: [
+        { id: { $in: packageIds } },
+        { _id: { $in: packageIds.filter((id) => id && id.match(/^[0-9a-fA-F]{24}$/)) } }
+      ],
+    });
+
+    const packageMap = new Map();
+    packagesList.forEach((pkg) => {
+      if (pkg.id) packageMap.set(pkg.id, pkg);
+      packageMap.set(String(pkg._id), pkg);
+      if (pkg.name) packageMap.set(pkg.name.toLowerCase().trim(), pkg);
+    });
+
+    // Customer name from first/latest booking
+    const customerName = bookings[0].primaryContact?.name || bookings[0].travelers?.[0]?.name || 'Traveler';
+
+    // Enrich each booking with live progress, financial ledger & dated itinerary
+    const enriched = bookings.map((booking) => {
+      const bObj = booking.toObject();
+      const pkg = packageMap.get(booking.packageId) || packageMap.get(booking.packageName?.toLowerCase().trim());
+      const progress = calculateTripProgress(bObj, pkg);
+
+      const advancePaid = Number(bObj.pricing?.amountPaidNow) || Number(bObj.paymentDetails?.amountPaid) || Number(bObj.pricing?.advanceAmount) || 0;
+      const totalPayable = Number(bObj.pricing?.totalPayable) || Number(bObj.pricing?.subtotal) || 0;
+      const balanceDue = Math.max(0, totalPayable - advancePaid);
+      const isFullPaid = bObj.paymentStatus === 'paid' || (totalPayable > 0 && advancePaid >= totalPayable);
+
+      return {
+        ...bObj,
+        progress,
+        financials: {
+          totalAdvancePaid: advancePaid,
+          totalPayable,
+          balanceDue,
+          isFullPaid,
+          statusLabel: isFullPaid ? 'PAID' : advancePaid > 0 ? 'ADVANCE PAID' : 'PENDING',
+        },
+      };
+    });
+
+    // Categorize
+    const upcoming = enriched.filter((b) => b.progress.step === 1 && b.bookingStatus !== 'cancelled');
+    const ongoing = enriched.filter((b) => (b.progress.step === 2 || b.progress.step === 3) && b.bookingStatus !== 'cancelled');
+    const past = enriched.filter((b) => b.progress.step === 4 || b.bookingStatus === 'cancelled');
+
+    res.status(200).json({
+      success: true,
+      count: enriched.length,
+      customerName,
+      bookings: enriched,
+      upcoming,
+      ongoing,
+      past,
+    });
+  } catch (error) {
+    console.error('[getMyBookingsByPhone Error]:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve your bookings.',
       error: error.message,
     });
   }

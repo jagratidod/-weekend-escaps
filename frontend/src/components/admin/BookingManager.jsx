@@ -62,6 +62,9 @@ export default function BookingManager() {
   const [copiedRef, setCopiedRef] = useState('');
   const [adminNoteText, setAdminNoteText] = useState('');
   const [savingNote, setSavingNote] = useState(false);
+  const [amountPaidInput, setAmountPaidInput] = useState('');
+  const [updatingPayment, setUpdatingPayment] = useState(false);
+  const [updatingTripStage, setUpdatingTripStage] = useState(false);
 
   // Fetch bookings from API
   const fetchBookings = async () => {
@@ -107,6 +110,64 @@ export default function BookingManager() {
     navigator.clipboard.writeText(ref);
     setCopiedRef(ref);
     setTimeout(() => setCopiedRef(''), 2000);
+  };
+
+  // Change dynamic trip journey stage (Auto, Booked, Departure, Exploring, Explored)
+  const handleTripStatusChange = async (bookingId, newTripStatus) => {
+    try {
+      setUpdatingTripStage(true);
+      const res = await fetch(`${API_BASE_URL}/bookings/${bookingId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ tripStatus: newTripStatus }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.booking) {
+        setBookings((prev) =>
+          prev.map((b) => (b._id === bookingId ? { ...b, tripStatus: newTripStatus } : b))
+        );
+        if (selectedBooking && selectedBooking._id === bookingId) {
+          setSelectedBooking({ ...selectedBooking, tripStatus: newTripStatus });
+        }
+      }
+    } catch (err) {
+      console.error('Trip status update error:', err);
+    } finally {
+      setUpdatingTripStage(false);
+    }
+  };
+
+  // Update amount paid received
+  const handleUpdatePaymentReceived = async (bookingId, newAmount) => {
+    try {
+      setUpdatingPayment(true);
+      const res = await fetch(`${API_BASE_URL}/bookings/${bookingId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ amountPaid: Number(newAmount) }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.booking) {
+        setBookings((prev) =>
+          prev.map((b) => (b._id === bookingId ? data.booking : b))
+        );
+        if (selectedBooking && selectedBooking._id === bookingId) {
+          setSelectedBooking(data.booking);
+        }
+      }
+    } catch (err) {
+      console.error('Payment update error:', err);
+    } finally {
+      setUpdatingPayment(false);
+    }
   };
 
   // Change booking status
@@ -198,6 +259,7 @@ export default function BookingManager() {
   const handleOpenDetails = (booking) => {
     setSelectedBooking(booking);
     setAdminNoteText(booking.adminNotes || '');
+    setAmountPaidInput(booking.pricing?.amountPaidNow ?? booking.paymentDetails?.amountPaid ?? 0);
   };
 
   // Status badge styling helper
@@ -620,20 +682,39 @@ export default function BookingManager() {
                   </div>
                 </div>
 
-                {/* Status Switcher Dropdown */}
-                <div className="flex items-center gap-2">
-                  <label className="text-[11px] font-bold text-neutral-600">Update Status:</label>
-                  <select
-                    value={selectedBooking.bookingStatus}
-                    onChange={(e) => handleStatusChange(selectedBooking._id, e.target.value)}
-                    disabled={isUpdatingStatus}
-                    className="px-3 py-1.5 rounded-xl border border-neutral-300 font-bold bg-white text-xs outline-none focus:ring-2 focus:ring-[#FF6B16]"
-                  >
-                    <option value="confirmed">Confirmed</option>
-                    <option value="pending">Pending</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
+                {/* Status Switcher Dropdowns */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5">
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-[11px] font-bold text-neutral-600">Booking:</label>
+                    <select
+                      value={selectedBooking.bookingStatus}
+                      onChange={(e) => handleStatusChange(selectedBooking._id, e.target.value)}
+                      disabled={isUpdatingStatus}
+                      className="px-2.5 py-1.5 rounded-xl border border-neutral-300 font-bold bg-white text-xs outline-hidden focus:ring-2 focus:ring-[#FF6B16]"
+                    >
+                      <option value="confirmed">Confirmed</option>
+                      <option value="pending">Pending</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-[11px] font-bold text-neutral-600">Trek Stage:</label>
+                    <select
+                      value={selectedBooking.tripStatus || 'AUTO'}
+                      onChange={(e) => handleTripStatusChange(selectedBooking._id, e.target.value)}
+                      disabled={updatingTripStage}
+                      className="px-2.5 py-1.5 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-900 font-extrabold text-xs outline-hidden focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="AUTO">🤖 Auto (By Date)</option>
+                      <option value="BOOKED">1️⃣ Booked</option>
+                      <option value="DEPARTURE">2️⃣ Departure</option>
+                      <option value="EXPLORING">3️⃣ Exploring</option>
+                      <option value="COMPLETED">4️⃣ Explored</option>
+                      <option value="CANCELLED">❌ Cancelled</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -773,6 +854,30 @@ export default function BookingManager() {
                       <span>{formatCurrency(selectedBooking.pricing?.remainingBalance)}</span>
                     </div>
                   )}
+
+                  {/* Payment Received Live Editor */}
+                  <div className="pt-2 border-t border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <label className="text-[11px] font-extrabold text-neutral-700">
+                      Update Payment Received (₹):
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={amountPaidInput}
+                        onChange={(e) => setAmountPaidInput(e.target.value)}
+                        placeholder="Amount"
+                        className="w-28 px-2.5 py-1 rounded-lg border border-neutral-300 text-xs font-bold bg-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleUpdatePaymentReceived(selectedBooking._id, amountPaidInput)}
+                        disabled={updatingPayment}
+                        className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition cursor-pointer disabled:opacity-50"
+                      >
+                        {updatingPayment ? 'Updating...' : 'Save Payment'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 

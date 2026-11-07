@@ -1,3 +1,16 @@
+export const DEFAULT_SECTION_VISIBILITY = {
+  hero: true,
+  reels: true,
+  experiences: true,
+  packages: true,
+  whyChooseUs: true,
+  bookingProcess: true,
+  testimonials: true,
+  gallery: true,
+  blogs: true,
+  finalCta: true,
+};
+
 export const DEFAULT_HOME_SECTIONS = {
   hero: {
     badge: 'EXPLORE • DISCOVER • ESCAPE',
@@ -205,6 +218,18 @@ export const DEFAULT_HOME_SECTIONS = {
     'blogs',
     'finalCta',
   ],
+  sectionVisibility: {
+    hero: true,
+    reels: true,
+    experiences: true,
+    packages: true,
+    whyChooseUs: true,
+    bookingProcess: true,
+    testimonials: true,
+    gallery: true,
+    blogs: true,
+    finalCta: true,
+  },
 };
 
 export const DEFAULT_SECTION_ORDER = DEFAULT_HOME_SECTIONS.sectionOrder;

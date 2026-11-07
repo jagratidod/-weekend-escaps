@@ -10,7 +10,7 @@ import Gallery from '../components/home/Gallery';
 import TravelBlogs from '../components/home/TravelBlogs';
 import FinalCTA from '../components/home/FinalCTA';
 import { useSettings } from '../context/SettingsContext';
-import { DEFAULT_SECTION_ORDER } from '../utils/defaultHomeSections';
+import { DEFAULT_SECTION_ORDER, DEFAULT_SECTION_VISIBILITY } from '../utils/defaultHomeSections';
 
 const SECTION_COMPONENTS = {
   hero: <Hero key="hero" />,
@@ -33,10 +33,13 @@ export function Home() {
   const { homeSections } = useSettings();
   const rawOrder = homeSections?.sectionOrder;
   const sectionOrder = Array.isArray(rawOrder) && rawOrder.length > 0 ? rawOrder : DEFAULT_SECTION_ORDER;
+  const visibility = homeSections?.sectionVisibility || DEFAULT_SECTION_VISIBILITY;
 
   return (
     <div className="flex flex-col min-h-screen">
-      {sectionOrder.map((sectionId) => SECTION_COMPONENTS[sectionId] || null)}
+      {sectionOrder
+        .filter((sectionId) => visibility[sectionId] !== false)
+        .map((sectionId) => SECTION_COMPONENTS[sectionId] || null)}
     </div>
   );
 }

@@ -215,9 +215,34 @@ export const DEFAULT_HOME_SECTIONS = {
     'blogs',
     'finalCta',
   ],
+  sectionVisibility: {
+    hero: true,
+    reels: true,
+    experiences: true,
+    packages: true,
+    whyChooseUs: true,
+    bookingProcess: true,
+    testimonials: true,
+    gallery: true,
+    blogs: true,
+    finalCta: true,
+  },
 };
 
 export const DEFAULT_SECTION_ORDER = DEFAULT_HOME_SECTIONS.sectionOrder;
+export const DEFAULT_SECTION_VISIBILITY = {
+  hero: true,
+  reels: true,
+  experiences: true,
+  packages: true,
+  whyChooseUs: true,
+  bookingProcess: true,
+  testimonials: true,
+  gallery: true,
+  blogs: true,
+  finalCta: true,
+};
+
 
 // Helper to get or initialize default settings
 const getOrCreateDefaultSettings = async () => {
@@ -757,6 +782,25 @@ export const updateHomeSections = async (req, res) => {
       settings.markModified('homeSections.sectionOrder');
     }
 
+    // Section Visibility update (Active/Inactive Toggle)
+    if (updates.sectionVisibility && typeof updates.sectionVisibility === 'object') {
+      const currentVis = settings.homeSections.sectionVisibility
+        ? (typeof settings.homeSections.sectionVisibility.toObject === 'function'
+            ? settings.homeSections.sectionVisibility.toObject()
+            : settings.homeSections.sectionVisibility)
+        : DEFAULT_SECTION_VISIBILITY;
+      settings.homeSections.sectionVisibility = {
+        ...DEFAULT_SECTION_VISIBILITY,
+        ...currentVis,
+        ...updates.sectionVisibility,
+      };
+      settings.markModified('homeSections.sectionVisibility');
+    }
+    if (!settings.homeSections.sectionVisibility) {
+      settings.homeSections.sectionVisibility = { ...DEFAULT_SECTION_VISIBILITY };
+      settings.markModified('homeSections.sectionVisibility');
+    }
+
     // 1. Hero Section update
     if (updates.hero) {
       settings.homeSections.hero = {
@@ -896,6 +940,9 @@ export const resetHomeSection = async (req, res) => {
       settings.homeSections = JSON.parse(JSON.stringify(DEFAULT_HOME_SECTIONS));
     } else if (section === 'sectionOrder') {
       settings.homeSections.sectionOrder = [...DEFAULT_SECTION_ORDER];
+    } else if (section === 'sectionVisibility') {
+      settings.homeSections.sectionVisibility = { ...DEFAULT_SECTION_VISIBILITY };
+      settings.markModified('homeSections.sectionVisibility');
     } else if (DEFAULT_HOME_SECTIONS[section]) {
       settings.homeSections[section] = JSON.parse(JSON.stringify(DEFAULT_HOME_SECTIONS[section]));
     } else {
@@ -914,6 +961,13 @@ export const resetHomeSection = async (req, res) => {
       await Setting.updateOne(
         { key: 'site_settings' },
         { $set: { 'homeSections.sectionOrder': settings.homeSections.sectionOrder } }
+      );
+    }
+
+    if (section === 'sectionVisibility' || !section || section === 'all') {
+      await Setting.updateOne(
+        { key: 'site_settings' },
+        { $set: { 'homeSections.sectionVisibility': settings.homeSections.sectionVisibility } }
       );
     }
 

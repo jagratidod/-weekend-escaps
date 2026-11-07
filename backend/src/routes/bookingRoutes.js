@@ -6,6 +6,7 @@ import {
   getBookingById,
   updateBookingStatus,
   deleteBooking,
+  getMyBookingsByPhone,
 } from '../controllers/bookingController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
@@ -13,6 +14,10 @@ const router = express.Router();
 
 // Public checkout submission
 router.post('/', createBooking);
+
+// Public My Bookings lookup by mobile number
+router.get('/my-bookings', getMyBookingsByPhone);
+router.post('/my-bookings', getMyBookingsByPhone);
 
 // Public offline registration submission (dedicated hidden flow)
 router.post('/offline-register', createOfflineRegistration);

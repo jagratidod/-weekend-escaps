@@ -91,6 +91,12 @@ const bookingSchema = new mongoose.Schema(
       default: 'pending',
       index: true,
     },
+    tripStatus: {
+      type: String,
+      enum: ['AUTO', 'BOOKED', 'DEPARTURE', 'EXPLORING', 'COMPLETED', 'CANCELLED'],
+      default: 'AUTO',
+      index: true,
+    },
     paymentStatus: {
       type: String,
       enum: ['unpaid', 'pending', 'advance_paid', 'paid', 'refunded'],

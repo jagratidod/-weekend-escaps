@@ -59,6 +59,7 @@ export const NAV_LINKS = [
       { name: "Bali Escape (7D/6N)", path: "/packages/bali-escape" }
     ]
   },
+  { name: "My Bookings", path: "/my-bookings" },
   { name: "Blog", path: "/blogs" },
   { name: "Gallery", path: "/gallery" },
   { name: "About Us", path: "/about" },
