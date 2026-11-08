@@ -20,6 +20,14 @@ const settingSchema = new mongoose.Schema(
       type: String,
       default: '/logo/weekend-escapes-logo.svg',
     },
+    logoHeight: {
+      type: Number,
+      default: 48,
+    },
+    footerLogoHeight: {
+      type: Number,
+      default: 48,
+    },
     siteName: {
       type: String,
       default: 'Weekend Escapes',

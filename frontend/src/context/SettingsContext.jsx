@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { DEFAULT_HOME_SECTIONS, DEFAULT_SECTION_VISIBILITY } from '../utils/defaultHomeSections';
 import {
-  applyThemeColor,
   DEFAULT_THEME_COLOR,
   DEFAULT_THEME_HOVER,
 } from '../utils/themeUtils';
@@ -63,6 +62,8 @@ export function SettingsProvider({ children }) {
     logoUrl: '/logo/weekend-escapes-logo.svg',
     footerLogoUrl: '/logo/weekend-escapes-logo.svg',
     darkLogoUrl: '/logo/weekend-escapes-logo.svg',
+    logoHeight: 48,
+    footerLogoHeight: 48,
     themeColor: DEFAULT_THEME_COLOR,
     themeColorHover: DEFAULT_THEME_HOVER,
     siteName: 'Weekend Escapes',
@@ -177,11 +178,6 @@ export function SettingsProvider({ children }) {
                 : [],
           },
         });
-
-        // Apply dynamic brand theme primary color & hover shade
-        if (data.settings.themeColor) {
-          applyThemeColor(data.settings.themeColor, data.settings.themeColorHover);
-        }
       }
     } catch (err) {
       console.warn('Could not fetch settings from backend, using defaults:', err.message);
@@ -197,39 +193,38 @@ export function SettingsProvider({ children }) {
   const activeThemeColor = settings.themeColor || DEFAULT_THEME_COLOR;
   const activeThemeColorHover = settings.themeColorHover || DEFAULT_THEME_HOVER;
 
-  const updateThemeColorSetting = useCallback(
-    async (token, themeColor, themeColorHover) => {
+  const updateLogoSizeSetting = useCallback(
+    async (token, { logoHeight, footerLogoHeight }) => {
       try {
-        const res = await fetch(`${API_BASE_URL}/settings/theme`, {
+        const res = await fetch(`${API_BASE_URL}/settings/logo-size`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ themeColor, themeColorHover }),
+          body: JSON.stringify({ logoHeight, footerLogoHeight }),
         });
         const data = await res.json();
         if (data.success) {
-          applyThemeColor(data.themeColor, data.themeColorHover);
           setSettings((prev) => ({
             ...prev,
-            themeColor: data.themeColor,
-            themeColorHover: data.themeColorHover,
+            logoHeight: data.logoHeight ?? prev.logoHeight,
+            footerLogoHeight: data.footerLogoHeight ?? prev.footerLogoHeight,
           }));
         }
         return data;
       } catch (err) {
-        console.error('Failed to update theme color:', err);
+        console.error('Failed to update logo sizes:', err);
         return { success: false, message: err.message };
       }
     },
     []
   );
 
-  const resetThemeColorSetting = useCallback(
+  const resetLogoSizeSetting = useCallback(
     async (token) => {
       try {
-        const res = await fetch(`${API_BASE_URL}/settings/theme/reset`, {
+        const res = await fetch(`${API_BASE_URL}/settings/logo-size/reset`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -238,16 +233,15 @@ export function SettingsProvider({ children }) {
         });
         const data = await res.json();
         if (data.success) {
-          applyThemeColor(data.themeColor, data.themeColorHover);
           setSettings((prev) => ({
             ...prev,
-            themeColor: data.themeColor,
-            themeColorHover: data.themeColorHover,
+            logoHeight: 48,
+            footerLogoHeight: 48,
           }));
         }
         return data;
       } catch (err) {
-        console.error('Failed to reset theme color:', err);
+        console.error('Failed to reset logo sizes:', err);
         return { success: false, message: err.message };
       }
     },
@@ -330,8 +324,10 @@ export function SettingsProvider({ children }) {
         updateFaqSectionSettings,
         themeColor: activeThemeColor,
         themeColorHover: activeThemeColorHover,
-        updateThemeColor: updateThemeColorSetting,
-        resetThemeColor: resetThemeColorSetting,
+        logoHeight: Number(settings.logoHeight) || 48,
+        footerLogoHeight: Number(settings.footerLogoHeight) || 48,
+        updateLogoSize: updateLogoSizeSetting,
+        resetLogoSize: resetLogoSizeSetting,
         logoUrl: activeLogoUrl,
         rawLogoUrl: settings.logoUrl,
         footerLogoUrl: activeFooterLogoUrl,

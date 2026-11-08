@@ -12,7 +12,7 @@ export function MobileMenu({
   onToggleDropdown,
   currentPath
 }) {
-  const { logoUrl } = useSettings();
+  const { logoUrl, logoHeight } = useSettings();
   const { packages } = usePackages();
 
   // Dynamic Tour Packages dropdown sublinks reflecting all created/updated packages
@@ -55,7 +55,12 @@ export function MobileMenu({
         <div>
           {/* Header */}
           <div className="flex items-center justify-between pb-6 border-b border-neutral-100">
-            <img src={logoUrl || "/logo/weekend-escapes-logo.svg"} alt="Weekend Escapes" className="h-9 w-auto" />
+            <img
+              src={logoUrl || "/logo/weekend-escapes-logo.svg"}
+              alt="Weekend Escapes"
+              style={{ height: `${Math.min(logoHeight || 36, 48)}px` }}
+              className="w-auto object-contain"
+            />
             <button
               type="button"
               onClick={onClose}

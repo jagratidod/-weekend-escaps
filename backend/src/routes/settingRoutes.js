@@ -13,8 +13,8 @@ import {
   resetHomeSection,
   updateFaqSection,
   resetFaqSection,
-  updateThemeColor,
-  resetThemeColor,
+  updateLogoSize,
+  resetLogoSize,
 } from '../controllers/settingController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 import { uploadLogo } from '../middlewares/uploadMiddleware.js';
@@ -22,8 +22,8 @@ import { uploadLogo } from '../middlewares/uploadMiddleware.js';
 const router = express.Router();
 
 router.get('/', getSettings);
-router.put('/theme', protect, updateThemeColor);
-router.post('/theme/reset', protect, resetThemeColor);
+router.put('/logo-size', protect, updateLogoSize);
+router.post('/logo-size/reset', protect, resetLogoSize);
 router.post('/logo', protect, uploadLogo.single('logo'), updateLogo);
 router.post('/logo/reset', protect, resetLogo);
 router.post('/footer-logo', protect, uploadLogo.single('logo'), updateFooterLogo);

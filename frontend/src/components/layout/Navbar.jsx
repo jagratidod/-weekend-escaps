@@ -14,7 +14,7 @@ export function Navbar({
   const [isScrolled, setIsScrolled] = useState(false);
   const [hasDarkPageAttr, setHasDarkPageAttr] = useState(false);
   const location = useLocation();
-  const { logoUrl, darkLogoUrl } = useSettings();
+  const { logoUrl, darkLogoUrl, logoHeight } = useSettings();
   const { packages } = usePackages();
 
   useEffect(() => {
@@ -89,7 +89,8 @@ export function Navbar({
             <img
               src={useWhiteText && darkLogoUrl ? darkLogoUrl : (logoUrl || "/logo/weekend-escapes-logo.svg")}
               alt="Weekend Escapes"
-              className={`h-10 sm:h-12 w-auto transition-all duration-300 group-hover:scale-105 object-contain ${
+              style={{ height: `${logoHeight || 48}px` }}
+              className={`w-auto transition-all duration-300 group-hover:scale-105 object-contain max-h-[85px] sm:max-h-none ${
                 useWhiteText && !darkLogoUrl && (!logoUrl || logoUrl.endsWith('weekend-escapes-logo.svg'))
                   ? 'bg-white/95 px-2.5 py-1 rounded-xl shadow-sm'
                   : ''

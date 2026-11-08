@@ -59,7 +59,7 @@ export function Footer() {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
   const [error, setError] = useState('');
-  const { logoUrl, footerLogoUrl, darkLogoUrl, contactInfo, whatsappUrl, whatsappNumber } = useSettings();
+  const { logoUrl, footerLogoUrl, darkLogoUrl, footerLogoHeight, contactInfo, whatsappUrl, whatsappNumber } = useSettings();
 
   const handleSubscribe = (e) => {
     e.preventDefault();
@@ -92,7 +92,8 @@ export function Footer() {
                       : footerLogoUrl || darkLogoUrl || logoUrl || "/logo/weekend-escapes-logo.svg"
                   }
                   alt="Weekend Escapes"
-                  className={`h-12 w-auto object-contain max-w-[220px] ${
+                  style={{ height: `${footerLogoHeight || 48}px` }}
+                  className={`w-auto object-contain max-w-[280px] ${
                     (!footerLogoUrl || footerLogoUrl.includes('/logo/weekend-escapes-logo.svg')) &&
                     (!darkLogoUrl || darkLogoUrl.includes('/logo/weekend-escapes-logo.svg')) &&
                     (logoUrl?.includes('/logo/weekend-escapes-logo.svg') || !logoUrl)

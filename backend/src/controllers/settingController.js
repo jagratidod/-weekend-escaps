@@ -280,6 +280,16 @@ const getOrCreateDefaultSettings = async () => {
       needsSave = true;
     }
 
+    if (!settings.logoHeight) {
+      settings.logoHeight = 48;
+      needsSave = true;
+    }
+
+    if (!settings.footerLogoHeight) {
+      settings.footerLogoHeight = 48;
+      needsSave = true;
+    }
+
     if (!settings.themeColor) {
       settings.themeColor = '#FF6B16';
       needsSave = true;
@@ -1066,88 +1076,73 @@ export const resetFaqSection = async (req, res) => {
 };
 
 /**
- * Helper to compute a darker hover shade from a hex color
- */
-const computeHoverShade = (hex, factor = 0.86) => {
-  let clean = hex.replace('#', '');
-  if (clean.length === 3) {
-    clean = clean.split('').map((c) => c + c).join('');
-  }
-  const r = Math.max(0, Math.floor(parseInt(clean.substring(0, 2), 16) * factor));
-  const g = Math.max(0, Math.floor(parseInt(clean.substring(2, 4), 16) * factor));
-  const b = Math.max(0, Math.floor(parseInt(clean.substring(4, 6), 16) * factor));
-  const toHex = (n) => n.toString(16).padStart(2, '0');
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-};
-
-/**
- * @desc    Update website theme primary color & hover shade
- * @route   PUT /api/settings/theme
+ * @desc    Update website logo display size (Header & Footer logo height)
+ * @route   PUT /api/settings/logo-size
  * @access  Private (Admin)
  */
-export const updateThemeColor = async (req, res) => {
+export const updateLogoSize = async (req, res) => {
   try {
-    const { themeColor, themeColorHover } = req.body;
+    const { logoHeight, footerLogoHeight } = req.body;
+    const settings = await getOrCreateDefaultSettings();
 
-    const hexRegex = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
-    if (!themeColor || !hexRegex.test(themeColor)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid theme color. Please provide a valid HEX color code (e.g. #FF6B16).',
-      });
+    if (logoHeight !== undefined) {
+      const parsedHeader = Number(logoHeight);
+      if (!isNaN(parsedHeader) && parsedHeader >= 20 && parsedHeader <= 200) {
+        settings.logoHeight = parsedHeader;
+      }
     }
 
-    const settings = await getOrCreateDefaultSettings();
-    settings.themeColor = themeColor;
-    settings.themeColorHover =
-      themeColorHover && hexRegex.test(themeColorHover)
-        ? themeColorHover
-        : computeHoverShade(themeColor);
+    if (footerLogoHeight !== undefined) {
+      const parsedFooter = Number(footerLogoHeight);
+      if (!isNaN(parsedFooter) && parsedFooter >= 20 && parsedFooter <= 200) {
+        settings.footerLogoHeight = parsedFooter;
+      }
+    }
 
     settings.updatedBy = req.admin ? req.admin._id : null;
     await settings.save();
 
     res.status(200).json({
       success: true,
-      message: 'Website theme color updated successfully!',
-      themeColor: settings.themeColor,
-      themeColorHover: settings.themeColorHover,
+      message: 'Logo sizes updated successfully!',
+      logoHeight: settings.logoHeight,
+      footerLogoHeight: settings.footerLogoHeight,
       settings,
     });
   } catch (error) {
-    console.error('[UpdateThemeColor Error]:', error.message);
+    console.error('[UpdateLogoSize Error]:', error.message);
     res.status(500).json({
       success: false,
-      message: error.message || 'Error updating website theme color',
+      message: error.message || 'Error updating logo size',
     });
   }
 };
 
 /**
- * @desc    Reset website theme primary color to default orange (#FF6B16)
- * @route   POST /api/settings/theme/reset
+ * @desc    Reset website logo display size to default (48px)
+ * @route   POST /api/settings/logo-size/reset
  * @access  Private (Admin)
  */
-export const resetThemeColor = async (req, res) => {
+export const resetLogoSize = async (req, res) => {
   try {
     const settings = await getOrCreateDefaultSettings();
-    settings.themeColor = '#FF6B16';
-    settings.themeColorHover = '#e05809';
+    settings.logoHeight = 48;
+    settings.footerLogoHeight = 48;
     settings.updatedBy = req.admin ? req.admin._id : null;
     await settings.save();
 
     res.status(200).json({
       success: true,
-      message: 'Website theme color reset to default orange (#FF6B16) successfully!',
-      themeColor: settings.themeColor,
-      themeColorHover: settings.themeColorHover,
+      message: 'Logo sizes reset to default (48px) successfully!',
+      logoHeight: settings.logoHeight,
+      footerLogoHeight: settings.footerLogoHeight,
       settings,
     });
   } catch (error) {
-    console.error('[ResetThemeColor Error]:', error.message);
+    console.error('[ResetLogoSize Error]:', error.message);
     res.status(500).json({
       success: false,
-      message: error.message || 'Error resetting website theme color',
+      message: error.message || 'Error resetting logo size',
     });
   }
 };

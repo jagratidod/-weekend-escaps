@@ -15,29 +15,15 @@ import {
   Eye,
   EyeOff,
   ShieldCheck,
-  Palette,
-  Sparkles,
-  Check,
-  CheckCircle2,
-  Pipette,
-  SlidersHorizontal,
-  Grid,
-  Layers,
+  Maximize2,
+  Plus,
+  Minus,
+  Sliders,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { useSettings, cleanWhatsAppNumber, buildWhatsAppUrl } from '../../context/SettingsContext';
 import { useAuth } from '../../context/AuthContext';
-import {
-  FULL_COLOR_PALETTES,
-  THEME_PRESETS,
-  DEFAULT_THEME_COLOR,
-  DEFAULT_THEME_HOVER,
-  computeHoverShade,
-  hexToRgb,
-  applyThemeColor,
-  isValidHex,
-  hslToHex,
-  hexToHsl,
-} from '../../utils/themeUtils';
 
 export default function LogoManager() {
   const {
@@ -47,10 +33,10 @@ export default function LogoManager() {
     rawFooterLogoUrl,
     darkLogoUrl,
     rawDarkLogoUrl,
-    themeColor,
-    themeColorHover,
-    updateThemeColor,
-    resetThemeColor,
+    logoHeight,
+    footerLogoHeight,
+    updateLogoSize,
+    resetLogoSize,
     whatsappNumber,
     whatsappMessage,
     refreshSettings,
@@ -94,153 +80,91 @@ export default function LogoManager() {
   const [savingWa, setSavingWa] = useState(false);
   const [waStatusMessage, setWaStatusMessage] = useState({ type: '', text: '' });
 
-  // Theme Primary Color Customizer state
-  const [selectedThemeColor, setSelectedThemeColor] = useState(themeColor || DEFAULT_THEME_COLOR);
-  const [selectedThemeHover, setSelectedThemeHover] = useState(themeColorHover || DEFAULT_THEME_HOVER);
-  const [hexInput, setHexInput] = useState(themeColor || DEFAULT_THEME_COLOR);
-  const [hsl, setHsl] = useState(() => hexToHsl(themeColor || DEFAULT_THEME_COLOR));
-  const [activePaletteCategory, setActivePaletteCategory] = useState('all');
-  const [activeViewTab, setActiveViewTab] = useState('palettes'); // 'palettes' | 'spectrum'
-  const [savingTheme, setSavingTheme] = useState(false);
-  const [themeStatusMessage, setThemeStatusMessage] = useState({ type: '', text: '' });
-  const colorPickerInputRef = useRef(null);
+  // Logo Dimensions & Display Size state
+  const [headerSize, setHeaderSize] = useState(Number(logoHeight) || 48);
+  const [footerSize, setFooterSize] = useState(Number(footerLogoHeight) || 48);
+  const [previewBgMode, setPreviewBgMode] = useState('light'); // 'light' | 'dark'
+  const [savingLogoSize, setSavingLogoSize] = useState(false);
+  const [logoSizeStatusMessage, setLogoSizeStatusMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
-    if (themeColor) {
-      setSelectedThemeColor(themeColor);
-      setSelectedThemeHover(themeColorHover || computeHoverShade(themeColor));
-      setHexInput(themeColor);
-      setHsl(hexToHsl(themeColor));
+    if (logoHeight !== undefined && logoHeight !== null) {
+      setHeaderSize(Number(logoHeight) || 48);
     }
-  }, [themeColor, themeColorHover]);
+  }, [logoHeight]);
 
-  const handleSelectColor = (color, hover) => {
-    const cleanHex = color.toUpperCase();
-    setSelectedThemeColor(cleanHex);
-    setHexInput(cleanHex);
-    const computedHover = hover || computeHoverShade(cleanHex);
-    setSelectedThemeHover(computedHover);
-    setHsl(hexToHsl(cleanHex));
-    // Instant live preview across the entire website
-    applyThemeColor(cleanHex, computedHover);
-  };
-
-  const handleHexInputChange = (e) => {
-    let val = e.target.value;
-    if (!val.startsWith('#') && val.length > 0) {
-      val = '#' + val;
+  useEffect(() => {
+    if (footerLogoHeight !== undefined && footerLogoHeight !== null) {
+      setFooterSize(Number(footerLogoHeight) || 48);
     }
-    setHexInput(val);
-    if (isValidHex(val)) {
-      handleSelectColor(val);
-    }
+  }, [footerLogoHeight]);
+
+  const handleHeaderSizeChange = (val) => {
+    const num = Math.min(160, Math.max(20, Number(val) || 20));
+    setHeaderSize(num);
   };
 
-  const handleHexInputBlur = () => {
-    if (!isValidHex(hexInput)) {
-      setHexInput(selectedThemeColor);
-    } else {
-      handleSelectColor(hexInput);
-    }
+  const handleFooterSizeChange = (val) => {
+    const num = Math.min(160, Math.max(20, Number(val) || 20));
+    setFooterSize(num);
   };
 
-  const handleHueSliderChange = (newHue) => {
-    const updatedHsl = { ...hsl, h: Number(newHue) };
-    setHsl(updatedHsl);
-    const newHex = hslToHex(updatedHsl.h, updatedHsl.s, updatedHsl.l);
-    setSelectedThemeColor(newHex);
-    setHexInput(newHex);
-    const hover = computeHoverShade(newHex);
-    setSelectedThemeHover(hover);
-    applyThemeColor(newHex, hover);
+  const handleStepHeaderSize = (delta) => {
+    setHeaderSize((prev) => Math.min(160, Math.max(20, prev + delta)));
   };
 
-  const handleSaturationSliderChange = (newSat) => {
-    const updatedHsl = { ...hsl, s: Number(newSat) };
-    setHsl(updatedHsl);
-    const newHex = hslToHex(updatedHsl.h, updatedHsl.s, updatedHsl.l);
-    setSelectedThemeColor(newHex);
-    setHexInput(newHex);
-    const hover = computeHoverShade(newHex);
-    setSelectedThemeHover(hover);
-    applyThemeColor(newHex, hover);
+  const handleStepFooterSize = (delta) => {
+    setFooterSize((prev) => Math.min(160, Math.max(20, prev + delta)));
   };
 
-  const handleLightnessSliderChange = (newLight) => {
-    const updatedHsl = { ...hsl, l: Number(newLight) };
-    setHsl(updatedHsl);
-    const newHex = hslToHex(updatedHsl.h, updatedHsl.s, updatedHsl.l);
-    setSelectedThemeColor(newHex);
-    setHexInput(newHex);
-    const hover = computeHoverShade(newHex);
-    setSelectedThemeHover(hover);
-    applyThemeColor(newHex, hover);
-  };
-
-  const handleOpenEyeDropper = async () => {
-    if (typeof window !== 'undefined' && window.EyeDropper) {
-      try {
-        const eyeDropper = new window.EyeDropper();
-        const result = await eyeDropper.open();
-        if (result && result.sRGBHex) {
-          handleSelectColor(result.sRGBHex.toUpperCase());
-        }
-      } catch (e) {
-        // User cancelled picker
-      }
-    }
-  };
-
-  const handleSaveTheme = async (e) => {
+  const handleSaveLogoSizes = async (e) => {
     if (e) e.preventDefault();
     if (!token) {
-      setThemeStatusMessage({ type: 'error', text: 'Admin authorization token missing. Please re-login.' });
+      setLogoSizeStatusMessage({ type: 'error', text: 'Admin authorization token missing. Please re-login.' });
       return;
     }
-    const hexRegex = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
-    if (!hexRegex.test(selectedThemeColor)) {
-      setThemeStatusMessage({ type: 'error', text: 'Please enter a valid HEX color code (e.g. #FF6B16).' });
-      return;
-    }
-    setSavingTheme(true);
-    setThemeStatusMessage({ type: '', text: '' });
+    setSavingLogoSize(true);
+    setLogoSizeStatusMessage({ type: '', text: '' });
     try {
-      const res = await updateThemeColor(token, selectedThemeColor, selectedThemeHover);
+      const res = await updateLogoSize(token, {
+        logoHeight: headerSize,
+        footerLogoHeight: footerSize,
+      });
       if (res.success) {
-        setThemeStatusMessage({
+        setLogoSizeStatusMessage({
           type: 'success',
-          text: `Website theme color successfully updated to ${res.themeColor}! All pages and buttons now reflect this color.`,
+          text: `Logo sizes updated successfully! Header Logo: ${headerSize}px, Footer Logo: ${footerSize}px. Live website updated.`,
         });
       } else {
-        setThemeStatusMessage({ type: 'error', text: res.message || 'Failed to update theme color.' });
+        setLogoSizeStatusMessage({ type: 'error', text: res.message || 'Failed to update logo sizes.' });
       }
     } catch (err) {
-      setThemeStatusMessage({ type: 'error', text: err.message || 'Error updating theme color.' });
+      setLogoSizeStatusMessage({ type: 'error', text: err.message || 'Error updating logo sizes.' });
     } finally {
-      setSavingTheme(false);
+      setSavingLogoSize(false);
     }
   };
 
-  const handleResetTheme = async () => {
+  const handleResetLogoSizes = async () => {
     if (!token) return;
-    setSavingTheme(true);
-    setThemeStatusMessage({ type: '', text: '' });
+    setSavingLogoSize(true);
+    setLogoSizeStatusMessage({ type: '', text: '' });
     try {
-      const res = await resetThemeColor(token);
+      const res = await resetLogoSize(token);
       if (res.success) {
-        setSelectedThemeColor(DEFAULT_THEME_COLOR);
-        setSelectedThemeHover(DEFAULT_THEME_HOVER);
-        setThemeStatusMessage({
+        setHeaderSize(48);
+        setFooterSize(48);
+        setLogoSizeStatusMessage({
           type: 'success',
-          text: 'Website theme color reset to default Weekend Orange (#FF6B16) successfully!',
+          text: 'Logo sizes reset to default (48px) successfully!',
         });
       } else {
-        setThemeStatusMessage({ type: 'error', text: res.message || 'Failed to reset theme color.' });
+        setLogoSizeStatusMessage({ type: 'error', text: res.message || 'Failed to reset logo sizes.' });
       }
     } catch (err) {
-      setThemeStatusMessage({ type: 'error', text: err.message || 'Error resetting theme color.' });
+      setLogoSizeStatusMessage({ type: 'error', text: err.message || 'Error resetting logo sizes.' });
     } finally {
-      setSavingTheme(false);
+      setSavingLogoSize(false);
     }
   };
 
@@ -676,18 +600,31 @@ export default function LogoManager() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6 items-start">
         {/* Left Column: Current Live Logo Display */}
         <div className="lg:col-span-5 space-y-4">
-          <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500">
-            Current Active Logo
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500">
+              Current Active Logo
+            </label>
+            <a
+              href="#logo-size-section"
+              className="text-[11px] font-bold text-[#FF6B16] hover:underline flex items-center gap-1"
+            >
+              <span>Height: {headerSize}px</span>
+              <Sliders className="w-3 h-3" />
+            </a>
+          </div>
 
           <div className="p-8 rounded-2xl border border-neutral-200 bg-neutral-50 flex flex-col items-center justify-center min-h-[190px] relative group">
             <img
               src={logoUrl}
               alt="Current Logo"
-              className="max-h-16 sm:max-h-20 w-auto object-contain transition-transform group-hover:scale-105"
+              style={{ height: `${headerSize}px` }}
+              className="w-auto object-contain transition-transform group-hover:scale-105"
             />
             <span className="absolute bottom-3 left-4 text-[10px] font-mono text-neutral-400 truncate max-w-[240px]">
               {rawLogoUrl}
+            </span>
+            <span className="absolute bottom-3 right-4 text-[10px] font-mono text-neutral-500 bg-neutral-200/80 px-2 py-0.5 rounded">
+              {headerSize}px
             </span>
           </div>
 
@@ -986,9 +923,13 @@ export default function LogoManager() {
             <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500">
               Current Active Footer Logo
             </label>
-            <span className="text-[10px] font-semibold text-neutral-400 bg-neutral-900 px-2 py-0.5 rounded-full text-white">
-              Dark Footer Mockup
-            </span>
+            <a
+              href="#logo-size-section"
+              className="text-[11px] font-bold text-[#FF6B16] hover:underline flex items-center gap-1"
+            >
+              <span>Height: {footerSize}px</span>
+              <Sliders className="w-3 h-3" />
+            </a>
           </div>
 
           {/* Dark background container to accurately simulate the dark website footer */}
@@ -996,12 +937,16 @@ export default function LogoManager() {
             <img
               src={footerLogoUrl}
               alt="Current Footer Logo"
-              className={`max-h-16 sm:max-h-20 w-auto object-contain transition-transform group-hover:scale-105 ${
+              style={{ height: `${footerSize}px` }}
+              className={`w-auto object-contain transition-transform group-hover:scale-105 ${
                 footerLogoUrl?.includes('/logo/weekend-escapes-logo.svg') ? 'invert brightness-200' : ''
               }`}
             />
             <span className="absolute bottom-3 left-4 text-[10px] font-mono text-neutral-400 truncate max-w-[240px]">
               {rawFooterLogoUrl || footerLogoUrl}
+            </span>
+            <span className="absolute bottom-3 right-4 text-[10px] font-mono text-neutral-400 bg-neutral-800 px-2 py-0.5 rounded">
+              {footerSize}px
             </span>
           </div>
 
@@ -1089,415 +1034,356 @@ export default function LogoManager() {
     </div>
 
     {/* ══════════════════════════════════════════════════════════════════
-        4. WEBSITE THEME & BRAND PRIMARY COLOR CUSTOMIZER
+        4. WEBSITE LOGO SIZE & DIMENSIONS CONTROLLER (INCREASE / DECREASE)
         ══════════════════════════════════════════════════════════════════ */}
-    <div id="website-theme-section" className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-150 shadow-sm mt-8 scroll-mt-6">
+    <div id="logo-size-section" className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-150 shadow-sm mt-8 scroll-mt-6">
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-neutral-100">
         <div>
           <div className="inline-flex items-center gap-2 mb-1.5">
-            <span
-              className="w-2.5 h-2.5 rounded-full animate-pulse"
-              style={{ backgroundColor: selectedThemeColor }}
-            ></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[#FF6B16] animate-pulse"></span>
             <span className="font-extrabold text-xs uppercase tracking-wider text-neutral-600">
-              Global Brand Customizer
+              Logo Dimensions & Scaling
             </span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-[#111111] flex items-center gap-2.5">
-            <Palette className="w-6 h-6" style={{ color: selectedThemeColor }} />
-            <span>Website Theme & Primary Color</span>
+            <Sliders className="w-6 h-6 text-[#FF6B16]" />
+            <span>Logo Display Size (Increase / Decrease)</span>
           </h2>
           <p className="text-neutral-500 text-xs sm:text-sm mt-0.5">
-            Choose the primary brand color for Weekend Escapes. All orange buttons, badges, highlights, scrollbars, glowing accents, and icons will instantly update to this color.
+            Website ke Header (Navbar) aur Footer logo ki size yaha se increase ya decrease karein. Live preview me real-time size dikhega.
           </p>
         </div>
 
         <button
           type="button"
-          onClick={handleResetTheme}
-          disabled={savingTheme || selectedThemeColor.toUpperCase() === DEFAULT_THEME_COLOR.toUpperCase()}
+          onClick={handleResetLogoSizes}
+          disabled={savingLogoSize || (headerSize === 48 && footerSize === 48)}
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-neutral-200 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 text-xs font-semibold transition-all w-fit cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <RotateCcw className="w-3.5 h-3.5" />
-          Reset to Default Orange
+          Reset to Default (48px)
         </button>
       </div>
 
       {/* Status Alert */}
-      {themeStatusMessage.text && (
+      {logoSizeStatusMessage.text && (
         <div
           className={`mt-6 p-4 rounded-2xl flex items-start gap-3 text-sm animate-in fade-in duration-200 ${
-            themeStatusMessage.type === 'success'
+            logoSizeStatusMessage.type === 'success'
               ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
               : 'bg-red-50 text-red-700 border border-red-200'
           }`}
         >
-          {themeStatusMessage.type === 'success' ? (
+          {logoSizeStatusMessage.type === 'success' ? (
             <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
           ) : (
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
           )}
-          <span className="font-medium">{themeStatusMessage.text}</span>
+          <span className="font-medium">{logoSizeStatusMessage.text}</span>
         </div>
       )}
 
-      {/* Main Grid: Controls on Left, Live Preview on Right */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
+      {/* Two Column Grid: Header Logo Size & Footer Logo Size */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
         
-        {/* Left Column (7 cols): Full Color Spectrum & All Palettes */}
-        <div className="lg:col-span-7 space-y-6">
-          
-          {/* 1. Custom Color Input & Eyedropper Bar */}
-          <div className="bg-neutral-50 p-5 rounded-2xl border border-neutral-200/80">
-            <div className="flex items-center justify-between mb-3">
-              <label className="text-xs font-extrabold text-neutral-700 uppercase tracking-wider flex items-center gap-2">
-                <Palette className="w-4 h-4 text-neutral-500" />
-                <span>Custom Color & Hex Code</span>
-              </label>
-              {typeof window !== 'undefined' && window.EyeDropper && (
-                <button
-                  type="button"
-                  onClick={handleOpenEyeDropper}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-white border border-neutral-200 text-neutral-700 hover:text-neutral-900 hover:border-neutral-300 transition-all cursor-pointer shadow-xs"
-                >
-                  <Pipette className="w-3.5 h-3.5 text-neutral-600" />
-                  <span>Pick from Screen</span>
-                </button>
-              )}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4">
-              {/* Native color picker trigger swatch button (no ugly black box!) */}
-              <div className="relative group shrink-0">
-                <button
-                  type="button"
-                  onClick={() => colorPickerInputRef.current?.click()}
-                  className="w-14 h-14 rounded-2xl shadow-md border-2 border-white flex items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 relative"
-                  style={{
-                    backgroundColor: selectedThemeColor,
-                    boxShadow: `0 8px 16px -4px ${selectedThemeColor}44`,
-                  }}
-                  title="Click to open system color dialog"
-                >
-                  <Palette className="w-6 h-6 text-white drop-shadow-md" />
-                </button>
-                <input
-                  ref={colorPickerInputRef}
-                  type="color"
-                  value={isValidHex(selectedThemeColor) ? selectedThemeColor : DEFAULT_THEME_COLOR}
-                  onChange={(e) => handleSelectColor(e.target.value)}
-                  className="sr-only"
-                />
-              </div>
-
-              {/* HEX text input with graceful typing */}
-              <div className="flex-1 min-w-[160px]">
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 font-mono font-bold text-xs sm:text-sm">
-                    HEX
-                  </span>
-                  <input
-                    type="text"
-                    value={hexInput}
-                    onChange={handleHexInputChange}
-                    onBlur={handleHexInputBlur}
-                    placeholder="#FF6B16"
-                    maxLength={7}
-                    className="w-full h-12 pl-13 pr-4 rounded-xl border border-neutral-200 bg-white text-sm font-mono font-bold text-neutral-900 focus:ring-2 focus:border-neutral-900 outline-none uppercase transition-all"
-                  />
+        {/* Card 1: Header / Navbar Logo Size */}
+        <div className="p-6 rounded-2xl border border-neutral-200/90 bg-[#F8FAFC] flex flex-col justify-between space-y-6">
+          <div>
+            <div className="flex items-center justify-between gap-3 pb-4 border-b border-neutral-200">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[#FF6B16]/10 text-[#FF6B16] flex items-center justify-center font-bold">
+                  <Maximize2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-[#111111]">Header Navbar Logo Size</h3>
+                  <p className="text-xs text-neutral-500">Website top navigation bar and mobile menu</p>
                 </div>
               </div>
-
-              {/* Active Color Info Pill */}
-              <div
-                className="px-4 py-2.5 rounded-xl text-xs font-bold text-white flex items-center gap-2 shadow-sm shrink-0"
-                style={{ backgroundColor: selectedThemeColor }}
-              >
-                <span className="w-2 h-2 rounded-full bg-white/90 animate-ping"></span>
-                <span>Active: {selectedThemeColor}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 2. Interactive Full Rainbow Spectrum & Hue Sliders */}
-          <div className="bg-white p-5 rounded-2xl border border-neutral-200/80 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-extrabold text-neutral-700 uppercase tracking-wider flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 text-neutral-500" />
-                <span>Spectrum Hue & Tone Sliders</span>
-              </label>
-              <span className="text-[11px] font-mono text-neutral-500 font-bold">
-                Hue: {hsl.h}° • Sat: {hsl.s}% • Light: {hsl.l}%
+              <span className="px-3 py-1 rounded-xl bg-white border border-neutral-200 text-sm font-black text-[#FF6B16] shadow-sm">
+                {headerSize} px
               </span>
             </div>
 
-            {/* Rainbow Hue Track (0 to 360 deg) */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-[11px] text-neutral-500 font-medium">
-                <span>Color Spectrum (Rainbow Hue)</span>
-                <span className="font-mono text-neutral-700 font-bold">{hsl.h}°</span>
-              </div>
-              <div className="relative h-6 rounded-xl overflow-hidden shadow-inner border border-neutral-200">
-                <input
-                  type="range"
-                  min="0"
-                  max="360"
-                  value={hsl.h}
-                  onChange={(e) => handleHueSliderChange(e.target.value)}
-                  className="w-full h-full appearance-none cursor-pointer bg-transparent"
-                  style={{
-                    background: 'linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)',
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Saturation & Lightness Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-              {/* Saturation Slider */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-[11px] text-neutral-500 font-medium">
-                  <span>Vibrancy (Saturation)</span>
-                  <span className="font-mono text-neutral-700 font-bold">{hsl.s}%</span>
-                </div>
-                <div className="relative h-5 rounded-lg overflow-hidden border border-neutral-200">
-                  <input
-                    type="range"
-                    min="10"
-                    max="100"
-                    value={hsl.s}
-                    onChange={(e) => handleSaturationSliderChange(e.target.value)}
-                    className="w-full h-full appearance-none cursor-pointer bg-transparent"
-                    style={{
-                      background: `linear-gradient(to right, ${hslToHex(hsl.h, 10, hsl.l)}, ${hslToHex(hsl.h, 100, hsl.l)})`,
-                    }}
-                  />
-                </div>
+            {/* Stepper Buttons & Range Slider */}
+            <div className="mt-5 space-y-4">
+              <div className="flex items-center justify-between text-xs font-semibold text-neutral-600">
+                <span>Adjust Height (20px - 140px):</span>
+                <span className="text-[11px] text-neutral-400 font-mono">Current: {headerSize}px</span>
               </div>
 
-              {/* Lightness Slider */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-[11px] text-neutral-500 font-medium">
-                  <span>Tone (Shade / Depth)</span>
-                  <span className="font-mono text-neutral-700 font-bold">{hsl.l}%</span>
-                </div>
-                <div className="relative h-5 rounded-lg overflow-hidden border border-neutral-200">
+              {/* Slider with - and + buttons */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleStepHeaderSize(-2)}
+                  disabled={headerSize <= 20}
+                  className="w-10 h-10 rounded-xl bg-white border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-100 flex items-center justify-center text-neutral-700 font-bold transition-all shadow-sm active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  title="Decrease 2px"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+
+                <div className="flex-1 relative">
                   <input
                     type="range"
                     min="20"
-                    max="80"
-                    value={hsl.l}
-                    onChange={(e) => handleLightnessSliderChange(e.target.value)}
-                    className="w-full h-full appearance-none cursor-pointer bg-transparent"
-                    style={{
-                      background: `linear-gradient(to right, #111111, ${hslToHex(hsl.h, hsl.s, 50)}, #ffffff)`,
-                    }}
+                    max="140"
+                    step="1"
+                    value={headerSize}
+                    onChange={(e) => handleHeaderSizeChange(e.target.value)}
+                    className="w-full accent-[#FF6B16] h-2 bg-neutral-200 rounded-lg cursor-pointer"
                   />
+                  <div className="flex justify-between text-[10px] text-neutral-400 mt-1 font-mono">
+                    <span>20px (Compact)</span>
+                    <span>48px (Default)</span>
+                    <span>140px (Extra Large)</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleStepHeaderSize(2)}
+                  disabled={headerSize >= 140}
+                  className="w-10 h-10 rounded-xl bg-white border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-100 flex items-center justify-center text-neutral-700 font-bold transition-all shadow-sm active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  title="Increase 2px"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+
+                {/* Direct Number Input */}
+                <div className="w-20">
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="20"
+                      max="140"
+                      value={headerSize}
+                      onChange={(e) => handleHeaderSizeChange(e.target.value)}
+                      className="w-full pl-2.5 pr-6 py-2 text-center text-xs font-bold rounded-xl border border-neutral-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6B16]/20 focus:border-[#FF6B16]"
+                    />
+                    <span className="absolute right-2 top-2.5 text-[10px] text-neutral-400 font-medium pointer-events-none">px</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Preset Buttons */}
+              <div className="pt-2">
+                <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block mb-2">Quick Presets:</span>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { label: 'Small', size: 36 },
+                    { label: 'Default', size: 48 },
+                    { label: 'Medium-Large', size: 60 },
+                    { label: 'Large', size: 76 },
+                    { label: 'Extra Large', size: 96 },
+                  ].map((preset) => (
+                    <button
+                      key={preset.size}
+                      type="button"
+                      onClick={() => handleHeaderSizeChange(preset.size)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        headerSize === preset.size
+                          ? 'bg-[#FF6B16] text-white shadow-sm'
+                          : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-100'
+                      }`}
+                    >
+                      {preset.label} ({preset.size}px)
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* 3. All Color Palettes Library (80+ Colors across 10 Families) */}
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <label className="text-xs font-extrabold text-neutral-700 uppercase tracking-wider flex items-center gap-2">
-                <Grid className="w-4 h-4 text-neutral-500" />
-                <span>All Color Palettes Library (80+ Shades)</span>
-              </label>
-              <span className="text-[11px] text-neutral-400">10 Complete Color Families</span>
-            </div>
-
-            {/* Category Filter Pills */}
-            <div className="flex flex-wrap gap-1.5 pb-1">
-              <button
-                type="button"
-                onClick={() => setActivePaletteCategory('all')}
-                className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                  activePaletteCategory === 'all'
-                    ? 'bg-neutral-900 text-white shadow-xs'
-                    : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-600'
-                }`}
-              >
-                All Families (80+)
-              </button>
-              {FULL_COLOR_PALETTES.map((palette) => {
-                const isActive = activePaletteCategory === palette.id;
-                return (
+            {/* Live Interactive Preview Box */}
+            <div className="mt-5 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-neutral-600">Header Live Preview:</span>
+                <div className="inline-flex items-center gap-1 bg-white border border-neutral-200 rounded-lg p-0.5 text-[11px]">
                   <button
-                    key={palette.id}
                     type="button"
-                    onClick={() => setActivePaletteCategory(palette.id)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-                      isActive
-                        ? 'bg-neutral-900 text-white shadow-xs'
-                        : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-600'
+                    onClick={() => setPreviewBgMode('light')}
+                    className={`px-2 py-0.5 rounded-md font-medium transition-colors flex items-center gap-1 cursor-pointer ${
+                      previewBgMode === 'light' ? 'bg-neutral-100 text-neutral-900 font-bold' : 'text-neutral-500 hover:text-neutral-800'
                     }`}
                   >
-                    <span
-                      className="w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: palette.colors[0].hex }}
-                    ></span>
-                    <span>{palette.family.split(' ')[0]}</span>
+                    <Sun className="w-3 h-3 text-amber-500" /> Light Nav
                   </button>
-                );
-              })}
-            </div>
-
-            {/* Color Palettes Grid Accordion / List */}
-            <div className="space-y-4 max-h-[480px] overflow-y-auto pr-1">
-              {FULL_COLOR_PALETTES.filter(
-                (p) => activePaletteCategory === 'all' || activePaletteCategory === p.id
-              ).map((palette) => (
-                <div
-                  key={palette.id}
-                  className="bg-neutral-50/70 p-4 rounded-2xl border border-neutral-200/70 space-y-2.5"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="w-3 h-3 rounded-full shrink-0"
-                        style={{ backgroundColor: palette.colors[0].hex }}
-                      ></span>
-                      <span className="font-bold text-xs text-neutral-800">
-                        {palette.family}
-                      </span>
-                    </div>
-                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-white border border-neutral-200 text-neutral-500">
-                      {palette.category}
-                    </span>
-                  </div>
-
-                  {/* 8 Shades Grid for this Family */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {palette.colors.map((colorItem) => {
-                      const isSelected =
-                        selectedThemeColor.toUpperCase() === colorItem.hex.toUpperCase();
-                      return (
-                        <button
-                          key={colorItem.hex}
-                          type="button"
-                          onClick={() => handleSelectColor(colorItem.hex)}
-                          className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer relative overflow-hidden group flex items-center gap-2.5 ${
-                            isSelected
-                              ? 'border-neutral-900 bg-white shadow-md ring-2 ring-neutral-900/10'
-                              : 'border-neutral-200/80 bg-white hover:border-neutral-300 hover:shadow-xs'
-                          }`}
-                        >
-                          <span
-                            className="w-7 h-7 rounded-lg shadow-xs flex items-center justify-center text-white shrink-0"
-                            style={{ backgroundColor: colorItem.hex }}
-                          >
-                            {isSelected && <Check className="w-4 h-4 stroke-[3]" />}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <div className="font-bold text-[11px] text-neutral-800 truncate leading-tight">
-                              {colorItem.name}
-                            </div>
-                            <div className="font-mono text-[10px] text-neutral-400 mt-0.5">
-                              {colorItem.hex}
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewBgMode('dark')}
+                    className={`px-2 py-0.5 rounded-md font-medium transition-colors flex items-center gap-1 cursor-pointer ${
+                      previewBgMode === 'dark' ? 'bg-neutral-800 text-white font-bold' : 'text-neutral-500 hover:text-neutral-800'
+                    }`}
+                  >
+                    <Moon className="w-3 h-3 text-blue-300" /> Dark Nav
+                  </button>
                 </div>
-              ))}
+              </div>
+
+              <div
+                className={`p-6 rounded-2xl flex items-center justify-center min-h-[130px] border transition-colors relative overflow-hidden ${
+                  previewBgMode === 'light'
+                    ? 'bg-white border-neutral-200'
+                    : 'bg-[#0B131A] border-neutral-800'
+                }`}
+              >
+                <img
+                  src={
+                    previewBgMode === 'dark'
+                      ? (previewDarkUrl || darkLogoUrl || previewUrl || logoUrl)
+                      : (previewUrl || logoUrl)
+                  }
+                  alt="Header Logo Preview"
+                  style={{ height: `${headerSize}px` }}
+                  className="w-auto object-contain max-w-full transition-all duration-150 drop-shadow-sm"
+                />
+                <span className="absolute bottom-2 right-2 text-[10px] font-mono px-2 py-0.5 rounded bg-black/40 text-white/80 backdrop-blur-xs">
+                  {headerSize}px
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Right Column (5 cols): Live Interactive Visual Preview */}
-        <div className="lg:col-span-5">
-          <div className="bg-neutral-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
-            {/* Background Glow */}
-            <div
-              className="absolute -top-10 -right-10 w-44 h-44 rounded-full blur-3xl opacity-20 pointer-events-none transition-colors duration-500"
-              style={{ backgroundColor: selectedThemeColor }}
-            ></div>
-
-            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" style={{ color: selectedThemeColor }} />
-                <span>Live Interactive Preview</span>
-              </span>
-              <span
-                className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                style={{
-                  backgroundColor: `${selectedThemeColor}33`,
-                  color: selectedThemeColor,
-                  border: `1px solid ${selectedThemeColor}55`,
-                }}
-              >
-                Instant Preview
+        {/* Card 2: Footer Logo Size */}
+        <div className="p-6 rounded-2xl border border-neutral-200/90 bg-[#F8FAFC] flex flex-col justify-between space-y-6">
+          <div>
+            <div className="flex items-center justify-between gap-3 pb-4 border-b border-neutral-200">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-neutral-900 text-white flex items-center justify-center font-bold">
+                  <Maximize2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-[#111111]">Footer Logo Size</h3>
+                  <p className="text-xs text-neutral-500">Website bottom footer and Call-to-Action areas</p>
+                </div>
+              </div>
+              <span className="px-3 py-1 rounded-xl bg-white border border-neutral-200 text-sm font-black text-neutral-800 shadow-sm">
+                {footerSize} px
               </span>
             </div>
 
-            {/* Simulated UI components */}
-            <div className="space-y-4">
-              {/* Badge Preview */}
-              <div>
-                <span
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider"
-                  style={{
-                    backgroundColor: `${selectedThemeColor}26`,
-                    color: selectedThemeColor,
-                  }}
+            {/* Stepper Buttons & Range Slider */}
+            <div className="mt-5 space-y-4">
+              <div className="flex items-center justify-between text-xs font-semibold text-neutral-600">
+                <span>Adjust Height (20px - 140px):</span>
+                <span className="text-[11px] text-neutral-400 font-mono">Current: {footerSize}px</span>
+              </div>
+
+              {/* Slider with - and + buttons */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleStepFooterSize(-2)}
+                  disabled={footerSize <= 20}
+                  className="w-10 h-10 rounded-xl bg-white border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-100 flex items-center justify-center text-neutral-700 font-bold transition-all shadow-sm active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  title="Decrease 2px"
                 >
-                  <span
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: selectedThemeColor }}
-                  ></span>
-                  Featured Expedition
+                  <Minus className="w-4 h-4" />
+                </button>
+
+                <div className="flex-1 relative">
+                  <input
+                    type="range"
+                    min="20"
+                    max="140"
+                    step="1"
+                    value={footerSize}
+                    onChange={(e) => handleFooterSizeChange(e.target.value)}
+                    className="w-full accent-neutral-800 h-2 bg-neutral-200 rounded-lg cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[10px] text-neutral-400 mt-1 font-mono">
+                    <span>20px (Compact)</span>
+                    <span>48px (Default)</span>
+                    <span>140px (Extra Large)</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleStepFooterSize(2)}
+                  disabled={footerSize >= 140}
+                  className="w-10 h-10 rounded-xl bg-white border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-100 flex items-center justify-center text-neutral-700 font-bold transition-all shadow-sm active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  title="Increase 2px"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+
+                {/* Direct Number Input */}
+                <div className="w-20">
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="20"
+                      max="140"
+                      value={footerSize}
+                      onChange={(e) => handleFooterSizeChange(e.target.value)}
+                      className="w-full pl-2.5 pr-6 py-2 text-center text-xs font-bold rounded-xl border border-neutral-200 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-700"
+                    />
+                    <span className="absolute right-2 top-2.5 text-[10px] text-neutral-400 font-medium pointer-events-none">px</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Preset Buttons */}
+              <div className="pt-2">
+                <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block mb-2">Quick Presets:</span>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { label: 'Small', size: 36 },
+                    { label: 'Default', size: 48 },
+                    { label: 'Medium-Large', size: 60 },
+                    { label: 'Large', size: 76 },
+                    { label: 'Extra Large', size: 96 },
+                  ].map((preset) => (
+                    <button
+                      key={preset.size}
+                      type="button"
+                      onClick={() => handleFooterSizeChange(preset.size)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        footerSize === preset.size
+                          ? 'bg-neutral-900 text-white shadow-sm'
+                          : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-100'
+                      }`}
+                    >
+                      {preset.label} ({preset.size}px)
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Live Interactive Preview Box on Dark Footer Background */}
+            <div className="mt-5 space-y-2">
+              <div className="flex items-center justify-between text-xs font-semibold text-neutral-600">
+                <span>Footer Live Preview (Dark Theme):</span>
+                <span className="text-[11px] text-neutral-400 font-mono">Footer Background</span>
+              </div>
+
+              <div className="p-6 rounded-2xl flex items-center justify-center min-h-[130px] border border-neutral-800 bg-[#0B131A] relative overflow-hidden">
+                <img
+                  src={
+                    previewFooterUrl ||
+                    (footerLogoUrl && !footerLogoUrl.includes('/logo/weekend-escapes-logo.svg')
+                      ? footerLogoUrl
+                      : (darkLogoUrl && !darkLogoUrl.includes('/logo/weekend-escapes-logo.svg'))
+                      ? darkLogoUrl
+                      : footerLogoUrl || darkLogoUrl || logoUrl)
+                  }
+                  alt="Footer Logo Preview"
+                  style={{ height: `${footerSize}px` }}
+                  className={`w-auto object-contain max-w-full transition-all duration-150 ${
+                    !previewFooterUrl &&
+                    (!footerLogoUrl || footerLogoUrl.includes('/logo/weekend-escapes-logo.svg')) &&
+                    (!darkLogoUrl || darkLogoUrl.includes('/logo/weekend-escapes-logo.svg'))
+                      ? 'invert brightness-200'
+                      : ''
+                  }`}
+                />
+                <span className="absolute bottom-2 right-2 text-[10px] font-mono px-2 py-0.5 rounded bg-black/40 text-white/80 backdrop-blur-xs">
+                  {footerSize}px
                 </span>
-              </div>
-
-              {/* Title with Highlight */}
-              <h3 className="text-lg font-black leading-snug">
-                Your Next{' '}
-                <span style={{ color: selectedThemeColor }}>Adventure</span>{' '}
-                Awaits
-              </h3>
-
-              {/* Sample Mini Card */}
-              <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-neutral-400">Kedarkantha Winter Trek</span>
-                  <span className="font-black" style={{ color: selectedThemeColor }}>
-                    ₹9,499
-                  </span>
-                </div>
-                {/* Progress bar */}
-                <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-300"
-                    style={{ width: '70%', backgroundColor: selectedThemeColor }}
-                  ></div>
-                </div>
-              </div>
-
-              {/* Buttons Row */}
-              <div className="flex items-center gap-3 pt-2">
-                <button
-                  type="button"
-                  className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold text-white transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5"
-                  style={{ backgroundColor: selectedThemeColor }}
-                >
-                  <span>Book Expedition</span>
-                </button>
-                <button
-                  type="button"
-                  className="py-2.5 px-4 rounded-xl text-xs font-bold transition-all border cursor-pointer"
-                  style={{
-                    borderColor: `${selectedThemeColor}88`,
-                    color: selectedThemeColor,
-                    backgroundColor: `${selectedThemeColor}15`,
-                  }}
-                >
-                  <span>Details</span>
-                </button>
               </div>
             </div>
           </div>
@@ -1508,26 +1394,25 @@ export default function LogoManager() {
       {/* Save Action Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-6 border-t border-neutral-100">
         <div className="text-xs text-neutral-500 flex items-center gap-2">
-          <Palette className="w-4 h-4 text-neutral-400" />
-          <span>Theme color is applied across the entire website and saved permanently in database.</span>
+          <Sliders className="w-4 h-4 text-neutral-400" />
+          <span>Logo sizes will be saved permanently in the database and applied across the entire website immediately.</span>
         </div>
 
         <button
           type="button"
-          onClick={handleSaveTheme}
-          disabled={savingTheme}
-          className="h-12 px-7 text-white font-bold text-sm rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto justify-center"
-          style={{ backgroundColor: selectedThemeColor }}
+          onClick={handleSaveLogoSizes}
+          disabled={savingLogoSize || (headerSize === Number(logoHeight || 48) && footerSize === Number(footerLogoHeight || 48))}
+          className="h-12 px-7 bg-[#FF6B16] hover:bg-[#e05809] text-white font-bold text-sm rounded-xl shadow-lg shadow-[#FF6B16]/25 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto justify-center"
         >
-          {savingTheme ? (
+          {savingLogoSize ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Saving Theme...</span>
+              <span>Saving Sizes...</span>
             </>
           ) : (
             <>
               <Save className="w-4 h-4" />
-              <span>Save Theme Color</span>
+              <span>Save Logo Sizes</span>
             </>
           )}
         </button>

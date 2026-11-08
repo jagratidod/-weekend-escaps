@@ -106,8 +106,14 @@ export const sendBookingConfirmationEmail = async (booking, payment) => {
     await transporter.sendMail({
       from,
       to: primary.email,
+      replyTo: process.env.SMTP_USER || 'admin.growme@gmail.com',
       subject,
       html,
+      headers: {
+        'X-Auto-Response-Suppress': 'OOF, AutoReply',
+        'Auto-Submitted': 'auto-generated',
+        'X-Entity-Ref-ID': booking.bookingRef || String(Date.now()),
+      },
     });
     console.log(`[Email Sent] Confirmation dispatched to ${primary.email} for ${booking.bookingRef}`);
   } catch (error) {
@@ -135,9 +141,11 @@ export const sendOfflineRegistrationEmail = async (booking) => {
     const companySignature = process.env.COMPANY_SIGNATURE || `Team ${companyName}`;
 
     const cleanWebsiteUrl = companyWebsite.startsWith('http') ? companyWebsite : `https://${companyWebsite}`;
-    const cleanTermsUrl = rawTerms.startsWith('http')
-      ? rawTerms
-      : `${clientUrl.replace(/\/$/, '')}/${rawTerms.replace(/^\//, '')}`;
+    const cleanTermsUrl =
+      rawTerms.startsWith('http') && !rawTerms.includes('localhost')
+        ? rawTerms
+        : `https://${companyWebsite}/terms`;
+    const companyTerms = 'Terms & Conditions';
     const cleanPhoneDigits = companyPhone.replace(/\D/g, '');
 
     const customerName = primary.name || 'Traveler';
@@ -174,7 +182,7 @@ ${companyWebsite}`;
         <!-- Header Banner -->
         <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 32px 28px; text-align: center; color: #ffffff;">
           <div style="display: inline-block; background: rgba(255, 107, 22, 0.15); border: 1px solid rgba(255, 107, 22, 0.3); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; color: #ff8a4c; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 12px;">
-            Booking Verified & Locked
+            Booking Confirmed
           </div>
           <h1 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; color: #ffffff;">${companyName}</h1>
         </div>
@@ -266,9 +274,15 @@ ${companyWebsite}`;
     const info = await transporter.sendMail({
       from,
       to: primary.email,
+      replyTo: process.env.SMTP_USER || 'admin.growme@gmail.com',
       subject,
       text: textContent,
       html: htmlContent,
+      headers: {
+        'X-Auto-Response-Suppress': 'OOF, AutoReply',
+        'Auto-Submitted': 'auto-generated',
+        'X-Entity-Ref-ID': booking.bookingRef || String(Date.now()),
+      },
     });
 
     console.log(`[Email Sent] Offline registration confirmation sent to ${primary.email}. MessageId: ${info.messageId}`);
