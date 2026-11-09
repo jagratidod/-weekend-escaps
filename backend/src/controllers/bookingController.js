@@ -1,6 +1,7 @@
 import Package from '../models/Package.js';
 import Booking from '../models/Booking.js';
 import Lead from '../models/Lead.js';
+import Coupon from '../models/Coupon.js';
 import { notifyAdmins, notifyCustomer } from '../services/firebaseNotificationService.js';
 import { sendOfflineRegistrationEmail } from '../services/emailService.js';
 
@@ -122,6 +123,18 @@ export const createBooking = async (req, res) => {
     });
 
     await newBooking.save();
+
+    // Increment coupon used count if valid coupon applied
+    if (couponCode) {
+      try {
+        await Coupon.findOneAndUpdate(
+          { code: couponCode.trim().toUpperCase() },
+          { $inc: { usedCount: 1 } }
+        );
+      } catch (couponErr) {
+        console.warn('[createBooking - Online] Could not increment coupon usedCount:', couponErr.message);
+      }
+    }
 
     // Also mirror into Lead collection for backwards compatibility & inquiries log
     try {
@@ -513,6 +526,18 @@ export const createOfflineRegistration = async (req, res) => {
     });
 
     await newBooking.save();
+
+    // Increment coupon used count if valid coupon applied
+    if (couponCode) {
+      try {
+        await Coupon.findOneAndUpdate(
+          { code: couponCode.trim().toUpperCase() },
+          { $inc: { usedCount: 1 } }
+        );
+      } catch (couponErr) {
+        console.warn('[createBooking - Online] Could not increment coupon usedCount:', couponErr.message);
+      }
+    }
 
     // Mirror to Leads collection for CRM visibility
     try {

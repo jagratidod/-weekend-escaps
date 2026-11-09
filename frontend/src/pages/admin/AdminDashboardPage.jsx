@@ -8,6 +8,7 @@ import TestimonialManager from '../../components/admin/TestimonialManager';
 import PagesManager from '../../components/admin/PagesManager';
 import BookingManager from '../../components/admin/BookingManager';
 import PaymentManager from '../../components/admin/PaymentManager';
+import CouponManager from '../../components/admin/CouponManager';
 import BlogManager from '../../components/admin/BlogManager';
 import BroadcastManager from '../../components/admin/BroadcastManager';
 import PackageManager from '../../components/admin/PackageManager';
@@ -47,6 +48,7 @@ const VALID_TABS = [
   'dashboard',
   'bookings',
   'payments',
+  'coupons',
   'broadcast',
   'blogs',
   'pages',
@@ -87,6 +89,9 @@ const TAB_ALIASES = {
   'package': 'packages',
   'booking': 'bookings',
   'payment': 'payments',
+  'coupon': 'coupons',
+  'promo': 'coupons',
+  'discounts': 'coupons',
   'blog': 'blogs',
 };
 
@@ -175,6 +180,7 @@ export default function AdminDashboardPage() {
       )}
       {activeTab === 'bookings' && <BookingManager />}
       {activeTab === 'payments' && <PaymentManager />}
+      {activeTab === 'coupons' && <CouponManager />}
       {activeTab === 'broadcast' && <BroadcastManager />}
       {activeTab === 'blogs' && <BlogManager />}
       {activeTab === 'pages' && <PagesManager initialSlug="terms-and-conditions" />}

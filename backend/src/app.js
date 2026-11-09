@@ -88,6 +88,7 @@ import reelRoutes from './routes/reelRoutes.js';
 import galleryRoutes from './routes/galleryRoutes.js';
 import aboutRoutes from './routes/aboutRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import couponRoutes from './routes/couponRoutes.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/settings', settingRoutes);
@@ -105,6 +106,7 @@ app.use('/api/reels', reelRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/about', aboutRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/coupons', couponRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

@@ -127,6 +127,8 @@ export function BookingPage() {
   // Step 3: Payment & Coupon
   const [couponCode, setCouponCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(0);
+  const [appliedCouponInfo, setAppliedCouponInfo] = useState(null);
+  const [isCouponVerifying, setIsCouponVerifying] = useState(false);
   const [couponMessage, setCouponMessage] = useState({ type: '', text: '' });
   const [paymentOption, setPaymentOption] = useState('advance'); // 'advance' | 'full'
   const [agreeTerms, setAgreeTerms] = useState(true);
@@ -268,40 +270,135 @@ export function BookingPage() {
     goToStep(3);
   };
 
-  // Coupon Code verification
-  const handleApplyCoupon = (e) => {
-    e.preventDefault();
-    const code = couponCode.trim().toUpperCase();
+  // Coupon Code verification & Available Offers via dynamic API
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [loadingOffers, setLoadingOffers] = useState(false);
+
+  // Fetch available offers when entering step 3 or when primary traveler's phone changes
+  useEffect(() => {
+    if (step === 3) {
+      const primaryPhone = travelers[0]?.phone
+        ? String(travelers[0].phone).replace(/\D/g, '').slice(-10)
+        : '';
+      setLoadingOffers(true);
+      const pkgId = pkg?._id || pkg?.id || '';
+      fetch(
+        `${API_BASE_URL}/coupons/available?phone=${primaryPhone}&packageId=${pkgId}&subtotal=${subtotal}&totalPersons=${totalPersons}`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.coupons)) {
+            setAvailableCoupons(data.coupons);
+          }
+        })
+        .catch((err) => console.warn('Could not fetch available offers:', err))
+        .finally(() => setLoadingOffers(false));
+    }
+  }, [step, travelers[0]?.phone, subtotal, totalPersons, pkg]);
+
+  const handleApplyCoupon = async (e, directCode = null) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const targetCode = directCode || couponCode;
+    const code = (targetCode || '').trim().toUpperCase();
     if (!code) return;
 
-    if (code === 'EARLYBIRD') {
-      const disc = Math.min(1000 * totalPersons, subtotal * 0.2);
-      setAppliedDiscount(disc);
-      setCouponMessage({
-        type: 'success',
-        text: `Awesome! Coupon EARLYBIRD applied (-₹${disc.toLocaleString('en-IN')})`,
+    if (directCode) {
+      setCouponCode(code);
+    }
+
+    setIsCouponVerifying(true);
+    setCouponMessage({ type: '', text: '' });
+
+    const primaryPhone = travelers[0]?.phone || '';
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/coupons/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code,
+          subtotal,
+          totalPersons,
+          packageId: pkg?._id || pkg?.id,
+          phone: primaryPhone,
+        }),
       });
-    } else if (code === 'WEEKEND10') {
-      const disc = Math.round(subtotal * 0.1);
-      setAppliedDiscount(disc);
-      setCouponMessage({
-        type: 'success',
-        text: `Coupon WEEKEND10 applied! 10% discount (-₹${disc.toLocaleString('en-IN')})`,
-      });
-    } else if (code === 'ESCAPE500') {
-      setAppliedDiscount(500);
-      setCouponMessage({
-        type: 'success',
-        text: 'Coupon ESCAPE500 applied! Flat ₹500 discount.',
-      });
-    } else {
-      setAppliedDiscount(0);
-      setCouponMessage({
-        type: 'error',
-        text: 'Invalid or expired coupon code. Try EARLYBIRD or WEEKEND10.',
-      });
+
+      const data = await res.json();
+      if (!res.ok || !data.valid) {
+        setAppliedDiscount(0);
+        setAppliedCouponInfo(null);
+        setCouponMessage({
+          type: 'error',
+          text: data.message || `Coupon "${code}" is invalid or expired.`,
+        });
+      } else {
+        setAppliedDiscount(data.discountAmount || 0);
+        setAppliedCouponInfo(data.coupon || null);
+        setCouponMessage({
+          type: 'success',
+          text: data.message || `Awesome! Coupon ${code} applied successfully!`,
+        });
+      }
+    } catch (err) {
+      console.error('Coupon validation error:', err);
+      // Fallback in case of temporary offline/network issues
+      if (code === 'EARLYBIRD') {
+        const disc = Math.min(1000 * totalPersons, subtotal * 0.2);
+        setAppliedDiscount(disc);
+        setCouponMessage({
+          type: 'success',
+          text: `Awesome! Coupon EARLYBIRD applied (-₹${disc.toLocaleString('en-IN')})`,
+        });
+      } else if (code === 'WEEKEND10') {
+        const disc = Math.round(subtotal * 0.1);
+        setAppliedDiscount(disc);
+        setCouponMessage({
+          type: 'success',
+          text: `Coupon WEEKEND10 applied! 10% discount (-₹${disc.toLocaleString('en-IN')})`,
+        });
+      } else if (code === 'ESCAPE500') {
+        setAppliedDiscount(500);
+        setCouponMessage({
+          type: 'success',
+          text: 'Coupon ESCAPE500 applied! Flat ₹500 discount.',
+        });
+      } else {
+        setAppliedDiscount(0);
+        setAppliedCouponInfo(null);
+        setCouponMessage({
+          type: 'error',
+          text: 'Unable to verify coupon right now. Please try again.',
+        });
+      }
+    } finally {
+      setIsCouponVerifying(false);
     }
   };
+
+  const handleRemoveCoupon = () => {
+    setCouponCode('');
+    setAppliedDiscount(0);
+    setAppliedCouponInfo(null);
+    setCouponMessage({ type: '', text: '' });
+  };
+
+  // Recalculate discount if travelers count or subtotal change while coupon is active
+  useEffect(() => {
+    if (appliedDiscount > 0 && couponCode && appliedCouponInfo) {
+      if (appliedCouponInfo.discountType === 'percentage') {
+        let disc = Math.round(subtotal * (appliedCouponInfo.discountValue / 100));
+        if (appliedCouponInfo.maxDiscount) disc = Math.min(disc, appliedCouponInfo.maxDiscount);
+        setAppliedDiscount(Math.min(disc, subtotal));
+      } else if (appliedCouponInfo.discountType === 'per_person') {
+        let disc = appliedCouponInfo.discountValue * totalPersons;
+        if (appliedCouponInfo.maxDiscount) disc = Math.min(disc, appliedCouponInfo.maxDiscount);
+        setAppliedDiscount(Math.min(disc, subtotal));
+      } else if (appliedCouponInfo.discountType === 'flat') {
+        setAppliedDiscount(Math.min(appliedCouponInfo.discountValue, subtotal));
+      }
+    }
+  }, [totalPersons, subtotal]);
 
   // Final Confirmation & Payment Gateway Action
   const handlePayAndConfirm = async () => {
@@ -934,35 +1031,151 @@ export function BookingPage() {
                 </div>
               </div>
 
-              {/* 3. Coupon Code Input */}
-              <form onSubmit={handleApplyCoupon} className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <div className="relative flex-grow">
-                    <input
-                      type="text"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                      placeholder="ENTER COUPON CODE (E.G. EARLYBIRD)"
-                      className="w-full h-11 px-3.5 rounded-xl border border-neutral-200 text-xs sm:text-sm font-mono uppercase text-neutral-800 placeholder-neutral-400 focus:border-[#FF6B16] focus:ring-2 focus:ring-[#FF6B16]/10 outline-none"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="h-11 px-5 rounded-xl bg-[#111111] hover:bg-[#FF6B16] text-white text-xs font-bold transition-all cursor-pointer"
-                  >
-                    Apply
-                  </button>
+              {/* 3. Coupon Code Input & Available Offers */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-black text-neutral-700 uppercase tracking-wider">
+                    COUPONS & OFFERS
+                  </label>
+                  {loadingOffers && (
+                    <span className="text-[11px] text-neutral-400 inline-flex items-center gap-1 font-semibold">
+                      <Loader2 className="w-3 h-3 animate-spin text-[#FF6B16]" /> Checking offers...
+                    </span>
+                  )}
                 </div>
+
+                {appliedDiscount > 0 ? (
+                  <div className="flex items-center justify-between p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">
+                        %
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-black text-emerald-800 text-xs sm:text-sm">
+                            {couponCode}
+                          </span>
+                          <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+                            APPLIED
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-emerald-700 font-medium">
+                          Saved {formatCurrency(appliedDiscount)} on this booking
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoupon}
+                      className="text-xs font-bold text-neutral-500 hover:text-rose-600 px-3 py-1.5 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {/* Available Offers Cards */}
+                    {availableCoupons.length > 0 && (
+                      <div className="space-y-2">
+                        {availableCoupons.map((c) => {
+                          const isUserExclusive = Boolean(c.isExclusive);
+                          return (
+                            <div
+                              key={c._id || c.code}
+                              className={`p-3 sm:p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+                                isUserExclusive
+                                  ? 'bg-[#FFF8F0] border-amber-300 shadow-xs'
+                                  : 'bg-white border-neutral-200 hover:border-neutral-300'
+                              }`}
+                            >
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span
+                                    className={`font-mono font-black text-xs px-2 py-0.5 rounded-md ${
+                                      isUserExclusive
+                                        ? 'bg-amber-100 text-amber-900 border border-amber-300/60'
+                                        : 'bg-neutral-100 text-neutral-800'
+                                    }`}
+                                  >
+                                    {c.code}
+                                  </span>
+
+                                  {isUserExclusive ? (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-[#FF6B16] text-white px-2 py-0.5 rounded-full shadow-xs">
+                                      ⭐ Exclusive For You
+                                    </span>
+                                  ) : (
+                                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                                      {c.discountType === 'percentage'
+                                        ? `${c.discountValue}% OFF`
+                                        : c.discountType === 'flat'
+                                        ? `Flat ₹${c.discountValue} OFF`
+                                        : `₹${c.discountValue} / Person`}
+                                    </span>
+                                  )}
+                                </div>
+
+                                <p className="text-xs font-bold text-neutral-800 mt-1 line-clamp-1">
+                                  {c.title || c.description}
+                                </p>
+                                {c.estimatedDiscount > 0 && (
+                                  <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">
+                                    Save {formatCurrency(c.estimatedDiscount)} on this booking!
+                                  </p>
+                                )}
+                              </div>
+
+                              <button
+                                type="button"
+                                disabled={isCouponVerifying}
+                                onClick={() => handleApplyCoupon(null, c.code)}
+                                className="flex-shrink-0 px-4 py-2 rounded-xl bg-[#111111] hover:bg-[#FF6B16] text-white text-xs font-bold transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                              >
+                                Apply
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Manual Input Form */}
+                    <form onSubmit={(e) => handleApplyCoupon(e)} className="space-y-1.5 pt-1">
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-grow">
+                          <input
+                            type="text"
+                            value={couponCode}
+                            disabled={isCouponVerifying}
+                            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                            placeholder="HAVE ANOTHER PROMO CODE? ENTER HERE"
+                            className="w-full h-11 px-3.5 rounded-xl border border-neutral-200 text-xs sm:text-sm font-mono uppercase text-neutral-800 placeholder-neutral-400 focus:border-[#FF6B16] focus:ring-2 focus:ring-[#FF6B16]/10 outline-none disabled:opacity-50"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={isCouponVerifying || !couponCode.trim()}
+                          className="h-11 px-5 rounded-xl bg-[#111111] hover:bg-[#FF6B16] text-white text-xs font-bold transition-all cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
+                        >
+                          {isCouponVerifying && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                          <span>{isCouponVerifying ? 'Checking...' : 'Apply'}</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
                 {couponMessage.text && (
                   <p
                     className={`text-[11px] font-semibold ${
-                      couponMessage.type === 'success' ? 'text-[#FF6B16]' : 'text-red-500'
+                      couponMessage.type === 'success' ? 'text-emerald-700' : 'text-rose-600'
                     }`}
                   >
                     {couponMessage.text}
                   </p>
                 )}
-              </form>
+              </div>
 
               {/* 4. Choose Payment Option */}
               <div className="space-y-3">

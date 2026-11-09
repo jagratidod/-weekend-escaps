@@ -29,15 +29,17 @@ import {
   Sparkles,
   GripVertical,
   RotateCcw,
+  Tag,
 } from 'lucide-react';
 
-const MAIN_NAV_ORDER_KEY = 'admin_sidebar_main_order_v3';
+const MAIN_NAV_ORDER_KEY = 'admin_sidebar_main_order_v4';
 const SUB_NAV_PAGES_KEY = 'admin_sidebar_pages_order_v4';
 
 const DEFAULT_MAIN_NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'bookings', label: 'Bookings', icon: CalendarCheck },
   { id: 'payments', label: 'Payments', icon: CreditCard },
+  { id: 'coupons', label: 'Coupons & Promo', icon: Tag },
   { id: 'pages_group', label: 'Pages', icon: FileText, isGroup: true },
   { id: 'broadcast', label: 'Push & Broadcast', icon: Radio },
   { id: 'leads', label: 'Inquiries & Leads', icon: ShoppingCart },
