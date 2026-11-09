@@ -44,6 +44,17 @@ const faqSchema = new mongoose.Schema(
   { _id: true }
 );
 
+const packageReelSchema = new mongoose.Schema(
+  {
+    video: { type: String, required: [true, 'Reel video URL is required'], trim: true },
+    poster: { type: String, default: '', trim: true },
+    author: { type: String, default: 'Weekend Explorer', trim: true },
+    location: { type: String, default: '', trim: true },
+    order: { type: Number, default: 0 },
+  },
+  { _id: true }
+);
+
 const pricingTierSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true }, // e.g. "Quad Sharing" or "Manali to Manali"
@@ -202,6 +213,10 @@ const packageSchema = new mongoose.Schema(
     },
     faqs: {
       type: [faqSchema],
+      default: [],
+    },
+    reels: {
+      type: [packageReelSchema],
       default: [],
     },
     description: {

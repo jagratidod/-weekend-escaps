@@ -13,15 +13,53 @@ export const DEFAULT_PACKAGE_CATEGORIES = [
   { _id: 'cat_7', name: 'Spiritual & Heritage', slug: 'spiritual-heritage', description: 'Sacred pilgrimages, ancient temples, and heritage trails.', order: 7, isActive: true },
 ];
 
+export const PACKAGES_CACHE_KEY = 'we_cached_packages';
+export const CATEGORIES_CACHE_KEY = 'we_cached_categories';
+
+export const getInitialCachedPackages = () => {
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(PACKAGES_CACHE_KEY) : null;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return { packages: parsed, hasCache: true };
+      }
+    }
+  } catch (err) {
+    console.warn('[PackageContext] Error loading cached packages:', err);
+  }
+  return { packages: DEFAULT_PACKAGES, hasCache: false };
+};
+
+export const getInitialCachedCategories = () => {
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(CATEGORIES_CACHE_KEY) : null;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.warn('[PackageContext] Error loading cached categories:', err);
+  }
+  return DEFAULT_PACKAGE_CATEGORIES;
+};
+
 const PackageContext = createContext();
 
 export function PackageProvider({ children }) {
   const { API_BASE_URL } = useSettings();
   const { token, user } = useAuth();
 
-  const [packages, setPackages] = useState(DEFAULT_PACKAGES);
-  const [categories, setCategories] = useState(DEFAULT_PACKAGE_CATEGORIES);
-  const [loading, setLoading] = useState(true);
+  const initialPkgRef = React.useRef(null);
+  if (!initialPkgRef.current) {
+    initialPkgRef.current = getInitialCachedPackages();
+  }
+
+  const [packages, setPackages] = useState(initialPkgRef.current.packages);
+  const [categories, setCategories] = useState(() => getInitialCachedCategories());
+  const [loading, setLoading] = useState(!initialPkgRef.current.hasCache);
   const [error, setError] = useState(null);
 
   // Fetch packages from backend with fallback
@@ -37,14 +75,19 @@ export function PackageProvider({ children }) {
           const data = await res.json();
           if (data.success && Array.isArray(data.packages) && data.packages.length > 0) {
             setPackages(data.packages);
+            try {
+              if (typeof window !== 'undefined') {
+                localStorage.setItem(PACKAGES_CACHE_KEY, JSON.stringify(data.packages));
+              }
+            } catch (e) {}
             setLoading(false);
             return data.packages;
           }
         }
-        setPackages(DEFAULT_PACKAGES);
+        setPackages((prev) => (Array.isArray(prev) && prev.length > 0 ? prev : DEFAULT_PACKAGES));
       } catch (err) {
-        console.warn('[PackageContext] Backend unreachable, using default packages:', err.message);
-        setPackages(DEFAULT_PACKAGES);
+        console.warn('[PackageContext] Backend unreachable, using fallback packages:', err.message);
+        setPackages((prev) => (Array.isArray(prev) && prev.length > 0 ? prev : DEFAULT_PACKAGES));
         setError(err.message);
       } finally {
         setLoading(false);
@@ -65,13 +108,18 @@ export function PackageProvider({ children }) {
           const data = await res.json();
           if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
             setCategories(data.categories);
+            try {
+              if (typeof window !== 'undefined') {
+                localStorage.setItem(CATEGORIES_CACHE_KEY, JSON.stringify(data.categories));
+              }
+            } catch (e) {}
             return data.categories;
           }
         }
-        setCategories(DEFAULT_PACKAGE_CATEGORIES);
+        setCategories((prev) => (Array.isArray(prev) && prev.length > 0 ? prev : DEFAULT_PACKAGE_CATEGORIES));
       } catch (err) {
-        console.warn('[PackageContext] Using default categories:', err.message);
-        setCategories(DEFAULT_PACKAGE_CATEGORIES);
+        console.warn('[PackageContext] Using fallback categories:', err.message);
+        setCategories((prev) => (Array.isArray(prev) && prev.length > 0 ? prev : DEFAULT_PACKAGE_CATEGORIES));
       }
       return DEFAULT_PACKAGE_CATEGORIES;
     },

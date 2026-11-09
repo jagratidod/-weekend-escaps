@@ -10,6 +10,34 @@ export function Hero() {
   const heroData = homeSections?.hero || {};
 
   const heroImageSrc = formatImageUrl(heroData.heroImage || '/newimage/herosecction/heroimage.png');
+  const [displayedSrc, setDisplayedSrc] = React.useState(heroImageSrc);
+  const [isLoaded, setIsLoaded] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!heroImageSrc) return;
+    if (heroImageSrc === displayedSrc) {
+      setIsLoaded(true);
+      return;
+    }
+    let isCancelled = false;
+    const img = new Image();
+    img.src = heroImageSrc;
+    img.onload = () => {
+      if (!isCancelled) {
+        setDisplayedSrc(heroImageSrc);
+        setIsLoaded(true);
+      }
+    };
+    img.onerror = () => {
+      if (!isCancelled) {
+        setDisplayedSrc(heroImageSrc);
+        setIsLoaded(true);
+      }
+    };
+    return () => {
+      isCancelled = true;
+    };
+  }, [heroImageSrc, displayedSrc]);
   const badgeText = heroData.badge || 'EXPLORE • DISCOVER • ESCAPE';
   const titleLine1 = heroData.titleLine1 || 'Your Next';
   const titleHighlight = heroData.titleHighlight || 'Adventure';
@@ -43,12 +71,16 @@ export function Hero() {
   return (
     <section className="relative min-h-screen flex flex-col justify-between pt-24 sm:pt-28 overflow-x-clip bg-[#F7F7F5]">
       {/* 1. Background Cinematic Hero Artwork Image */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#EAE8E3]">
         <img
-          src={heroImageSrc}
+          src={displayedSrc}
           alt="Weekend Escapes Mountain Adventure"
           loading="eager"
-          className="w-full h-full object-cover object-right lg:object-center"
+          fetchPriority="high"
+          onLoad={() => setIsLoaded(true)}
+          className={`w-full h-full object-cover object-right lg:object-center transition-opacity duration-700 ease-in-out ${
+            isLoaded ? 'opacity-100' : 'opacity-80'
+          }`}
         />
         {/* Soft top gradient blend for navbar readability */}
         <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#F7F7F5]/90 via-[#F7F7F5]/30 to-transparent pointer-events-none" />

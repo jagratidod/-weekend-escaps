@@ -748,12 +748,21 @@ export function PackageDetails() {
         </div>
       </Container>
 
-      {/* ── Travel Reels Showcase Section (5 Reels, Dynamic from Admin, Same for all Packages) ── */}
+      {/* ── Travel Reels Showcase Section (5 Reels, Package-Specific with Fallback) ── */}
       <section className="w-full pt-10 pb-2 mt-10 border-t border-neutral-200/70 overflow-hidden bg-[#F7F7F5]">
         <TripReelsRow
-          title="What Our Travellers Say"
-          subtitle="Real moments and unfiltered trail memories captured by explorers"
+          title={
+            Array.isArray(pkg?.reels) && pkg.reels.length > 0
+              ? `Moments From ${pkg.name}`
+              : "What Our Travellers Say"
+          }
+          subtitle={
+            Array.isArray(pkg?.reels) && pkg.reels.length > 0
+              ? `Real moments captured by explorers on ${pkg.name}`
+              : "Real moments and unfiltered trail memories captured by explorers"
+          }
           maxReels={5}
+          customReels={Array.isArray(pkg?.reels) && pkg.reels.length > 0 ? pkg.reels : null}
         />
       </section>
 

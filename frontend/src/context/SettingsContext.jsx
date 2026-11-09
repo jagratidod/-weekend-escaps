@@ -57,24 +57,142 @@ export const DEFAULT_CONTACT_INFO = {
   },
 };
 
+export const SETTINGS_CACHE_KEY = 'we_cached_settings';
+
+export const buildDefaultSettings = () => ({
+  logoUrl: '/logo/weekend-escapes-logo.svg',
+  footerLogoUrl: '/logo/weekend-escapes-logo.svg',
+  darkLogoUrl: '/logo/weekend-escapes-logo.svg',
+  logoHeight: 48,
+  footerLogoHeight: 48,
+  themeColor: DEFAULT_THEME_COLOR,
+  themeColorHover: DEFAULT_THEME_HOVER,
+  siteName: 'Weekend Escapes',
+  tagline: 'Crafting Adventures',
+  whatsappNumber: '+91 98765 43210',
+  whatsappMessage: 'Hi Weekend Escapes! I would like to plan my next adventure.',
+  contactInfo: DEFAULT_CONTACT_INFO,
+  homeSections: DEFAULT_HOME_SECTIONS,
+  packageFaqSection: DEFAULT_FAQ_SECTION,
+});
+
+export const mergeServerSettings = (serverSettings = {}) => {
+  const defaults = buildDefaultSettings();
+  const serverHome = serverSettings.homeSections || {};
+  return {
+    ...defaults,
+    ...serverSettings,
+    contactInfo: {
+      ...DEFAULT_CONTACT_INFO,
+      ...(serverSettings.contactInfo || {}),
+      socials: {
+        ...DEFAULT_CONTACT_INFO.socials,
+        ...((serverSettings.contactInfo && serverSettings.contactInfo.socials) || {}),
+      },
+    },
+    homeSections: {
+      ...defaults.homeSections,
+      ...serverHome,
+      hero: { ...DEFAULT_HOME_SECTIONS.hero, ...(serverHome.hero || {}) },
+      experiences: {
+        ...DEFAULT_HOME_SECTIONS.experiences,
+        ...(serverHome.experiences || {}),
+        items:
+          Array.isArray(serverHome.experiences?.items) && serverHome.experiences.items.length > 0
+            ? serverHome.experiences.items
+            : DEFAULT_HOME_SECTIONS.experiences.items,
+      },
+      whyChooseUs: {
+        ...DEFAULT_HOME_SECTIONS.whyChooseUs,
+        ...(serverHome.whyChooseUs || {}),
+        benefits:
+          Array.isArray(serverHome.whyChooseUs?.benefits) && serverHome.whyChooseUs.benefits.length > 0
+            ? serverHome.whyChooseUs.benefits
+            : DEFAULT_HOME_SECTIONS.whyChooseUs.benefits,
+      },
+      bookingProcess: {
+        ...DEFAULT_HOME_SECTIONS.bookingProcess,
+        ...(serverHome.bookingProcess || {}),
+        steps:
+          Array.isArray(serverHome.bookingProcess?.steps) && serverHome.bookingProcess.steps.length > 0
+            ? serverHome.bookingProcess.steps
+            : DEFAULT_HOME_SECTIONS.bookingProcess.steps,
+        welfare: {
+          ...DEFAULT_HOME_SECTIONS.bookingProcess.welfare,
+          ...(serverHome.bookingProcess?.welfare || {}),
+          items:
+            Array.isArray(serverHome.bookingProcess?.welfare?.items) &&
+            serverHome.bookingProcess.welfare.items.length > 0
+              ? serverHome.bookingProcess.welfare.items
+              : DEFAULT_HOME_SECTIONS.bookingProcess.welfare.items,
+        },
+      },
+      gallery: {
+        ...DEFAULT_HOME_SECTIONS.gallery,
+        ...(serverHome.gallery || {}),
+        items:
+          Array.isArray(serverHome.gallery?.items) && serverHome.gallery.items.length > 0
+            ? serverHome.gallery.items
+            : DEFAULT_HOME_SECTIONS.gallery.items,
+      },
+      finalCta: { ...DEFAULT_HOME_SECTIONS.finalCta, ...(serverHome.finalCta || {}) },
+      sectionOrder: (() => {
+        if (Array.isArray(serverHome.sectionOrder) && serverHome.sectionOrder.length > 0) {
+          const merged = [...serverHome.sectionOrder];
+          DEFAULT_HOME_SECTIONS.sectionOrder.forEach((sec) => {
+            if (!merged.includes(sec)) merged.push(sec);
+          });
+          return merged;
+        }
+        return DEFAULT_HOME_SECTIONS.sectionOrder;
+      })(),
+      sectionVisibility: {
+        ...DEFAULT_SECTION_VISIBILITY,
+        ...(serverHome.sectionVisibility || {}),
+      },
+    },
+    packageFaqSection: {
+      ...DEFAULT_FAQ_SECTION,
+      ...(serverSettings.packageFaqSection || {}),
+      defaultFaqs:
+        Array.isArray(serverSettings.packageFaqSection?.defaultFaqs)
+          ? serverSettings.packageFaqSection.defaultFaqs
+          : [],
+    },
+  };
+};
+
+export const getInitialCachedSettings = () => {
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(SETTINGS_CACHE_KEY) : null;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return {
+          settings: mergeServerSettings(parsed),
+          hasCache: true,
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('[SettingsContext] Failed to read settings from cache:', err);
+  }
+  return {
+    settings: buildDefaultSettings(),
+    hasCache: false,
+  };
+};
+
 export function SettingsProvider({ children }) {
-  const [settings, setSettings] = useState({
-    logoUrl: '/logo/weekend-escapes-logo.svg',
-    footerLogoUrl: '/logo/weekend-escapes-logo.svg',
-    darkLogoUrl: '/logo/weekend-escapes-logo.svg',
-    logoHeight: 48,
-    footerLogoHeight: 48,
-    themeColor: DEFAULT_THEME_COLOR,
-    themeColorHover: DEFAULT_THEME_HOVER,
-    siteName: 'Weekend Escapes',
-    tagline: 'Crafting Adventures',
-    whatsappNumber: '+91 98765 43210',
-    whatsappMessage: 'Hi Weekend Escapes! I would like to plan my next adventure.',
-    contactInfo: DEFAULT_CONTACT_INFO,
-    homeSections: DEFAULT_HOME_SECTIONS,
-    packageFaqSection: DEFAULT_FAQ_SECTION,
-  });
-  const [loading, setLoading] = useState(true);
+  const initialCacheRef = React.useRef(null);
+  if (!initialCacheRef.current) {
+    initialCacheRef.current = getInitialCachedSettings();
+  }
+
+  const [settings, setSettings] = useState(initialCacheRef.current.settings);
+  const [hasCachedSettings, setHasCachedSettings] = useState(initialCacheRef.current.hasCache);
+  const [loading, setLoading] = useState(!initialCacheRef.current.hasCache);
+  const [isSyncing, setIsSyncing] = useState(true);
 
   // Helper to format any image URL (Cloudinary, local /uploads/, or static asset)
   const formatImageUrl = useCallback((rawUrl) => {
@@ -95,96 +213,29 @@ export function SettingsProvider({ children }) {
   };
 
   const fetchSettings = useCallback(async () => {
+    setIsSyncing(true);
     try {
       const res = await fetch(`${API_BASE_URL}/settings`);
       const data = await res.json();
       if (data.success && data.settings) {
-        const serverHome = data.settings.homeSections || {};
-        setSettings({
-          ...data.settings,
-          contactInfo: {
-            ...DEFAULT_CONTACT_INFO,
-            ...(data.settings.contactInfo || {}),
-            socials: {
-              ...DEFAULT_CONTACT_INFO.socials,
-              ...((data.settings.contactInfo && data.settings.contactInfo.socials) || {}),
-            },
-          },
-          homeSections: {
-            hero: { ...DEFAULT_HOME_SECTIONS.hero, ...(serverHome.hero || {}) },
-            experiences: {
-              ...DEFAULT_HOME_SECTIONS.experiences,
-              ...(serverHome.experiences || {}),
-              items:
-                Array.isArray(serverHome.experiences?.items) && serverHome.experiences.items.length > 0
-                  ? serverHome.experiences.items
-                  : DEFAULT_HOME_SECTIONS.experiences.items,
-            },
-            whyChooseUs: {
-              ...DEFAULT_HOME_SECTIONS.whyChooseUs,
-              ...(serverHome.whyChooseUs || {}),
-              benefits:
-                Array.isArray(serverHome.whyChooseUs?.benefits) && serverHome.whyChooseUs.benefits.length > 0
-                  ? serverHome.whyChooseUs.benefits
-                  : DEFAULT_HOME_SECTIONS.whyChooseUs.benefits,
-            },
-            bookingProcess: {
-              ...DEFAULT_HOME_SECTIONS.bookingProcess,
-              ...(serverHome.bookingProcess || {}),
-              steps:
-                Array.isArray(serverHome.bookingProcess?.steps) && serverHome.bookingProcess.steps.length > 0
-                  ? serverHome.bookingProcess.steps
-                  : DEFAULT_HOME_SECTIONS.bookingProcess.steps,
-              welfare: {
-                ...DEFAULT_HOME_SECTIONS.bookingProcess.welfare,
-                ...(serverHome.bookingProcess?.welfare || {}),
-                items:
-                  Array.isArray(serverHome.bookingProcess?.welfare?.items) &&
-                  serverHome.bookingProcess.welfare.items.length > 0
-                    ? serverHome.bookingProcess.welfare.items
-                    : DEFAULT_HOME_SECTIONS.bookingProcess.welfare.items,
-              },
-            },
-            gallery: {
-              ...DEFAULT_HOME_SECTIONS.gallery,
-              ...(serverHome.gallery || {}),
-              items:
-                Array.isArray(serverHome.gallery?.items) && serverHome.gallery.items.length > 0
-                  ? serverHome.gallery.items
-                  : DEFAULT_HOME_SECTIONS.gallery.items,
-            },
-            finalCta: { ...DEFAULT_HOME_SECTIONS.finalCta, ...(serverHome.finalCta || {}) },
-            sectionOrder: (() => {
-              if (Array.isArray(serverHome.sectionOrder) && serverHome.sectionOrder.length > 0) {
-                const merged = [...serverHome.sectionOrder];
-                DEFAULT_HOME_SECTIONS.sectionOrder.forEach((sec) => {
-                  if (!merged.includes(sec)) merged.push(sec);
-                });
-                return merged;
-              }
-              return DEFAULT_HOME_SECTIONS.sectionOrder;
-            })(),
-            sectionVisibility: {
-              ...DEFAULT_SECTION_VISIBILITY,
-              ...(serverHome.sectionVisibility || {}),
-            },
-          },
-          packageFaqSection: {
-            ...DEFAULT_FAQ_SECTION,
-            ...(data.settings.packageFaqSection || {}),
-            defaultFaqs:
-              Array.isArray(data.settings.packageFaqSection?.defaultFaqs)
-                ? data.settings.packageFaqSection.defaultFaqs
-                : [],
-          },
-        });
+        const merged = mergeServerSettings(data.settings);
+        setSettings(merged);
+        setHasCachedSettings(true);
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify(merged));
+          }
+        } catch (e) {
+          console.warn('[SettingsContext] Failed to cache settings to localStorage:', e);
+        }
       }
     } catch (err) {
-      console.warn('Could not fetch settings from backend, using defaults:', err.message);
+      console.warn('Could not fetch settings from backend, using current/defaults:', err.message);
     } finally {
       setLoading(false);
+      setIsSyncing(false);
     }
-  }, [formatImageUrl]);
+  }, []);
 
   useEffect(() => {
     fetchSettings();
@@ -206,11 +257,19 @@ export function SettingsProvider({ children }) {
         });
         const data = await res.json();
         if (data.success) {
-          setSettings((prev) => ({
-            ...prev,
-            logoHeight: data.logoHeight ?? prev.logoHeight,
-            footerLogoHeight: data.footerLogoHeight ?? prev.footerLogoHeight,
-          }));
+          setSettings((prev) => {
+            const next = {
+              ...prev,
+              logoHeight: data.logoHeight ?? prev.logoHeight,
+              footerLogoHeight: data.footerLogoHeight ?? prev.footerLogoHeight,
+            };
+            try {
+              if (typeof window !== 'undefined') {
+                localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify(next));
+              }
+            } catch (e) {}
+            return next;
+          });
         }
         return data;
       } catch (err) {
@@ -233,11 +292,19 @@ export function SettingsProvider({ children }) {
         });
         const data = await res.json();
         if (data.success) {
-          setSettings((prev) => ({
-            ...prev,
-            logoHeight: 48,
-            footerLogoHeight: 48,
-          }));
+          setSettings((prev) => {
+            const next = {
+              ...prev,
+              logoHeight: 48,
+              footerLogoHeight: 48,
+            };
+            try {
+              if (typeof window !== 'undefined') {
+                localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify(next));
+              }
+            } catch (e) {}
+            return next;
+          });
         }
         return data;
       } catch (err) {
@@ -344,6 +411,8 @@ export function SettingsProvider({ children }) {
         buildWhatsAppUrl,
         formatImageUrl,
         loading,
+        hasCachedSettings,
+        isSyncing,
         refreshSettings: fetchSettings,
         API_BASE_URL,
         BACKEND_ROOT,

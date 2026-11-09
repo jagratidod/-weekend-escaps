@@ -27,6 +27,27 @@ export function FinalCTA() {
   const bgImg = formatImageUrl(
     ctaData.bgImage || '/newimage/other sections image/footerbanner2.png'
   );
+  const [displayedBg, setDisplayedBg] = React.useState(bgImg);
+  const [bgLoaded, setBgLoaded] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!bgImg || bgImg === displayedBg) {
+      setBgLoaded(true);
+      return;
+    }
+    let isMounted = true;
+    const img = new Image();
+    img.src = bgImg;
+    img.onload = () => {
+      if (isMounted) {
+        setDisplayedBg(bgImg);
+        setBgLoaded(true);
+      }
+    };
+    return () => {
+      isMounted = false;
+    };
+  }, [bgImg, displayedBg]);
   const primaryButtonText = ctaData.primaryButtonText || 'Explore Packages';
   const primaryButtonLink = ctaData.primaryButtonLink || '/packages';
   const whatsappButtonText = ctaData.whatsappButtonText || 'Talk on WhatsApp';
@@ -46,10 +67,13 @@ export function FinalCTA() {
       {/* Cinematic Mountain Sunset Panorama Background */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <img
-          src={bgImg}
+          src={displayedBg}
           alt="Sunset mountains"
           loading="lazy"
-          className="w-full h-full object-cover object-center"
+          onLoad={() => setBgLoaded(true)}
+          className={`w-full h-full object-cover object-center transition-opacity duration-700 ease-in-out ${
+            bgLoaded ? 'opacity-100' : 'opacity-70'
+          }`}
         />
         {/* Dark gradient overlay to keep text sharp while preserving vibrant sunset glow */}
         <div className="absolute inset-0 bg-black/40" />

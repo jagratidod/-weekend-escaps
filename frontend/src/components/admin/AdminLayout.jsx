@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 
 const MAIN_NAV_ORDER_KEY = 'admin_sidebar_main_order_v3';
-const SUB_NAV_PAGES_KEY = 'admin_sidebar_pages_order_v3';
+const SUB_NAV_PAGES_KEY = 'admin_sidebar_pages_order_v4';
 
 const DEFAULT_MAIN_NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -49,7 +49,6 @@ const DEFAULT_PAGE_SUB_ITEMS = [
   { id: 'home_sections', label: 'Home Page Editor', icon: Sparkles },
   { id: 'about_editor', label: 'About Page Editor', icon: Compass },
   { id: 'gallery_editor', label: 'Gallery Page Editor', icon: Camera },
-  { id: 'reels', label: 'Travel Reels', icon: Film },
   { id: 'blogs', label: 'Blogs & Journal', icon: BookOpen },
   { id: 'pages', label: 'Terms & Conditions', icon: FileText },
   { id: 'cancellation_policy', label: 'Cancellation Policy', icon: ShieldCheck },

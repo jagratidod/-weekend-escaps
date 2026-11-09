@@ -407,6 +407,7 @@ export const createPackage = async (req, res) => {
       excluded: Array.isArray(excluded) ? excluded : [],
       itinerary: Array.isArray(itinerary) ? itinerary : [],
       faqs: Array.isArray(req.body.faqs) ? req.body.faqs : [],
+      reels: Array.isArray(req.body.reels) ? req.body.reels.slice(0, 5) : [],
       availability: req.body.availability || {
         scheduleType: 'daily',
         defaultSeatsPerBatch: 16,
@@ -487,6 +488,7 @@ export const updatePackage = async (req, res) => {
       'availability',
       'highlights',
       'faqs',
+      'reels',
       'description',
       'isFeatured',
       'isTrending',
@@ -498,7 +500,11 @@ export const updatePackage = async (req, res) => {
 
     fieldsToUpdate.forEach((field) => {
       if (req.body[field] !== undefined) {
-        pkg[field] = req.body[field];
+        if (field === 'reels' && Array.isArray(req.body.reels)) {
+          pkg.reels = req.body.reels.slice(0, 5);
+        } else {
+          pkg[field] = req.body[field];
+        }
       }
     });
 

@@ -39,6 +39,20 @@ export function WhyChooseUs() {
     whyData.subtitle ||
     'We create meaningful travel experiences with care, expertise and a passion for exploration.';
   const imgSrc = formatImageUrl(whyData.image || '/newimage/other sections image/image1.png');
+  const [displayedImg, setDisplayedImg] = React.useState(imgSrc);
+
+  React.useEffect(() => {
+    if (!imgSrc || imgSrc === displayedImg) return;
+    let isMounted = true;
+    const img = new Image();
+    img.src = imgSrc;
+    img.onload = () => {
+      if (isMounted) setDisplayedImg(imgSrc);
+    };
+    return () => {
+      isMounted = false;
+    };
+  }, [imgSrc, displayedImg]);
   const handwrittenNote = whyData.handwrittenNote || 'Travel even\nRepeat';
 
   const defaultBenefits = [
@@ -135,11 +149,12 @@ export function WhyChooseUs() {
                 </defs>
                 <path d={TORN_PAPER_OUTER} fill="#ffffff" />
                 <image
-                  href={imgSrc}
+                  href={displayedImg}
                   width="800"
                   height="500"
                   preserveAspectRatio="xMidYMid slice"
                   clipPath="url(#whyChooseTornClip)"
+                  className="transition-opacity duration-500 ease-in-out"
                 />
               </svg>
 

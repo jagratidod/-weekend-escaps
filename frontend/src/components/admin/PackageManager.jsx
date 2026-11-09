@@ -37,6 +37,8 @@ import {
   RotateCcw,
   ArrowUp,
   ArrowDown,
+  Film,
+  Video,
 } from 'lucide-react';
 import { getDefaultPackageFAQs } from '../packages/PackageFAQ';
 
@@ -168,9 +170,139 @@ export function PackageManager() {
     isActive: true,
     order: 0,
     faqs: [],
+    reels: [],
   };
 
   const [formData, setFormData] = useState(initialFormData);
+
+  // Package Reels State (Max 5 Reels per package)
+  const [newReel, setNewReel] = useState({
+    video: '',
+    poster: '',
+    author: '',
+    location: '',
+  });
+  const [uploadingReelVideo, setUploadingReelVideo] = useState(false);
+  const [reelUploadProgress, setReelUploadProgress] = useState(0);
+  const [reelUploadError, setReelUploadError] = useState('');
+  const packageReelInputRef = React.useRef(null);
+
+  // Handle Reel Video Upload (Direct file to /api/reels/upload, max 20MB)
+  const handleUploadReelVideo = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 20 * 1024 * 1024) {
+      setReelUploadError(`Video size (${(file.size / (1024 * 1024)).toFixed(1)}MB) exceeds 20MB limit. Please compress before uploading.`);
+      showToast('error', 'Video exceeds 20MB limit. Please compress.');
+      if (packageReelInputRef.current) packageReelInputRef.current.value = '';
+      return;
+    }
+
+    try {
+      setUploadingReelVideo(true);
+      setReelUploadError('');
+      setReelUploadProgress(25);
+
+      const uploadBody = new FormData();
+      uploadBody.append('file', file);
+
+      setReelUploadProgress(50);
+      const res = await fetch(`${API_BASE_URL}/reels/upload`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: uploadBody,
+      });
+
+      setReelUploadProgress(85);
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to upload video');
+      }
+
+      setReelUploadProgress(100);
+      const derivedPoster =
+        data.posterUrl ||
+        (data.url && data.url.includes('cloudinary.com')
+          ? data.url.replace(/\.[^/.]+$/, '.jpg')
+          : '');
+
+      setNewReel((prev) => ({
+        ...prev,
+        video: data.url,
+        poster: derivedPoster || prev.poster,
+        location: prev.location || formData.location || formData.name || '',
+      }));
+
+      showToast('success', 'Video uploaded successfully to Cloudinary!');
+    } catch (err) {
+      console.error('Reel Upload Error:', err);
+      setReelUploadError(err.message || 'Upload failed');
+      showToast('error', err.message || 'Failed to upload video');
+    } finally {
+      setUploadingReelVideo(false);
+      setReelUploadProgress(0);
+      if (packageReelInputRef.current) packageReelInputRef.current.value = '';
+    }
+  };
+
+  // Add reel to package list
+  const handleAddReelToPackage = () => {
+    const currentReels = Array.isArray(formData.reels) ? formData.reels : [];
+    if (currentReels.length >= 5) {
+      showToast('error', 'Maximum 5 reels allowed per package');
+      return;
+    }
+
+    if (!newReel.video || !newReel.video.trim()) {
+      showToast('error', 'Please upload a video file or enter a video URL');
+      return;
+    }
+
+    const reelToAdd = {
+      id: `reel_${Date.now()}`,
+      video: newReel.video.trim(),
+      poster: newReel.poster.trim(),
+      author: newReel.author.trim() || 'Weekend Explorer',
+      location: newReel.location.trim() || formData.location || formData.name || 'Expedition',
+      order: currentReels.length,
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      reels: [...(Array.isArray(prev.reels) ? prev.reels : []), reelToAdd],
+    }));
+
+    setNewReel({
+      video: '',
+      poster: '',
+      author: '',
+      location: '',
+    });
+    showToast('success', `Reel added! (${currentReels.length + 1}/5 reels)`);
+  };
+
+  // Remove reel from package
+  const handleRemoveReelFromPackage = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      reels: (prev.reels || []).filter((_, idx) => idx !== index),
+    }));
+    showToast('info', 'Reel removed');
+  };
+
+  // Move reel up / down
+  const handleMoveReel = (index, direction) => {
+    const list = [...(formData.reels || [])];
+    const targetIdx = direction === 'up' ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= list.length) return;
+    const temp = list[index];
+    list[index] = list[targetIdx];
+    list[targetIdx] = temp;
+    setFormData((prev) => ({ ...prev, reels: list }));
+  };
 
   // FAQ Builder Temp State
   const [newFaq, setNewFaq] = useState({
@@ -321,6 +453,9 @@ export function PackageManager() {
       isActive: pkg.isActive !== undefined ? !!pkg.isActive : true,
       order: pkg.order || 0,
       faqs: Array.isArray(pkg.faqs) ? [...pkg.faqs] : [],
+      reels: Array.isArray(pkg.reels)
+        ? pkg.reels.map((r, i) => ({ ...r, id: r._id || r.id || `reel_${Date.now()}_${i}` }))
+        : [],
     });
     setActiveFormTab('basic');
     setShowQuickAddCat(false);
@@ -1105,7 +1240,7 @@ export function PackageManager() {
                                   </span>
                                 )}
                               </div>
-                              <div className="flex items-center gap-3 text-neutral-500 text-[11px] mt-1">
+                              <div className="flex items-center gap-3 text-neutral-500 text-[11px] mt-1 flex-wrap">
                                 <span className="flex items-center gap-1">
                                   <MapPin className="w-3 h-3 text-[#FF6B16]" />
                                   {pkg.location}
@@ -1113,6 +1248,17 @@ export function PackageManager() {
                                 <span className="flex items-center gap-1">
                                   <Clock className="w-3 h-3 text-neutral-400" />
                                   {pkg.duration}
+                                </span>
+                                <span
+                                  className={`flex items-center gap-1 font-bold px-1.5 py-0.5 rounded text-[10px] ${
+                                    (pkg.reels?.length || 0) > 0
+                                      ? 'bg-orange-100 text-[#FF6B16]'
+                                      : 'bg-neutral-100 text-neutral-400'
+                                  }`}
+                                  title="Package specific experience reels"
+                                >
+                                  <Film className="w-3 h-3" />
+                                  {pkg.reels?.length || 0}/5 Reels
                                 </span>
                               </div>
                             </div>
@@ -1370,6 +1516,7 @@ export function PackageManager() {
                 { id: 'basic', label: 'Basic Info' },
                 { id: 'pricing', label: 'Pricing & Badges' },
                 { id: 'media', label: 'Cover Image' },
+                { id: 'reels', label: `Reels (${formData.reels?.length || 0}/5)` },
                 { id: 'itinerary', label: 'Itinerary Builder' },
                 { id: 'availability', label: 'Batches & Availability' },
                 { id: 'inclusions', label: 'Inclusions & Highlights' },
@@ -2040,6 +2187,317 @@ export function PackageManager() {
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* ── TAB: PACKAGE REELS (MAX 5) ── */}
+              {activeFormTab === 'reels' && (
+                <div className="space-y-6">
+                  {/* Header Banner */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-orange-50 via-amber-50/40 to-neutral-50 border border-orange-200/60 shadow-xs">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Film className="w-4 h-4 text-[#FF6B16]" />
+                        <h3 className="text-sm font-black text-neutral-800">
+                          Package Experience Reels (Max 5)
+                        </h3>
+                      </div>
+                      <p className="text-xs text-neutral-600 leading-relaxed">
+                        Upload short vertical reels (like Instagram Reels/Shorts) specifically for this tour package. Explorers will see these on this package's detail page!
+                      </p>
+                    </div>
+                    <div className="shrink-0 flex items-center gap-2">
+                      <span
+                        className={`px-3 py-1.5 rounded-full text-xs font-black shadow-xs ${
+                          (formData.reels?.length || 0) >= 5
+                            ? 'bg-rose-100 text-rose-700 border border-rose-200'
+                            : 'bg-white text-[#FF6B16] border border-orange-200'
+                        }`}
+                      >
+                        {formData.reels?.length || 0} / 5 Reels
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Add New Reel Card (if < 5) */}
+                  {(formData.reels?.length || 0) < 5 ? (
+                    <div className="p-5 rounded-2xl border border-neutral-200 bg-white shadow-xs space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-neutral-800 flex items-center gap-1.5">
+                          <Plus className="w-3.5 h-3.5 text-[#FF6B16]" />
+                          Add Reel #{(formData.reels?.length || 0) + 1}
+                        </h4>
+                        <span className="text-[11px] text-neutral-400 font-medium">
+                          MP4, MOV, WebM (Max 20MB)
+                        </span>
+                      </div>
+
+                      {/* Video Upload Box */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="border-2 border-dashed border-neutral-200 rounded-xl p-4 text-center hover:border-[#FF6B16] transition-colors bg-neutral-50/60 flex flex-col items-center justify-center min-h-[140px]">
+                          <input
+                            type="file"
+                            id="package-reel-video-file"
+                            ref={packageReelInputRef}
+                            accept="video/mp4,video/quicktime,video/webm,video/x-matroska"
+                            onChange={handleUploadReelVideo}
+                            disabled={uploadingReelVideo}
+                            className="hidden"
+                          />
+                          <label
+                            htmlFor="package-reel-video-file"
+                            className="cursor-pointer flex flex-col items-center justify-center w-full"
+                          >
+                            <div className="w-10 h-10 rounded-xl bg-orange-100 text-[#FF6B16] flex items-center justify-center mb-2 shadow-xs">
+                              <Video className={`w-5 h-5 ${uploadingReelVideo ? 'animate-bounce' : ''}`} />
+                            </div>
+                            <span className="text-xs font-extrabold text-neutral-800">
+                              {uploadingReelVideo ? 'Uploading to Cloudinary...' : 'Click to Upload Video File'}
+                            </span>
+                            <span className="text-[10px] text-neutral-400 mt-0.5">
+                              Short vertical clip (under 20MB)
+                            </span>
+                          </label>
+
+                          {uploadingReelVideo && (
+                            <div className="w-full mt-3 px-2">
+                              <div className="w-full bg-neutral-200 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                  className="bg-[#FF6B16] h-full transition-all duration-300"
+                                  style={{ width: `${reelUploadProgress}%` }}
+                                />
+                              </div>
+                              <span className="text-[10px] text-neutral-500 mt-1 block font-bold">
+                                Uploading {reelUploadProgress}%
+                              </span>
+                            </div>
+                          )}
+
+                          {reelUploadError && (
+                            <p className="text-[11px] text-rose-600 font-semibold mt-2">
+                              {reelUploadError}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Or Video URL input */}
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-[11px] font-bold text-neutral-700 mb-1">
+                              Or Paste Video URL (Cloudinary / MP4) <span className="text-rose-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={newReel.video}
+                              onChange={(e) => setNewReel({ ...newReel, video: e.target.value })}
+                              placeholder="https://res.cloudinary.com/.../video.mp4"
+                              className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-medium focus:outline-none focus:border-[#FF6B16]"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2.5">
+                            <div>
+                              <label className="block text-[11px] font-bold text-neutral-700 mb-1">
+                                Traveler / Author
+                              </label>
+                              <input
+                                type="text"
+                                value={newReel.author}
+                                onChange={(e) => setNewReel({ ...newReel, author: e.target.value })}
+                                placeholder="e.g. Priya & Rahul"
+                                className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-medium focus:outline-none focus:border-[#FF6B16]"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-bold text-neutral-700 mb-1">
+                                Location / Tag
+                              </label>
+                              <input
+                                type="text"
+                                value={newReel.location}
+                                onChange={(e) => setNewReel({ ...newReel, location: e.target.value })}
+                                placeholder="e.g. Summit Camp"
+                                className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-medium focus:outline-none focus:border-[#FF6B16]"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-neutral-700 mb-1">
+                              Poster / Thumbnail URL (Optional)
+                            </label>
+                            <input
+                              type="text"
+                              value={newReel.poster}
+                              onChange={(e) => setNewReel({ ...newReel, poster: e.target.value })}
+                              placeholder="Auto-derived or paste image URL"
+                              className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-medium focus:outline-none focus:border-[#FF6B16]"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Video Live Preview if URL is set */}
+                      {newReel.video && (
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-neutral-50 border border-neutral-200">
+                          <div className="w-16 h-24 rounded-lg bg-black overflow-hidden shrink-0 shadow-xs relative">
+                            <video
+                              src={newReel.video}
+                              muted
+                              playsInline
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 inline-block mb-1">
+                              Ready to Add
+                            </span>
+                            <p className="text-xs font-bold text-neutral-800 truncate">
+                              {newReel.author || 'Weekend Explorer'} • {newReel.location || formData.name}
+                            </p>
+                            <p className="text-[11px] text-neutral-500 truncate mt-0.5 font-mono">
+                              {newReel.video}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleAddReelToPackage}
+                            className="px-4 py-2 rounded-xl bg-[#FF6B16] hover:bg-[#e05809] text-white text-xs font-bold shadow-md shadow-[#FF6B16]/25 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Add Reel</span>
+                          </button>
+                        </div>
+                      )}
+
+                      {!newReel.video && (
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            onClick={handleAddReelToPackage}
+                            disabled={!newReel.video}
+                            className="px-4 py-2 rounded-xl bg-neutral-200 text-neutral-400 text-xs font-bold cursor-not-allowed flex items-center gap-1.5"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Upload or Enter Video to Add</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="p-4 rounded-xl bg-neutral-100 border border-neutral-200 text-center text-xs font-bold text-neutral-600">
+                      Maximum 5 reels limit reached for this package. Remove a reel below if you wish to upload a new one.
+                    </div>
+                  )}
+
+                  {/* List of Current Package Reels */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-neutral-700">
+                        Added Reels ({formData.reels?.length || 0} of 5)
+                      </h4>
+                      {(formData.reels?.length || 0) > 1 && (
+                        <span className="text-[11px] text-neutral-400 font-medium">
+                          Use arrows to change display order
+                        </span>
+                      )}
+                    </div>
+
+                    {(!formData.reels || formData.reels.length === 0) ? (
+                      <div className="p-8 rounded-2xl border-2 border-dashed border-neutral-200 text-center bg-neutral-50/50">
+                        <Film className="w-8 h-8 text-neutral-300 mx-auto mb-2" />
+                        <p className="text-xs font-bold text-neutral-700">
+                          No custom reels uploaded for this package yet
+                        </p>
+                        <p className="text-[11px] text-neutral-400 max-w-sm mx-auto mt-1">
+                          When empty, the package details page will automatically display global testimonial reels as fallback. Upload custom reels above to show package-specific explorer videos!
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                        {formData.reels.map((reel, idx) => (
+                          <div
+                            key={reel.id || reel._id || idx}
+                            className="relative rounded-2xl border border-neutral-200 bg-white p-3 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between"
+                          >
+                            <div className="flex gap-3">
+                              {/* Video thumbnail preview */}
+                              <div className="w-20 h-28 rounded-xl bg-neutral-900 overflow-hidden relative shrink-0 shadow-inner group">
+                                {reel.poster ? (
+                                  <img
+                                    src={getImageUrl(reel.poster)}
+                                    alt={reel.author}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <video
+                                    src={`${reel.video}#t=0.001`}
+                                    preload="metadata"
+                                    muted
+                                    className="w-full h-full object-cover"
+                                  />
+                                )}
+                                <div className="absolute top-1 left-1 bg-black/70 text-white text-[9px] font-black px-1.5 py-0.5 rounded">
+                                  #{idx + 1}
+                                </div>
+                              </div>
+
+                              {/* Details */}
+                              <div className="min-w-0 flex-1 flex flex-col justify-between py-0.5">
+                                <div>
+                                  <span className="text-xs font-black text-neutral-800 block truncate">
+                                    {reel.author || 'Weekend Explorer'}
+                                  </span>
+                                  <span className="text-[11px] font-medium text-neutral-500 block truncate mt-0.5">
+                                    📍 {reel.location || formData.name}
+                                  </span>
+                                  <a
+                                    href={reel.video}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[10px] text-[#FF6B16] hover:underline font-mono truncate block mt-1"
+                                    title={reel.video}
+                                  >
+                                    View Video Link ↗
+                                  </a>
+                                </div>
+
+                                {/* Order & Delete Controls */}
+                                <div className="flex items-center gap-1.5 mt-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMoveReel(idx, 'up')}
+                                    disabled={idx === 0}
+                                    title="Move reel left/up"
+                                    className="w-7 h-7 rounded-lg border border-neutral-200 text-neutral-600 hover:bg-neutral-100 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors cursor-pointer"
+                                  >
+                                    <ArrowUp className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMoveReel(idx, 'down')}
+                                    disabled={idx === (formData.reels?.length || 0) - 1}
+                                    title="Move reel right/down"
+                                    className="w-7 h-7 rounded-lg border border-neutral-200 text-neutral-600 hover:bg-neutral-100 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors cursor-pointer"
+                                  >
+                                    <ArrowDown className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveReelFromPackage(idx)}
+                                    title="Delete reel"
+                                    className="w-7 h-7 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 flex items-center justify-center ml-auto transition-colors cursor-pointer"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 

@@ -214,8 +214,21 @@ export function TripReelsRow({
   subtitle = '',
   maxReels = 10,
   className = '',
+  customReels = null,
 }) {
-  const [allReels, setAllReels] = useState(TRIP_REELS);
+  const hasCustomReels = Array.isArray(customReels) && customReels.length > 0;
+
+  const [allReels, setAllReels] = useState(() => {
+    if (hasCustomReels) return customReels;
+    try {
+      const cached = typeof window !== 'undefined' ? localStorage.getItem('we_cached_reels') : null;
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return TRIP_REELS;
+  });
   const [isAudioOn, setIsAudioOn] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
 
@@ -223,6 +236,7 @@ export function TripReelsRow({
 
   // Fetch dynamic reels from backend with graceful fallback to TRIP_REELS
   useEffect(() => {
+    if (hasCustomReels) return;
     let isMounted = true;
     const fetchDynamicReels = async () => {
       try {
@@ -232,6 +246,11 @@ export function TripReelsRow({
         const json = await res.json();
         if (isMounted && json.success && Array.isArray(json.data) && json.data.length > 0) {
           setAllReels(json.data);
+          try {
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('we_cached_reels', JSON.stringify(json.data));
+            }
+          } catch (e) {}
         }
       } catch (err) {
         // Silently fallback to bundled default reels
@@ -241,20 +260,24 @@ export function TripReelsRow({
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [hasCustomReels]);
 
   const reels = useMemo(() => {
+    if (hasCustomReels) {
+      return maxReels && customReels.length > maxReels ? customReels.slice(0, maxReels) : customReels;
+    }
     const list = Array.isArray(allReels) && allReels.length > 0 ? allReels : TRIP_REELS;
     return maxReels && list.length > maxReels ? list.slice(0, maxReels) : list;
-  }, [allReels, maxReels]);
+  }, [hasCustomReels, customReels, allReels, maxReels]);
 
-  // Find index of Anil Yogi to start centered as in screenshot, or default to index 2
+  // Find index of Anil Yogi to start centered as in screenshot, or default to 0 for custom reels
   const centerItemIndex = useMemo(() => {
+    if (hasCustomReels) return 0;
     const foundIdx = reels.findIndex(
       (r) => (r.author || '').toLowerCase().includes('anil yogi')
     );
     return foundIdx !== -1 ? foundIdx : Math.min(2, Math.max(0, reels.length - 1));
-  }, [reels]);
+  }, [reels, hasCustomReels]);
 
   // Number of times to cycle the reels to maintain an infinite runway buffer
   const repeatCount = useMemo(() => {
@@ -361,7 +384,7 @@ export function TripReelsRow({
       <div className="relative flex items-center justify-center min-h-[380px] xs:min-h-[420px] sm:min-h-[470px] md:min-h-[510px] lg:min-h-[550px] w-full px-2 sm:px-4 md:px-6 overflow-hidden select-none py-2">
         <div className="w-full max-w-[1550px] mx-auto overflow-hidden">
           <Swiper
-            key={`reels-swiper-${reels.length}-${reels[0]?._id || reels[0]?.id || 'def'}`}
+            key={`reels-swiper-${reels.length}-${reels[0]?._id || reels[0]?.id || reels[0]?.video || 'def'}`}
             onSwiper={(swiper) => {
               swiperRef.current = swiper;
             }}

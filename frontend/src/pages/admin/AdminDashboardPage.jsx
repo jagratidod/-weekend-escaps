@@ -60,13 +60,16 @@ const VALID_TABS = [
   'gallery_editor',
   'settings',
   'packages',
-  'reels',
 ];
 
 const TAB_ALIASES = {
   'home': 'home_sections',
   'home-sections': 'home_sections',
   'homesections': 'home_sections',
+  'reels': 'home_sections',
+  'reel': 'home_sections',
+  'travel-reels': 'home_sections',
+  'travel_reels': 'home_sections',
   'about': 'about_editor',
   'about-editor': 'about_editor',
   'gallery': 'gallery_editor',
@@ -84,7 +87,6 @@ const TAB_ALIASES = {
   'package': 'packages',
   'booking': 'bookings',
   'payment': 'payments',
-  'reel': 'reels',
   'blog': 'blogs',
 };
 
