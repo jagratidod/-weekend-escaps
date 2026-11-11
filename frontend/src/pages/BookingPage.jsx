@@ -617,7 +617,7 @@ export function BookingPage() {
           )}
 
           {/* ══════════════════════════════════════════════════════════════
-              STEP 2: ROOM OCCUPANCY & TRAVELERS
+              STEP 2: YOUR TRIP & OCCUPANCY
               ══════════════════════════════════════════════════════════════ */}
           {step === 2 && (
             <div className="space-y-6">
@@ -627,28 +627,11 @@ export function BookingPage() {
                   Step 2 of 4
                 </span>
                 <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight">
-                  ROOM OCCUPANCY & TRAVELERS
+                  YOUR TRIP
                 </h1>
                 <p className="text-neutral-500 text-xs sm:text-sm mt-1">
-                  Choose your room sharing preference and total number of travelers.
+                  Confirm your trip, room occupancy and number of travelers.
                 </p>
-              </div>
-
-              {/* Selected Date Summary Card */}
-              <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200/80 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <Calendar className="w-4 h-4 text-[#FF6B16]" />
-                  <span className="text-xs font-bold text-neutral-800">
-                    Departure Date: {formatFriendlyDate(travelDate)} ({selectedCity})
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => goToStep(1)}
-                  className="text-xs font-bold text-[#FF6B16] hover:underline cursor-pointer"
-                >
-                  Change Date
-                </button>
               </div>
 
               {/* Form Fields */}
@@ -666,8 +649,30 @@ export function BookingPage() {
                   />
                 </div>
 
-                {/* Total Persons Stepper & Occupancy */}
+                {/* Date & Persons Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Selected Travel Date */}
+                  <div>
+                    <label className="block text-[11px] font-extrabold text-neutral-600 uppercase tracking-wider mb-1.5">
+                      TRAVEL DATE *
+                    </label>
+                    <div className="h-12 px-4 rounded-xl border border-neutral-200 bg-neutral-50 flex items-center justify-between">
+                      <div className="flex items-center gap-2 truncate">
+                        <Calendar className="w-4 h-4 text-[#FF6B16] shrink-0" />
+                        <span className="text-xs sm:text-sm font-bold text-neutral-800 truncate">
+                          {formatFriendlyDate(travelDate)} ({selectedCity})
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => goToStep(1)}
+                        className="text-xs font-bold text-[#FF6B16] hover:underline shrink-0 ml-2 cursor-pointer"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Total Persons Stepper */}
                   <div>
                     <label className="block text-[11px] font-extrabold text-neutral-600 uppercase tracking-wider mb-1.5">
@@ -702,37 +707,37 @@ export function BookingPage() {
                       </button>
                     </div>
                   </div>
-
-                  {/* Dynamic Pricing / Sharing Option Selector */}
-                  {displayTiers.length > 0 && (
-                    <div>
-                      <label className="block text-[11px] font-extrabold text-neutral-600 uppercase tracking-wider mb-1.5">
-                        {pkg?.pricingType === 'distance'
-                          ? 'BOARDING & DEPARTURE ROUTE *'
-                          : 'ROOM / CAMP OCCUPANCY *'}
-                      </label>
-                      <select
-                        value={sharingType}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setSharingType(val);
-                          const match = displayTiers.find((t) => val.startsWith(t.name));
-                          if (match) setCustomPricePerPerson(match.price);
-                        }}
-                        className="w-full h-12 px-4 rounded-xl border border-neutral-200 text-sm font-semibold text-neutral-800 bg-white focus:border-[#FF6B16] outline-none cursor-pointer"
-                      >
-                        {displayTiers.map((t) => {
-                          const label = `${t.name}${t.subtext ? ` (${t.subtext})` : ''}`;
-                          return (
-                            <option key={t.name} value={label}>
-                              {t.name} — {formatCurrency(t.price)}/person {t.subtext ? `• ${t.subtext}` : ''}
-                            </option>
-                          );
-                        })}
-                      </select>
-                    </div>
-                  )}
                 </div>
+
+                {/* Dynamic Pricing / Sharing Option Selector (Full Width) */}
+                {displayTiers.length > 0 && (
+                  <div>
+                    <label className="block text-[11px] font-extrabold text-neutral-600 uppercase tracking-wider mb-1.5">
+                      {pkg?.pricingType === 'distance'
+                        ? 'BOARDING & DEPARTURE ROUTE *'
+                        : 'ROOM / CAMP OCCUPANCY *'}
+                    </label>
+                    <select
+                      value={sharingType}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSharingType(val);
+                        const match = displayTiers.find((t) => val.startsWith(t.name));
+                        if (match) setCustomPricePerPerson(match.price);
+                      }}
+                      className="w-full h-12 px-4 rounded-xl border border-neutral-200 text-sm font-semibold text-neutral-800 bg-white focus:border-[#FF6B16] outline-none cursor-pointer"
+                    >
+                      {displayTiers.map((t) => {
+                        const label = `${t.name}${t.subtext ? ` (${t.subtext})` : ''}`;
+                        return (
+                          <option key={t.name} value={label}>
+                            {t.name} — {formatCurrency(t.price)}/person {t.subtext ? `• ${t.subtext}` : ''}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                )}
 
                 {/* Real-time Availability Status Banner */}
                 {travelDate && (
@@ -795,7 +800,7 @@ export function BookingPage() {
                   <button
                     type="button"
                     onClick={() => goToStep(1)}
-                    className="w-1/3 h-12 sm:h-14 rounded-xl border-2 border-neutral-200 text-neutral-700 font-black text-xs sm:text-sm uppercase tracking-wider hover:bg-neutral-50 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    className="w-1/3 h-12 sm:h-14 rounded-xl border border-neutral-300 text-neutral-700 font-black text-xs sm:text-sm uppercase tracking-wider hover:bg-neutral-50 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     <span>Back</span>
