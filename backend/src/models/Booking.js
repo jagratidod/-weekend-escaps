@@ -36,6 +36,11 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    departureCity: {
+      type: String,
+      default: 'Ahmedabad',
+      trim: true,
+    },
     friendlyTravelDate: {
       type: String,
       default: '',

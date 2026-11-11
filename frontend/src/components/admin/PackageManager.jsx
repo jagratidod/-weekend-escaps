@@ -125,6 +125,7 @@ export function PackageManager() {
     badgeColor: 'bg-[#FF6B16] text-white',
     duration: '6 Days / 5 Nights',
     location: 'Uttarakhand, India',
+    departureCities: ['Ahmedabad', 'Mumbai', 'Pune'],
     price: 8999,
     originalPrice: 12999,
     gstRate: 5,
@@ -361,10 +362,59 @@ export function PackageManager() {
   const [newBatch, setNewBatch] = useState({
     startDate: '',
     endDate: '',
+    city: 'All Cities',
     totalSeats: 16,
+    priceOverride: '',
     status: 'auto',
     note: '',
   });
+  const [batchCityFilter, setBatchCityFilter] = useState('All');
+  const [customCityInput, setCustomCityInput] = useState('');
+
+  const POPULAR_DEPARTURE_CITIES = [
+    'Ahmedabad',
+    'Mumbai',
+    'Pune',
+    'Delhi',
+    'Surat',
+    'Vadodara',
+    'Bangalore',
+    'Jaipur',
+    'Indore',
+    'Goa',
+  ];
+
+  const handleAddDepartureCity = (cityName) => {
+    const trimmed = (cityName || '').trim();
+    if (!trimmed) return;
+    const current = Array.isArray(formData.departureCities) ? formData.departureCities : [];
+    if (current.some((c) => c.toLowerCase() === trimmed.toLowerCase())) {
+      showToast('error', `${trimmed} is already in departure cities list`);
+      return;
+    }
+    setFormData((prev) => ({
+      ...prev,
+      departureCities: [...(prev.departureCities || []), trimmed],
+    }));
+    setCustomCityInput('');
+    showToast('success', `Added ${trimmed} to departure cities!`);
+  };
+
+  const handleRemoveDepartureCity = (cityToRemove) => {
+    const current = Array.isArray(formData.departureCities) ? formData.departureCities : [];
+    if (current.length <= 1) {
+      showToast('error', 'At least one departure city is required');
+      return;
+    }
+    setFormData((prev) => ({
+      ...prev,
+      departureCities: (prev.departureCities || []).filter(
+        (c) => c.toLowerCase() !== cityToRemove.toLowerCase()
+      ),
+    }));
+    showToast('info', `Removed ${cityToRemove}`);
+  };
+
   const [newBlackout, setNewBlackout] = useState({
     date: '',
     reason: '',
@@ -414,6 +464,9 @@ export function PackageManager() {
       badgeColor: pkg.badgeColor || 'bg-[#FF6B16] text-white',
       duration: pkg.duration || '',
       location: pkg.location || '',
+      departureCities: Array.isArray(pkg.departureCities) && pkg.departureCities.length > 0
+        ? [...pkg.departureCities]
+        : ['Ahmedabad', 'Mumbai', 'Pune'],
       price: pkg.price || 0,
       originalPrice: pkg.originalPrice || '',
       gstRate: pkg.gstRate !== undefined && pkg.gstRate !== null ? Number(pkg.gstRate) : 5,
@@ -708,6 +761,7 @@ export function PackageManager() {
       showToast('error', 'Batch start date is required');
       return;
     }
+    const chosenCity = newBatch.city?.trim() || 'All Cities';
     setFormData((prev) => ({
       ...prev,
       availability: {
@@ -716,7 +770,9 @@ export function PackageManager() {
           ...(prev.availability?.batches || []),
           {
             ...newBatch,
+            city: chosenCity,
             totalSeats: Number(newBatch.totalSeats) || 16,
+            priceOverride: newBatch.priceOverride ? Number(newBatch.priceOverride) : null,
             bookedSeats: 0,
           },
         ],
@@ -725,11 +781,13 @@ export function PackageManager() {
     setNewBatch({
       startDate: '',
       endDate: '',
+      city: chosenCity,
       totalSeats: formData.availability?.defaultSeatsPerBatch || 16,
+      priceOverride: '',
       status: 'auto',
       note: '',
     });
-    showToast('success', 'Departure batch added!');
+    showToast('success', `Departure batch added for ${chosenCity}!`);
   };
 
   const handleRemoveBatch = (index) => {
@@ -1669,6 +1727,92 @@ export function PackageManager() {
                         placeholder="e.g. Uttarakhand, India"
                         className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs font-medium focus:outline-none focus:border-[#FF6B16]"
                       />
+                    </div>
+                  </div>
+
+                  {/* Departure Cities (Boarding Points) Manager */}
+                  <div className="p-4 rounded-2xl bg-[#FFF9F5] border border-[#FED7AA] space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                      <div>
+                        <label className="block text-xs font-extrabold text-neutral-800 uppercase tracking-wider">
+                          Departure Cities (Boarding Points) <span className="text-rose-500">*</span>
+                        </label>
+                        <p className="text-[11px] text-neutral-500">
+                          Cities where travelers can board this trip. Shown as interactive selection chips on the package page and checkout.
+                        </p>
+                      </div>
+                      <span className="text-xs font-bold text-[#FF6B16]">
+                        {formData.departureCities?.length || 0} Cities Configured
+                      </span>
+                    </div>
+
+                    {/* Active Cities Tags */}
+                    <div className="flex flex-wrap items-center gap-2 min-h-[36px]">
+                      {(formData.departureCities || []).map((city) => (
+                        <span
+                          key={city}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#FED7AA] text-neutral-800 font-bold text-xs shadow-2xs group"
+                        >
+                          <span className="w-2 h-2 rounded-full bg-[#FF6B16]" />
+                          <span>{city}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveDepartureCity(city)}
+                            className="text-neutral-400 hover:text-rose-600 transition-colors ml-0.5 cursor-pointer text-sm font-black"
+                            title={`Remove ${city}`}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Add Custom City or One-Click Presets */}
+                    <div className="pt-2 border-t border-orange-100 flex flex-col sm:flex-row gap-2">
+                      <div className="flex-1 flex gap-2">
+                        <input
+                          type="text"
+                          value={customCityInput}
+                          onChange={(e) => setCustomCityInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddDepartureCity(customCityInput);
+                            }
+                          }}
+                          placeholder="Type new departure city (e.g. Delhi, Surat, Bangalore) & press Enter"
+                          className="flex-1 px-3 py-2 rounded-xl bg-white border border-neutral-300 text-xs font-medium focus:outline-none focus:border-[#FF6B16]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleAddDepartureCity(customCityInput)}
+                          disabled={!customCityInput.trim()}
+                          className="px-4 py-2 bg-[#FF6B16] hover:bg-[#e05809] disabled:opacity-50 text-white rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0"
+                        >
+                          + Add City
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Popular Quick Presets */}
+                    <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                      <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Quick Presets:</span>
+                      {POPULAR_DEPARTURE_CITIES.map((pc) => {
+                        const isAdded = (formData.departureCities || []).some(
+                          (c) => c.toLowerCase() === pc.toLowerCase()
+                        );
+                        if (isAdded) return null;
+                        return (
+                          <button
+                            key={pc}
+                            type="button"
+                            onClick={() => handleAddDepartureCity(pc)}
+                            className="px-2 py-0.5 rounded-lg bg-orange-100/60 hover:bg-[#FF6B16] text-[#C2410C] hover:text-white text-[11px] font-semibold transition-all cursor-pointer"
+                          >
+                            + {pc}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -2830,147 +2974,254 @@ export function PackageManager() {
                     </div>
 
                     {/* Quick Add Batch Form Bar */}
-                    <div className="p-3 bg-orange-50/60 rounded-2xl border border-orange-100 mb-3 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
-                      <div className="sm:col-span-3">
-                        <label className="block text-[11px] font-bold text-neutral-700 mb-1">
-                          Start Date <span className="text-rose-500">*</span>
-                        </label>
-                        <input
-                          type="date"
-                          value={newBatch.startDate}
-                          onChange={(e) => setNewBatch({ ...newBatch, startDate: e.target.value })}
-                          className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-neutral-200 text-xs font-semibold focus:outline-none focus:border-[#FF6B16]"
-                        />
+                    <div className="p-3 bg-orange-50/60 rounded-2xl border border-orange-100 mb-3 space-y-2.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+                        <div className="sm:col-span-3">
+                          <label className="block text-[11px] font-bold text-neutral-700 mb-1">
+                            Departure City <span className="text-rose-500">*</span>
+                          </label>
+                          <select
+                            value={newBatch.city || 'All Cities'}
+                            onChange={(e) => setNewBatch({ ...newBatch, city: e.target.value })}
+                            className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-neutral-200 text-xs font-semibold focus:outline-none focus:border-[#FF6B16] cursor-pointer"
+                          >
+                            <option value="All Cities">🌐 All Cities (General)</option>
+                            {(formData.departureCities || []).map((c) => (
+                              <option key={c} value={c}>
+                                📍 {c}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="sm:col-span-3">
+                          <label className="block text-[11px] font-bold text-neutral-700 mb-1">
+                            Start Date <span className="text-rose-500">*</span>
+                          </label>
+                          <input
+                            type="date"
+                            value={newBatch.startDate}
+                            onChange={(e) => setNewBatch({ ...newBatch, startDate: e.target.value })}
+                            className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-neutral-200 text-xs font-semibold focus:outline-none focus:border-[#FF6B16]"
+                          />
+                        </div>
+
+                        <div className="sm:col-span-3">
+                          <label className="block text-[11px] font-bold text-neutral-700 mb-1">
+                            End Date (Optional)
+                          </label>
+                          <input
+                            type="date"
+                            value={newBatch.endDate}
+                            onChange={(e) => setNewBatch({ ...newBatch, endDate: e.target.value })}
+                            className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-neutral-200 text-xs font-semibold focus:outline-none focus:border-[#FF6B16]"
+                          />
+                        </div>
+
+                        <div className="sm:col-span-3">
+                          <label className="block text-[11px] font-bold text-neutral-700 mb-1">
+                            Seats Limit
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="100"
+                            value={newBatch.totalSeats}
+                            onChange={(e) =>
+                              setNewBatch({ ...newBatch, totalSeats: Number(e.target.value) || 16 })
+                            }
+                            className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-neutral-200 text-xs font-semibold focus:outline-none focus:border-[#FF6B16]"
+                          />
+                        </div>
                       </div>
 
-                      <div className="sm:col-span-3">
-                        <label className="block text-[11px] font-bold text-neutral-700 mb-1">
-                          End Date (Optional)
-                        </label>
-                        <input
-                          type="date"
-                          value={newBatch.endDate}
-                          onChange={(e) => setNewBatch({ ...newBatch, endDate: e.target.value })}
-                          className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-neutral-200 text-xs font-semibold focus:outline-none focus:border-[#FF6B16]"
-                        />
-                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end pt-1 border-t border-orange-100/70">
+                        <div className="sm:col-span-4">
+                          <label className="block text-[11px] font-bold text-neutral-700 mb-1">
+                            City Price Override (₹ optional)
+                          </label>
+                          <input
+                            type="number"
+                            placeholder={`e.g. ${formData.price || 4500}`}
+                            value={newBatch.priceOverride || ''}
+                            onChange={(e) => setNewBatch({ ...newBatch, priceOverride: e.target.value })}
+                            className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-neutral-200 text-xs font-semibold focus:outline-none focus:border-[#FF6B16]"
+                          />
+                        </div>
 
-                      <div className="sm:col-span-2">
-                        <label className="block text-[11px] font-bold text-neutral-700 mb-1">
-                          Seats
-                        </label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="100"
-                          value={newBatch.totalSeats}
-                          onChange={(e) =>
-                            setNewBatch({ ...newBatch, totalSeats: Number(e.target.value) || 16 })
-                          }
-                          className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-neutral-200 text-xs font-semibold focus:outline-none focus:border-[#FF6B16]"
-                        />
-                      </div>
+                        <div className="sm:col-span-5">
+                          <label className="block text-[11px] font-bold text-neutral-700 mb-1">
+                            Batch Label / Note
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Weekend Special, Long Weekend"
+                            value={newBatch.note}
+                            onChange={(e) => setNewBatch({ ...newBatch, note: e.target.value })}
+                            className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-neutral-200 text-xs font-semibold focus:outline-none focus:border-[#FF6B16]"
+                          />
+                        </div>
 
-                      <div className="sm:col-span-2">
-                        <label className="block text-[11px] font-bold text-neutral-700 mb-1">
-                          Batch Label
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Weekend Special"
-                          value={newBatch.note}
-                          onChange={(e) => setNewBatch({ ...newBatch, note: e.target.value })}
-                          className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-neutral-200 text-xs font-semibold focus:outline-none focus:border-[#FF6B16]"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <button
-                          type="button"
-                          onClick={handleAddBatch}
-                          className="w-full py-1.5 px-3 bg-[#FF6B16] hover:bg-[#E55A0B] text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center justify-center gap-1 cursor-pointer"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                          <span>Add Batch</span>
-                        </button>
+                        <div className="sm:col-span-3">
+                          <button
+                            type="button"
+                            onClick={handleAddBatch}
+                            className="w-full py-2 px-3 bg-[#FF6B16] hover:bg-[#E55A0B] text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Add Batch</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Batches Table / List */}
-                    {formData.availability?.batches?.length > 0 ? (
-                      <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                        {formData.availability.batches.map((batch, bIdx) => {
-                          const total = batch.totalSeats || 16;
-                          const booked = batch.bookedSeats || 0;
-                          const left = Math.max(0, total - booked);
-
+                    {/* City Filter Pills */}
+                    {formData.availability?.batches?.length > 0 && (
+                      <div className="flex items-center gap-1.5 flex-wrap mb-2.5 pt-1">
+                        <span className="text-[11px] font-bold text-neutral-500 mr-1">Filter by City:</span>
+                        <button
+                          type="button"
+                          onClick={() => setBatchCityFilter('All')}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                            batchCityFilter === 'All'
+                              ? 'bg-[#FF6B16] text-white shadow-xs'
+                              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                          }`}
+                        >
+                          All ({formData.availability?.batches?.length || 0})
+                        </button>
+                        {(formData.departureCities || []).map((c) => {
+                          const count = (formData.availability?.batches || []).filter(
+                            (b) =>
+                              (b.city || 'All Cities').toLowerCase() === c.toLowerCase() ||
+                              (b.city || '').toLowerCase() === 'all cities'
+                          ).length;
                           return (
-                            <div
-                              key={bIdx}
-                              className="p-3 bg-white rounded-xl border border-neutral-200 flex flex-wrap items-center justify-between gap-3 shadow-2xs hover:border-neutral-300 transition-colors"
+                            <button
+                              key={c}
+                              type="button"
+                              onClick={() => setBatchCityFilter(c)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                batchCityFilter === c
+                                  ? 'bg-[#FF6B16] text-white shadow-xs'
+                                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                              }`}
                             >
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-orange-100 text-[#FF6B16] flex items-center justify-center font-black text-xs">
-                                  {bIdx + 1}
-                                </div>
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs font-black text-neutral-900">
-                                      {batch.startDate}
-                                      {batch.endDate ? ` → ${batch.endDate}` : ''}
-                                    </span>
-                                    {batch.note && (
-                                      <span className="px-2 py-0.5 rounded-full bg-neutral-100 text-[10px] font-bold text-neutral-700">
-                                        {batch.note}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-2 text-[11px] text-neutral-500 mt-0.5">
-                                    <span>Total: <b>{total}</b></span>
-                                    <span>•</span>
-                                    <span>Booked: <b>{booked}</b></span>
-                                    <span>•</span>
-                                    <span
-                                      className={`font-black ${
-                                        left === 0
-                                          ? 'text-rose-600'
-                                          : left <= 4
-                                          ? 'text-amber-600'
-                                          : 'text-emerald-600'
-                                      }`}
-                                    >
-                                      {left} Seats Available
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-2">
-                                <select
-                                  value={batch.status || 'auto'}
-                                  onChange={(e) =>
-                                    handleUpdateBatch(bIdx, 'status', e.target.value)
-                                  }
-                                  className="px-2 py-1 bg-neutral-50 rounded-lg border border-neutral-200 text-xs font-bold cursor-pointer"
-                                >
-                                  <option value="auto">Auto (Calculate from seats)</option>
-                                  <option value="available">Force Available</option>
-                                  <option value="filling_fast">Force Filling Fast</option>
-                                  <option value="sold_out">Force Sold Out</option>
-                                </select>
-
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveBatch(bIdx)}
-                                  className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                                  title="Delete Batch"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
+                              {c} ({count})
+                            </button>
                           );
                         })}
+                      </div>
+                    )}
+
+                    {/* Batches Table / List */}
+                    {formData.availability?.batches?.length > 0 ? (
+                      <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                        {(formData.availability.batches || [])
+                          .filter((b) => {
+                            if (batchCityFilter === 'All') return true;
+                            return (
+                              (b.city || 'All Cities').toLowerCase() === batchCityFilter.toLowerCase() ||
+                              (b.city || '').toLowerCase() === 'all cities'
+                            );
+                          })
+                          .map((batch) => {
+                            const originalIdx = (formData.availability.batches || []).indexOf(batch);
+                            const total = batch.totalSeats || 16;
+                            const booked = batch.bookedSeats || 0;
+                            const left = Math.max(0, total - booked);
+
+                            return (
+                              <div
+                                key={originalIdx}
+                                className="p-3 bg-white rounded-xl border border-neutral-200 flex flex-wrap items-center justify-between gap-3 shadow-2xs hover:border-neutral-300 transition-colors"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-lg bg-orange-100 text-[#FF6B16] flex items-center justify-center font-black text-xs shrink-0">
+                                    {originalIdx + 1}
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="text-xs font-black text-neutral-900">
+                                        {batch.startDate}
+                                        {batch.endDate ? ` → ${batch.endDate}` : ''}
+                                      </span>
+                                      <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-black">
+                                        📍 {batch.city || 'All Cities'}
+                                      </span>
+                                      {batch.priceOverride && (
+                                        <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black">
+                                          ₹{batch.priceOverride}
+                                        </span>
+                                      )}
+                                      {batch.note && (
+                                        <span className="px-2 py-0.5 rounded-full bg-neutral-100 text-[10px] font-bold text-neutral-700">
+                                          {batch.note}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[11px] text-neutral-500 mt-1">
+                                      <span>Total: <b>{total}</b></span>
+                                      <span>•</span>
+                                      <span>Booked: <b>{booked}</b></span>
+                                      <span>•</span>
+                                      <span
+                                        className={`font-black ${
+                                          left === 0
+                                            ? 'text-rose-600'
+                                            : left <= 4
+                                            ? 'text-amber-600'
+                                            : 'text-emerald-600'
+                                        }`}
+                                      >
+                                        {left} Seats Available
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <select
+                                    value={batch.city || 'All Cities'}
+                                    onChange={(e) =>
+                                      handleUpdateBatch(originalIdx, 'city', e.target.value)
+                                    }
+                                    className="px-2 py-1 bg-neutral-50 rounded-lg border border-neutral-200 text-xs font-semibold cursor-pointer"
+                                    title="Change departure city for this batch"
+                                  >
+                                    <option value="All Cities">🌐 All Cities</option>
+                                    {(formData.departureCities || []).map((c) => (
+                                      <option key={c} value={c}>
+                                        {c}
+                                      </option>
+                                    ))}
+                                  </select>
+
+                                  <select
+                                    value={batch.status || 'auto'}
+                                    onChange={(e) =>
+                                      handleUpdateBatch(originalIdx, 'status', e.target.value)
+                                    }
+                                    className="px-2 py-1 bg-neutral-50 rounded-lg border border-neutral-200 text-xs font-bold cursor-pointer"
+                                  >
+                                    <option value="auto">Auto (from seats)</option>
+                                    <option value="available">Force Available</option>
+                                    <option value="filling_fast">Force Filling Fast</option>
+                                    <option value="sold_out">Force Sold Out</option>
+                                  </select>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveBatch(originalIdx)}
+                                    className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                                    title="Delete Batch"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
                       </div>
                     ) : (
                       <div className="p-4 rounded-xl border border-dashed border-neutral-200 text-center text-xs text-neutral-400">

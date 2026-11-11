@@ -598,6 +598,10 @@ export const updatePackage = async (req, res) => {
           pkg.reels = req.body.reels.slice(0, 5);
         } else if (field === 'gstRate') {
           pkg.gstRate = req.body.gstRate !== '' && !isNaN(Number(req.body.gstRate)) ? Number(req.body.gstRate) : 5;
+        } else if (field === 'departureCities') {
+          pkg.departureCities = Array.isArray(req.body.departureCities)
+            ? req.body.departureCities.map((c) => String(c).trim()).filter(Boolean)
+            : ['Ahmedabad', 'Mumbai', 'Pune'];
         } else if (field === 'price') {
           pkg.price = Number(req.body.price);
         } else if (field === 'originalPrice') {
@@ -1025,12 +1029,13 @@ export const getUpcomingSlots = async (req, res) => {
     if (avail.batches && avail.batches.length > 0) {
       let filteredBatches = avail.batches;
       if (city) {
-        const cityMatch = avail.batches.filter(
-          (b) => b.city && b.city.toLowerCase() === city.toLowerCase()
-        );
-        if (cityMatch.length > 0) {
-          filteredBatches = cityMatch;
-        }
+        const targetCity = city.trim().toLowerCase();
+        filteredBatches = avail.batches.filter((b) => {
+          if (!b.city || b.city.toLowerCase() === 'all' || b.city.toLowerCase() === 'all cities') {
+            return true;
+          }
+          return b.city.trim().toLowerCase() === targetCity;
+        });
       }
 
       filteredBatches.sort((a, b) => (a.startDate || '').localeCompare(b.startDate || ''));
@@ -1064,6 +1069,7 @@ export const getUpcomingSlots = async (req, res) => {
           rangeLabel,
           totalSeats: total,
           seatsLeft: left,
+          priceOverride: b.priceOverride || null,
           status:
             b.status === 'sold_out' || left <= 0
               ? 'sold_out'

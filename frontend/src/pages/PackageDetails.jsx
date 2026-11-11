@@ -41,7 +41,12 @@ export function PackageDetails() {
   const { getPackageById, checkAvailability, getUpcomingSlots } = usePackages();
   const pkg = getPackageById(id);
 
-  const { whatsappUrl, getCustomWhatsAppUrl } = useSettings();
+  const {
+    whatsappUrl,
+    getCustomWhatsAppUrl,
+    themeColor = '#FF6B16',
+    themeColorHover = '#e05809',
+  } = useSettings();
   const packageWaUrl = getCustomWhatsAppUrl
     ? getCustomWhatsAppUrl(`Hi Weekend Escapes! I would like to inquire about the package: ${pkg?.name || pkg?.title || 'Tour Package'}`)
     : whatsappUrl;
@@ -52,7 +57,45 @@ export function PackageDetails() {
       )
     : packageWaUrl || whatsappUrl || 'https://wa.me/919876543210';
 
-  const [activeTab, setActiveTab] = useState('itinerary');
+  const NAV_SECTIONS = [
+    { id: 'section-dates', label: 'Available Dates' },
+    { id: 'section-itinerary', label: 'Day-by-Day Itinerary' },
+    { id: 'section-inclusions', label: "What's Included" },
+    { id: 'section-policy', label: 'Important Guidelines' },
+  ];
+
+  const [activeSection, setActiveSection] = useState('section-dates');
+
+  // Scrollspy effect: highlight active tab as user scrolls down the page
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 180;
+      for (let i = NAV_SECTIONS.length - 1; i >= 0; i--) {
+        const el = document.getElementById(NAV_SECTIONS[i].id);
+        if (el) {
+          const top = el.offsetTop;
+          if (scrollPosition >= top) {
+            setActiveSection(NAV_SECTIONS[i].id);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToSection = (sectionId) => {
+    setActiveSection(sectionId);
+    const el = document.getElementById(sectionId);
+    if (el) {
+      const yOffset = -120;
+      const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedCity, setSelectedCity] = useState(pkg?.departureCities?.[0] || 'Ahmedabad');
 
@@ -116,8 +159,8 @@ export function PackageDetails() {
     }
   }, [pkg?.id, pkg?._id]);
 
-  const effectivePrice = selectedTier ? Number(selectedTier.price) : (Number(pkg?.price) || 0);
-  const effectiveOriginalPrice = selectedTier?.originalPrice || (pkg?.originalPrice ? Number(pkg.originalPrice) : null);
+  const effectivePrice = Number(pkg?.price) || 0;
+  const effectiveOriginalPrice = pkg?.originalPrice ? Number(pkg.originalPrice) : null;
 
   const discountPercent =
     effectiveOriginalPrice && effectiveOriginalPrice > effectivePrice
@@ -125,20 +168,9 @@ export function PackageDetails() {
       : null;
 
   const gstRate = Number(pkg?.gstRate) >= 0 ? Number(pkg?.gstRate) : 5;
-  const baseAmount = effectivePrice * travelersCount;
+  const baseAmount = effectivePrice;
   const gstAmount = Number(((baseAmount * gstRate) / 100).toFixed(2));
   const grandTotal = Number((baseAmount + gstAmount).toFixed(2));
-
-  const handleDropdownChange = (val) => {
-    if (displayTiers.length > 0) {
-      const found = displayTiers.find((t) => t.name === val);
-      if (found) {
-        setSelectedTier(found);
-      }
-    } else {
-      setTravelersCount(Number(val));
-    }
-  };
 
   // Availability & Slots State
   const [upcomingSlots, setUpcomingSlots] = useState([]);
@@ -207,27 +239,12 @@ export function PackageDetails() {
     };
   }, [selectedDate, travelersCount, pkg?.id, pkg?._id, id]);
 
-  const handleCheckAvailability = (e, tierToUse = selectedTier, countOverride = null) => {
+  const handleCheckAvailability = (e) => {
     if (e?.preventDefault) e.preventDefault();
-    if (!selectedDate) {
-      const el = document.getElementById('available-dates-section');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
-      }
-      return;
-    }
-    const query = new URLSearchParams();
-    if (selectedDate) query.append('date', selectedDate);
-    if (selectedCity) query.append('city', selectedCity);
-    const travelersToPass = countOverride !== null ? countOverride : travelersCount;
-    query.append('travelers', String(travelersToPass));
-    if (tierToUse?.name) {
-      query.append('tier', tierToUse.name);
-      query.append('tierPrice', String(tierToUse.price));
-      if (tierToUse.subtext) query.append('tierSubtext', tierToUse.subtext);
-    }
-    query.append('step', '1');
-    navigate(`/book/${pkg.id || pkg._id}?${query.toString()}`);
+    const cityParam = selectedCity ? `?city=${encodeURIComponent(selectedCity)}` : '';
+    navigate(`/book/${pkg.id || pkg._id}${cityParam}`, {
+      state: { city: selectedCity },
+    });
   };
 
   const handleSelectTierAndBook = (tier) => {
@@ -336,69 +353,47 @@ export function PackageDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* Left Column: Itinerary, Inclusions, Highlights */}
           <div className="lg:col-span-8 space-y-8">
-            {/* Available Departure Dates (City & Month Grid matching screenshot) */}
-            <AvailableDatesSection
-              pkg={pkg}
-              selectedDate={selectedDate}
-              selectedCity={selectedCity}
-              onSelectCity={(city) => setSelectedCity(city)}
-              onSelectDate={(date, batch) => {
-                setSelectedDate(date);
-                if (window.innerWidth < 1024) {
-                  const el = document.getElementById('booking-card-form');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }
-              }}
-            />
-
-            {/* Navigation Tabs */}
-            <div className="flex border-b border-neutral-200">
-              <button
-                onClick={() => setActiveTab('itinerary')}
-                className={`pb-4 px-6 font-extrabold text-sm border-b-2 transition-all cursor-pointer ${
-                  activeTab === 'itinerary'
-                    ? 'border-[#FF6B16] text-[#FF6B16]'
-                    : 'border-transparent text-neutral-500 hover:text-neutral-900'
-                }`}
-              >
-                Day-by-Day Itinerary
-              </button>
-              <button
-                onClick={() => setActiveTab('inclusions')}
-                className={`pb-4 px-6 font-extrabold text-sm border-b-2 transition-all cursor-pointer ${
-                  activeTab === 'inclusions'
-                    ? 'border-[#FF6B16] text-[#FF6B16]'
-                    : 'border-transparent text-neutral-500 hover:text-neutral-900'
-                }`}
-              >
-                What's Included
-              </button>
-              <button
-                onClick={() => setActiveTab('policy')}
-                className={`pb-4 px-6 font-extrabold text-sm border-b-2 transition-all cursor-pointer ${
-                  activeTab === 'policy'
-                    ? 'border-[#FF6B16] text-[#FF6B16]'
-                    : 'border-transparent text-neutral-500 hover:text-neutral-900'
-                }`}
-              >
-                Important Guidelines
-              </button>
-              <button
-                onClick={() => {
-                  const el = document.getElementById('package-faqs-section');
-                  if (el) {
-                    el.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
-                className="pb-4 px-6 font-extrabold text-sm border-b-2 border-transparent text-neutral-500 hover:text-[#FF6B16] transition-all cursor-pointer"
-              >
-                FAQs
-              </button>
+            {/* Sticky Navigation Bar with active indicator */}
+            <div className="sticky top-20 z-20 bg-white/95 backdrop-blur-md pt-2 pb-1 border-b border-neutral-200 overflow-x-auto no-scrollbar shadow-xs">
+              <div className="flex items-center gap-1 sm:gap-2">
+                {NAV_SECTIONS.map((sec) => (
+                  <button
+                    key={sec.id}
+                    type="button"
+                    onClick={() => scrollToSection(sec.id)}
+                    className={`pb-3 px-4 sm:px-6 font-extrabold text-xs sm:text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+                      activeSection === sec.id
+                        ? 'border-[#FF6B16] text-[#FF6B16]'
+                        : 'border-transparent text-neutral-500 hover:text-neutral-900'
+                    }`}
+                  >
+                    {sec.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Tab: Itinerary */}
-            {activeTab === 'itinerary' && (
-              <div className="bg-white rounded-3xl p-6 sm:p-10 border border-neutral-100 shadow-sm">
+            {/* Continuous Sections Stream (All sections rendered with smooth scrollspy) */}
+            <div className="space-y-10">
+              {/* Section 1: Available Dates */}
+              <div id="section-dates" className="scroll-mt-32 bg-white rounded-3xl p-6 sm:p-8 border border-neutral-100 shadow-sm">
+                <AvailableDatesSection
+                  pkg={pkg}
+                  selectedDate={selectedDate}
+                  selectedCity={selectedCity}
+                  onSelectCity={(city) => setSelectedCity(city)}
+                  onSelectDate={(date, batch) => {
+                    setSelectedDate(date);
+                    if (window.innerWidth < 1024) {
+                      const el = document.getElementById('booking-card-form');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Section 2: Day-by-Day Itinerary */}
+              <div id="section-itinerary" className="scroll-mt-32 bg-white rounded-3xl p-6 sm:p-10 border border-neutral-100 shadow-sm">
                 <div className="mb-6 pb-4 border-b border-neutral-100 flex items-center justify-between">
                   <div>
                     <span className="text-[#FF6B16] font-bold text-xs uppercase tracking-widest block mb-1">
@@ -415,11 +410,9 @@ export function PackageDetails() {
 
                 <ItineraryTimeline itinerary={pkg.itinerary} packageId={pkg.id || pkg._id} />
               </div>
-            )}
 
-            {/* Tab: Inclusions */}
-            {activeTab === 'inclusions' && (
-              <div className="space-y-6 bg-white p-6 sm:p-8 rounded-3xl border border-neutral-100 shadow-sm">
+              {/* Section 3: What's Included */}
+              <div id="section-inclusions" className="scroll-mt-32 space-y-6 bg-white p-6 sm:p-8 rounded-3xl border border-neutral-100 shadow-sm">
                 <h3 className="text-2xl font-black text-[#111111]">
                   Inclusions & Exclusions
                 </h3>
@@ -454,11 +447,9 @@ export function PackageDetails() {
                   </div>
                 </div>
               </div>
-            )}
 
-            {/* Tab: Policy */}
-            {activeTab === 'policy' && (
-              <div className="space-y-4 bg-white p-6 sm:p-8 rounded-3xl border border-neutral-100 shadow-sm text-sm text-neutral-600 leading-relaxed">
+              {/* Section 4: Important Guidelines */}
+              <div id="section-policy" className="scroll-mt-32 space-y-4 bg-white p-6 sm:p-8 rounded-3xl border border-neutral-100 shadow-sm text-sm text-neutral-600 leading-relaxed">
                 <h3 className="text-2xl font-black text-[#111111] mb-2">
                   Trip Guidelines & Safety
                 </h3>
@@ -472,7 +463,7 @@ export function PackageDetails() {
                   3. Weather conditions in mountain passes can change rapidly. The decisions of the trek marshal are final for safety reasons.
                 </p>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Right Column: Pricing & Smart Availability Booking Card */}
@@ -482,7 +473,7 @@ export function PackageDetails() {
               <div className="flex items-center justify-between pb-4 border-b border-neutral-100">
                 <div>
                   <span className="block text-[11px] font-extrabold uppercase tracking-wider text-neutral-400">
-                    {selectedTier ? selectedTier.name : 'STARTING FROM'}
+                    STARTING FROM / PERSON
                   </span>
                   <div className="flex items-baseline gap-2.5 mt-0.5">
                     <span className="text-3xl font-black text-[#111111]">
@@ -502,188 +493,46 @@ export function PackageDetails() {
                 ) : null}
               </div>
 
-              {/* Selected Departure Date Indicator */}
-              <div className="pb-1">
-                {selectedDate ? (
-                  <div className="p-3.5 bg-emerald-50/70 border border-emerald-300 rounded-2xl flex items-center justify-between shadow-2xs">
-                    <div className="flex items-center gap-2.5 overflow-hidden">
-                      <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-                        <Calendar className="w-4 h-4" />
-                      </div>
-                      <div className="overflow-hidden">
-                        <span className="block text-[10px] uppercase font-bold text-emerald-800 tracking-wider">
-                          Departure Date
-                        </span>
-                        <span className="block text-xs sm:text-sm font-black text-neutral-900 truncate">
-                          {selectedDateLabel || selectedDate}
-                          {selectedCity ? ` (${selectedCity})` : ''}
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const el = document.getElementById('available-dates-section');
-                        if (el) el.scrollIntoView({ behavior: 'smooth' });
-                      }}
-                      className="text-xs font-bold text-[#FF6B16] hover:underline cursor-pointer shrink-0 ml-2"
-                    >
-                      Change
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const el = document.getElementById('available-dates-section');
-                      if (el) el.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="w-full p-3.5 bg-orange-50/60 border border-dashed border-[#FF6B16]/50 rounded-2xl flex items-center justify-between text-left hover:bg-orange-50 transition-all cursor-pointer group"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center text-[#FF6B16] group-hover:scale-105 transition-transform shrink-0">
-                        <Calendar className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <span className="block text-xs font-black text-neutral-800">
-                          Select Departure Date
-                        </span>
-                        <span className="block text-[10px] text-neutral-500 font-medium">
-                          Choose from Available Dates on left
-                        </span>
-                      </div>
-                    </div>
-                    <span className="text-xs font-bold text-[#FF6B16]">
-                      Choose &rarr;
-                    </span>
-                  </button>
-                )}
+              {/* Departure Cities Selector (From) - Theme Based */}
+              <div className="pt-1">
+                <label className="block text-sm sm:text-base font-extrabold text-neutral-900 mb-2.5">
+                  From
+                </label>
+                <div className="flex flex-wrap items-center gap-2">
+                  {((pkg?.departureCities && pkg.departureCities.length > 0)
+                    ? pkg.departureCities
+                    : ['Ahmedabad', 'Mumbai', 'Pune']
+                  ).map((city) => {
+                    const isSelected = (selectedCity || '').toLowerCase() === city.toLowerCase();
+                    return (
+                      <button
+                        key={city}
+                        type="button"
+                        onClick={() => setSelectedCity(city)}
+                        style={
+                          isSelected
+                            ? { backgroundColor: themeColor, borderColor: themeColor }
+                            : {}
+                        }
+                        className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                          isSelected
+                            ? 'text-white shadow-md shadow-[#FF6B16]/25 border'
+                            : 'bg-white border border-neutral-300 text-neutral-700 hover:border-[#FF6B16]/50 hover:text-neutral-900'
+                        }`}
+                      >
+                        {city}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Booking Availability Form */}
               <form id="booking-card-form" onSubmit={handleCheckAvailability} className="space-y-4">
-                {/* Unified Sharing / Route / Travelers Dropdown */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[11px] font-black text-neutral-700 uppercase tracking-wider">
-                      {tiers.length > 0
-                        ? pkg?.pricingType === 'distance'
-                          ? 'SELECT ROUTE & BOARDING'
-                          : 'ROOM & SHARING OCCUPANCY'
-                        : 'NUMBER OF TRAVELERS'}
-                    </label>
-                    {selectedTier?.subtext && (
-                      <span className="text-[10px] text-emerald-600 font-bold truncate max-w-[170px]">
-                        {selectedTier.subtext}
-                      </span>
-                    )}
-                  </div>
 
-                  <select
-                    value={selectedTier?.name || travelersCount}
-                    onChange={(e) => handleDropdownChange(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 text-sm font-semibold focus:outline-none focus:border-[#FF6B16] focus:ring-2 focus:ring-[#FF6B16]/10 transition-all cursor-pointer bg-white"
-                  >
-                    {tiers.length > 0 ? (
-                      tiers.map((t) => (
-                        <option key={t.name} value={t.name}>
-                          {t.name} — {formatCurrency(t.price)} per person {t.subtext ? `(${t.subtext})` : ''}
-                        </option>
-                      ))
-                    ) : (
-                      <>
-                        <option value={1}>1 Traveler (Solo)</option>
-                        <option value={2}>2 Travelers (Pair/Couple)</option>
-                        <option value={3}>3 Travelers (Small Group)</option>
-                        <option value={4}>4 Travelers (Group)</option>
-                        <option value={5}>5 Travelers (Group)</option>
-                        <option value={6}>6+ Travelers (Custom Batch)</option>
-                      </>
-                    )}
-                  </select>
-
-                  {/* Travelers Count Adjuster Stepper */}
-                  {tiers.length > 0 && (
-                    <div className="mt-2 flex items-center justify-between px-3.5 py-1.5 bg-neutral-50 rounded-xl border border-neutral-200/80 text-xs font-semibold text-neutral-600">
-                      <div className="flex items-center gap-1.5">
-                        <Users className="w-3.5 h-3.5 text-neutral-400" />
-                        <span>Travelers Count:</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setTravelersCount(Math.max(1, travelersCount - 1))}
-                          className="w-6 h-6 rounded-md bg-white border border-neutral-200 text-neutral-700 font-bold hover:bg-neutral-100 flex items-center justify-center text-xs active:scale-95 cursor-pointer shadow-2xs"
-                        >
-                          -
-                        </button>
-                        <span className="font-bold text-neutral-900 min-w-[20px] text-center">{travelersCount}</span>
-                        <button
-                          type="button"
-                          onClick={() => setTravelersCount(travelersCount + 1)}
-                          className="w-6 h-6 rounded-md bg-white border border-neutral-200 text-neutral-700 font-bold hover:bg-neutral-100 flex items-center justify-center text-xs active:scale-95 cursor-pointer shadow-2xs"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Live Real-time Availability Feedback Card */}
-                {selectedDate && (
-                  <div className="transition-all animate-fade-in">
-                    {checkingAvailability ? (
-                      <div className="p-3 bg-neutral-50 rounded-2xl border border-neutral-200 flex items-center justify-center gap-2 text-xs font-bold text-neutral-500">
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#FF6B16]" />
-                        <span>Verifying seat availability...</span>
-                      </div>
-                    ) : availabilityResult ? (
-                      availabilityResult.available ? (
-                        <div
-                          className={`p-3.5 rounded-2xl border ${
-                            availabilityResult.status === 'filling_fast'
-                              ? 'bg-amber-50/70 border-amber-200 text-amber-900'
-                              : 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            {availabilityResult.status === 'filling_fast' ? (
-                              <Zap className="w-4 h-4 text-amber-600 shrink-0" />
-                            ) : (
-                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                            )}
-                            <span className="text-xs font-black">
-                              {availabilityResult.status === 'filling_fast'
-                                ? 'Filling Fast • High Demand Date'
-                                : 'Available • Guaranteed Departure'}
-                            </span>
-                          </div>
-                          <p className="text-[11px] font-medium mt-1 pl-6 opacity-90">
-                            {availabilityResult.seatsLeft !== undefined
-                              ? `${availabilityResult.seatsLeft} seat(s) available for ${travelersCount} traveler(s).`
-                              : availabilityResult.message || 'Slot confirmed for your dates.'}
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900">
-                          <div className="flex items-center gap-2">
-                            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                            <span className="text-xs font-black">Date Unavailable</span>
-                          </div>
-                          <p className="text-[11px] font-medium mt-1 pl-6 text-rose-700">
-                            {availabilityResult.reason ||
-                              'Selected date is sold out or unavailable. Please pick another date or message us on WhatsApp.'}
-                          </p>
-                        </div>
-                      )
-                    ) : null}
-                  </div>
-                )}
-
-                {/* Price Breakdown with GST Box matching screenshot */}
+                {/* Price Breakdown with GST Box - Theme Based */}
                 <div className="pt-2">
-                  <div className="rounded-2xl border border-teal-400 bg-teal-50/20 p-4 sm:p-5 space-y-2.5">
+                  <div className="rounded-2xl border border-[#FED7AA] bg-[#FFF9F5] p-4 sm:p-5 space-y-2.5">
                     <div className="flex justify-between items-center text-xs sm:text-sm text-neutral-600 font-semibold">
                       <span>Base Amount:</span>
                       <span className="font-extrabold text-neutral-900 font-mono text-sm sm:text-base">
@@ -698,18 +547,20 @@ export function PackageDetails() {
                       </span>
                     </div>
 
-                    <div className="pt-2.5 border-t border-dashed border-teal-300 flex justify-between items-center">
+                    <div className="pt-2.5 border-t border-dashed border-[#FED7AA] flex justify-between items-center">
                       <span className="text-sm sm:text-base font-black text-neutral-900">
                         Grand Total:
                       </span>
-                      <span className="text-lg sm:text-xl font-black text-[#0D9488] font-mono">
+                      <span
+                        className="text-lg sm:text-xl font-black font-mono"
+                        style={{ color: themeColor }}
+                      >
                         ₹{grandTotal.toFixed(2)}
                       </span>
                     </div>
                   </div>
                   <span className="text-[10px] text-neutral-400 block text-right mt-1.5 font-medium">
-                    {selectedTier?.name ? `${selectedTier.name} • ` : ''}
-                    ₹{effectivePrice} × {travelersCount} traveler(s) + {gstRate}% GST
+                    Base ₹{effectivePrice.toLocaleString('en-IN')} + {gstRate}% GST per person
                   </span>
                 </div>
 

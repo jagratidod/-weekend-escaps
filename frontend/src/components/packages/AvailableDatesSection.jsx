@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Check, Loader2, Calendar, AlertCircle } from 'lucide-react';
 import { usePackages } from '../../context/PackageContext';
+import { useSettings } from '../../context/SettingsContext';
 
 export default function AvailableDatesSection({
   pkg,
@@ -8,16 +9,23 @@ export default function AvailableDatesSection({
   onSelectDate,
   selectedCity: parentSelectedCity,
   onSelectCity,
+  hideTitle = false,
 }) {
   const { getUpcomingSlots } = usePackages();
+  const { themeColor = '#FF6B16' } = useSettings();
 
-  // Cities list from package or defaults
+  const [backendCities, setBackendCities] = useState([]);
+
+  // Cities list from backend response, package object or safe defaults
   const availableCities = useMemo(() => {
+    if (backendCities.length > 0) {
+      return backendCities;
+    }
     if (Array.isArray(pkg?.departureCities) && pkg.departureCities.length > 0) {
       return pkg.departureCities;
     }
     return ['Ahmedabad', 'Mumbai', 'Pune'];
-  }, [pkg?.departureCities]);
+  }, [backendCities, pkg?.departureCities]);
 
   const [selectedCity, setSelectedCity] = useState(
     parentSelectedCity || availableCities[0] || 'Ahmedabad'
@@ -33,6 +41,19 @@ export default function AvailableDatesSection({
     }
   }, [parentSelectedCity]);
 
+  // If selectedCity is not in availableCities, fallback to first available city
+  useEffect(() => {
+    if (availableCities.length > 0) {
+      const match = availableCities.find(
+        (c) => c.toLowerCase() === (selectedCity || '').toLowerCase()
+      );
+      if (!match) {
+        setSelectedCity(availableCities[0]);
+        if (onSelectCity) onSelectCity(availableCities[0]);
+      }
+    }
+  }, [availableCities]);
+
   // Fetch slots from backend whenever package or selected city changes
   useEffect(() => {
     let isCancelled = false;
@@ -44,6 +65,9 @@ export default function AvailableDatesSection({
         const pkgId = pkg.id || pkg._id;
         const res = await getUpcomingSlots(pkgId, selectedCity);
         if (!isCancelled) {
+          if (res && Array.isArray(res.departureCities) && res.departureCities.length > 0) {
+            setBackendCities(res.departureCities);
+          }
           if (res && Array.isArray(res.slots)) {
             setSlotsData(res.slots);
           } else {
@@ -161,9 +185,11 @@ export default function AvailableDatesSection({
   return (
     <section id="available-dates-section" className="scroll-mt-28 py-6 my-4">
       {/* 1. Main Heading */}
-      <h2 className="text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight mb-4">
-        Available Dates
-      </h2>
+      {!hideTitle && (
+        <h2 className="text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight mb-4">
+          Available Dates
+        </h2>
+      )}
 
       {/* 2. City Selector */}
       <div className="mb-4">
@@ -178,17 +204,25 @@ export default function AvailableDatesSection({
                 key={city}
                 type="button"
                 onClick={() => handleCitySelect(city)}
+                style={
+                  isSelected
+                    ? { backgroundColor: `${themeColor}12`, borderColor: themeColor }
+                    : {}
+                }
                 className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-emerald-50/70 border border-emerald-400 text-neutral-900 shadow-xs'
-                    : 'bg-neutral-100/80 border border-neutral-200 text-neutral-700 hover:bg-neutral-200/60 hover:text-neutral-900'
+                    ? 'shadow-xs text-neutral-900 border'
+                    : 'bg-white border border-neutral-200 text-neutral-700 hover:border-neutral-300 hover:text-neutral-900'
                 }`}
               >
                 <span
-                  className={`w-4 h-4 rounded-full flex items-center justify-center border transition-all ${
+                  style={
                     isSelected
-                      ? 'bg-emerald-500 border-emerald-500 text-white'
-                      : 'border-neutral-300 bg-white'
+                      ? { backgroundColor: themeColor, borderColor: themeColor }
+                      : {}
+                  }
+                  className={`w-4 h-4 rounded-full flex items-center justify-center border transition-all ${
+                    isSelected ? 'text-white' : 'border-neutral-300 bg-white'
                   }`}
                 >
                   {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
@@ -262,12 +296,17 @@ export default function AvailableDatesSection({
                   {/* Top Floating Badge */}
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
                     <span
+                      style={
+                        !isSoldOut && batch.status !== 'filling_fast'
+                          ? { backgroundColor: themeColor }
+                          : {}
+                      }
                       className={`inline-block px-5 py-1 rounded-full text-[11px] font-extrabold tracking-wide text-white shadow-xs ${
                         isSoldOut
                           ? 'bg-rose-500'
                           : batch.status === 'filling_fast'
                           ? 'bg-amber-500'
-                          : 'bg-[#10B981]'
+                          : 'bg-[#FF6B16]'
                       }`}
                     >
                       {isSoldOut
@@ -280,9 +319,14 @@ export default function AvailableDatesSection({
 
                   {/* Card Box */}
                   <div
+                    style={
+                      isSelected
+                        ? { borderColor: themeColor, backgroundColor: `${themeColor}0a` }
+                        : {}
+                    }
                     className={`pt-5 pb-4 px-3 sm:px-4 rounded-xl border text-center transition-all bg-white ${
                       isSelected
-                        ? 'border-2 border-emerald-500 ring-2 ring-emerald-500/20 shadow-md bg-emerald-50/20'
+                        ? 'border-2 ring-2 ring-[#FF6B16]/20 shadow-md'
                         : 'border-neutral-300 hover:border-neutral-400 hover:shadow-xs'
                     }`}
                   >
@@ -290,14 +334,26 @@ export default function AvailableDatesSection({
                       {batch.rangeLabel || batch.label || batchDate}
                     </div>
 
-                    <div className="mt-1 flex items-center justify-center gap-1">
+                    <div className="mt-1 flex items-center justify-center gap-1.5 flex-wrap">
                       {isSoldOut ? (
                         <span className="text-[10px] font-bold text-rose-600">Batch Full</span>
                       ) : batch.seatsLeft !== undefined ? (
-                        <span className="text-[10px] font-semibold text-emerald-600">
+                        <span
+                          className="text-[10px] font-bold"
+                          style={{ color: isSelected ? themeColor : '#10B981' }}
+                        >
                           {batch.seatsLeft} seat(s) left
                         </span>
                       ) : null}
+
+                      {batch.priceOverride && (
+                        <span
+                          className="text-[11px] font-black"
+                          style={{ color: themeColor }}
+                        >
+                          ₹{batch.priceOverride.toLocaleString('en-IN')}
+                        </span>
+                      )}
                     </div>
 
                     {batch.note && (

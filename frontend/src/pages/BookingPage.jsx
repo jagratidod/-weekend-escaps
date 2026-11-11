@@ -25,7 +25,9 @@ import {
   Clock,
   Printer,
   ChevronRight,
+  Check,
 } from 'lucide-react';
+import AvailableDatesSection from '../components/packages/AvailableDatesSection';
 
 const ADVANCE_PER_PERSON = 2000;
 
@@ -71,11 +73,14 @@ export function BookingPage() {
   const queryTierSubtext = searchParams.get('tierSubtext') || '';
   const queryStep = parseInt(searchParams.get('step') || '1', 10);
 
-  // Wizard Step: 1 = YOUR TRIP, 2 = TRAVELER DETAILS, 3 = PAY & CONFIRM, 4 = SUCCESS
-  const [step, setStep] = useState(queryStep >= 1 && queryStep <= 4 ? queryStep : 1);
+  // Wizard Step: 1 = CHOOSE DATE & CITY, 2 = OCCUPANCY & PERSONS, 3 = TRAVELER DETAILS, 4 = PAY & CONFIRM, 5 = SUCCESS
+  const [step, setStep] = useState(queryStep >= 1 && queryStep <= 5 ? queryStep : 1);
 
-  // Step 1: Trip Confirmation
-  const [travelDate, setTravelDate] = useState(queryDate || getDefaultTomorrowDate());
+  const queryCity = searchParams.get('city') || location.state?.city || '';
+  const [selectedCity, setSelectedCity] = useState(queryCity || pkg?.departureCities?.[0] || 'Ahmedabad');
+
+  // Selected Travel Date (chosen in Step 1)
+  const [travelDate, setTravelDate] = useState(queryDate || '');
   const [totalPersons, setTotalPersons] = useState(Math.max(1, queryTravelers || 1));
   const [sharingType, setSharingType] = useState(() => {
     if (queryTier) return `${queryTier}${queryTierSubtext ? ` (${queryTierSubtext})` : ''}`;
@@ -224,20 +229,19 @@ export function BookingPage() {
   const advancePayable = ADVANCE_PER_PERSON * totalPersons;
   const finalPayableNow = paymentOption === 'advance' ? advancePayable : totalPayable;
 
-  // Validate Step 1
+  // Validate Step 2 (Occupancy & Travelers)
   const handleContinueToTravelers = (e) => {
     e.preventDefault();
     if (!travelDate) {
-      setErrors({ travelDate: 'Please select your travel date' });
+      goToStep(1);
       return;
     }
     if (availabilityInfo && availabilityInfo.available === false) {
       setErrors({ travelDate: availabilityInfo.reason || 'This date is currently unavailable for booking. Please pick another date.' });
       return;
-      return;
     }
     setErrors({});
-    goToStep(2);
+    goToStep(3);
   };
 
   // Validate Step 2
@@ -271,16 +275,16 @@ export function BookingPage() {
     }
 
     setErrors({});
-    goToStep(3);
+    goToStep(4);
   };
 
   // Coupon Code verification & Available Offers via dynamic API
   const [availableCoupons, setAvailableCoupons] = useState([]);
   const [loadingOffers, setLoadingOffers] = useState(false);
 
-  // Fetch available offers when entering step 3 or when primary traveler's phone changes
+  // Fetch available offers when entering step 4 or when primary traveler's phone changes
   useEffect(() => {
-    if (step === 3) {
+    if (step === 4) {
       const primaryPhone = travelers[0]?.phone
         ? String(travelers[0].phone).replace(/\D/g, '').slice(-10)
         : '';
@@ -421,6 +425,7 @@ export function BookingPage() {
       packageName: tripTitle,
       visitorId: getVisitorId(),
       travelDate,
+      departureCity: selectedCity,
       friendlyTravelDate: formatFriendlyDate(travelDate),
       totalPersons,
       sharingType,
@@ -508,13 +513,15 @@ export function BookingPage() {
           </Link>
 
           {/* Stepper Progress Indicator */}
-          {step <= 3 && (
-            <div className="flex items-center gap-2 text-xs font-bold text-neutral-400">
-              <span className={step >= 1 ? 'text-[#FF6B16]' : ''}>1. Trip</span>
-              <ChevronRight className="w-3.5 h-3.5 text-neutral-300" />
-              <span className={step >= 2 ? 'text-[#FF6B16]' : ''}>2. Travelers</span>
-              <ChevronRight className="w-3.5 h-3.5 text-neutral-300" />
-              <span className={step === 3 ? 'text-[#FF6B16]' : ''}>3. Pay & Confirm</span>
+          {step <= 4 && (
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-bold text-neutral-400 overflow-x-auto no-scrollbar py-1">
+              <span className={step >= 1 ? 'text-[#FF6B16]' : ''}>1. Date & City</span>
+              <ChevronRight className="w-3.5 h-3.5 text-neutral-300 shrink-0" />
+              <span className={step >= 2 ? 'text-[#FF6B16]' : ''}>2. Occupancy</span>
+              <ChevronRight className="w-3.5 h-3.5 text-neutral-300 shrink-0" />
+              <span className={step >= 3 ? 'text-[#FF6B16]' : ''}>3. Travelers</span>
+              <ChevronRight className="w-3.5 h-3.5 text-neutral-300 shrink-0" />
+              <span className={step === 4 ? 'text-[#FF6B16]' : ''}>4. Pay & Confirm</span>
             </div>
           )}
         </div>
@@ -522,21 +529,124 @@ export function BookingPage() {
         {/* ── Main Booking Container Card ── */}
         <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-xl border border-neutral-150 select-none">
           {/* ══════════════════════════════════════════════════════════════
-              STEP 1: YOUR TRIP
+              STEP 1: CHOOSE AVAILABLE DATE & CITY
               ══════════════════════════════════════════════════════════════ */}
           {step === 1 && (
             <div className="space-y-6">
               {/* Step Header */}
               <div>
                 <span className="inline-block px-3.5 py-1 rounded-full bg-[#FFF4EE] border border-[#FED7AA] text-[#FF6B16] text-[11px] font-black tracking-wider uppercase mb-2">
-                  Step 1 of 3
+                  Step 1 of 4
                 </span>
                 <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight">
-                  YOUR TRIP
+                  CHOOSE DEPARTURE DATE & CITY
                 </h1>
                 <p className="text-neutral-500 text-xs sm:text-sm mt-1">
-                  Confirm your trip, choose a travel date and number of travelers.
+                  Select your preferred boarding city and pick an available batch from the calendar.
                 </p>
+              </div>
+
+              {/* Interactive Available Dates Picker */}
+              <div className="bg-[#FAF9F6] rounded-2xl p-4 sm:p-6 border border-neutral-200/80">
+                <AvailableDatesSection
+                  pkg={pkg}
+                  selectedDate={travelDate}
+                  selectedCity={selectedCity}
+                  onSelectCity={(c) => {
+                    setSelectedCity(c);
+                  }}
+                  onSelectDate={(d) => {
+                    setTravelDate(d);
+                    setErrors({});
+                  }}
+                  hideTitle={true}
+                />
+              </div>
+
+              {/* Selection Summary Pill */}
+              {travelDate ? (
+                <div className="p-4 rounded-2xl bg-[#FFF9F5] border border-[#FED7AA] flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#FF6B16] text-white flex items-center justify-center font-bold shadow-sm">
+                      <Check className="w-5 h-5 stroke-[3]" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#9A3412]">
+                        Selected Departure Date:
+                      </span>
+                      <p className="text-sm font-black text-neutral-900">
+                        {formatFriendlyDate(travelDate)} ({selectedCity})
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold text-[#C2410C] bg-white px-3 py-1 rounded-full border border-[#FED7AA] shadow-2xs">
+                    Confirmed Batch
+                  </span>
+                </div>
+              ) : (
+                <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>Please click on an available date card above to choose your departure batch.</span>
+                </div>
+              )}
+
+              {errors.travelDate && (
+                <p className="text-xs text-rose-500 font-bold">{errors.travelDate}</p>
+              )}
+
+              {/* Continue Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (!travelDate) {
+                    setErrors({ travelDate: 'Please click on an available date card above to proceed' });
+                    return;
+                  }
+                  setErrors({});
+                  goToStep(2);
+                }}
+                disabled={!travelDate}
+                className="w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg bg-[#FF6B16] hover:bg-[#e05809] active:scale-[0.99] text-white shadow-[#FF6B16]/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+              >
+                <span>CONTINUE TO TRIP OCCUPANCY</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* ══════════════════════════════════════════════════════════════
+              STEP 2: ROOM OCCUPANCY & TRAVELERS
+              ══════════════════════════════════════════════════════════════ */}
+          {step === 2 && (
+            <div className="space-y-6">
+              {/* Step Header */}
+              <div>
+                <span className="inline-block px-3.5 py-1 rounded-full bg-[#FFF4EE] border border-[#FED7AA] text-[#FF6B16] text-[11px] font-black tracking-wider uppercase mb-2">
+                  Step 2 of 4
+                </span>
+                <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight">
+                  ROOM OCCUPANCY & TRAVELERS
+                </h1>
+                <p className="text-neutral-500 text-xs sm:text-sm mt-1">
+                  Choose your room sharing preference and total number of travelers.
+                </p>
+              </div>
+
+              {/* Selected Date Summary Card */}
+              <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200/80 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <Calendar className="w-4 h-4 text-[#FF6B16]" />
+                  <span className="text-xs font-bold text-neutral-800">
+                    Departure Date: {formatFriendlyDate(travelDate)} ({selectedCity})
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => goToStep(1)}
+                  className="text-xs font-bold text-[#FF6B16] hover:underline cursor-pointer"
+                >
+                  Change Date
+                </button>
               </div>
 
               {/* Form Fields */}
@@ -554,28 +664,8 @@ export function BookingPage() {
                   />
                 </div>
 
-                {/* Date & Persons Row */}
+                {/* Total Persons Stepper & Occupancy */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Travel Date */}
-                  <div>
-                    <label className="block text-[11px] font-extrabold text-neutral-600 uppercase tracking-wider mb-1.5">
-                      TRAVEL DATE *
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="date"
-                        required
-                        value={travelDate}
-                        onChange={(e) => setTravelDate(e.target.value)}
-                        min={getDefaultTomorrowDate()}
-                        className="w-full h-12 px-4 rounded-xl border border-neutral-200 text-sm font-medium text-neutral-800 focus:border-[#FF6B16] focus:ring-2 focus:ring-[#FF6B16]/10 outline-none transition-all cursor-pointer"
-                      />
-                    </div>
-                    {errors.travelDate && (
-                      <p className="text-xs text-red-500 mt-1">{errors.travelDate}</p>
-                    )}
-                  </div>
-
                   {/* Total Persons Stepper */}
                   <div>
                     <label className="block text-[11px] font-extrabold text-neutral-600 uppercase tracking-wider mb-1.5">
@@ -610,37 +700,37 @@ export function BookingPage() {
                       </button>
                     </div>
                   </div>
-                </div>
 
-                {/* Dynamic Pricing / Sharing Option Selector */}
-                {displayTiers.length > 0 && (
-                  <div>
-                    <label className="block text-[11px] font-extrabold text-neutral-600 uppercase tracking-wider mb-1.5">
-                      {pkg?.pricingType === 'distance'
-                        ? 'BOARDING & DEPARTURE ROUTE *'
-                        : 'ROOM / CAMP OCCUPANCY *'}
-                    </label>
-                    <select
-                      value={sharingType}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setSharingType(val);
-                        const match = displayTiers.find((t) => val.startsWith(t.name));
-                        if (match) setCustomPricePerPerson(match.price);
-                      }}
-                      className="w-full h-12 px-4 rounded-xl border border-neutral-200 text-sm font-semibold text-neutral-800 bg-white focus:border-[#FF6B16] outline-none cursor-pointer"
-                    >
-                      {displayTiers.map((t) => {
-                        const label = `${t.name}${t.subtext ? ` (${t.subtext})` : ''}`;
-                        return (
-                          <option key={t.name} value={label}>
-                            {t.name} — {formatCurrency(t.price)}/person {t.subtext ? `• ${t.subtext}` : ''}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </div>
-                )}
+                  {/* Dynamic Pricing / Sharing Option Selector */}
+                  {displayTiers.length > 0 && (
+                    <div>
+                      <label className="block text-[11px] font-extrabold text-neutral-600 uppercase tracking-wider mb-1.5">
+                        {pkg?.pricingType === 'distance'
+                          ? 'BOARDING & DEPARTURE ROUTE *'
+                          : 'ROOM / CAMP OCCUPANCY *'}
+                      </label>
+                      <select
+                        value={sharingType}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSharingType(val);
+                          const match = displayTiers.find((t) => val.startsWith(t.name));
+                          if (match) setCustomPricePerPerson(match.price);
+                        }}
+                        className="w-full h-12 px-4 rounded-xl border border-neutral-200 text-sm font-semibold text-neutral-800 bg-white focus:border-[#FF6B16] outline-none cursor-pointer"
+                      >
+                        {displayTiers.map((t) => {
+                          const label = `${t.name}${t.subtext ? ` (${t.subtext})` : ''}`;
+                          return (
+                            <option key={t.name} value={label}>
+                              {t.name} — {formatCurrency(t.price)}/person {t.subtext ? `• ${t.subtext}` : ''}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                  )}
+                </div>
 
                 {/* Real-time Availability Status Banner */}
                 {travelDate && (
@@ -648,41 +738,47 @@ export function BookingPage() {
                     {isCheckingAvail ? (
                       <div className="p-3 rounded-xl bg-neutral-50 border border-neutral-200 text-xs font-semibold text-neutral-500 flex items-center gap-2">
                         <Loader2 className="w-3.5 h-3.5 animate-spin text-[#FF6B16]" />
-                        <span>Verifying seat availability for {travelDate}...</span>
+                        <span>Verifying seat availability...</span>
                       </div>
                     ) : availabilityInfo ? (
-                      <div
-                        className={`p-3.5 rounded-xl border text-xs flex items-center justify-between gap-3 ${
-                          availabilityInfo.available
-                            ? availabilityInfo.status === 'filling_fast'
-                              ? 'bg-amber-50/80 border-amber-200 text-amber-900 font-bold'
-                              : 'bg-emerald-50/80 border-emerald-200 text-emerald-900 font-bold'
-                            : 'bg-rose-50 border-rose-200 text-rose-900 font-bold'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          {availabilityInfo.available ? (
+                      availabilityInfo.available ? (
+                        <div
+                          className={`p-3.5 rounded-xl border ${
+                            availabilityInfo.status === 'filling_fast'
+                              ? 'bg-amber-50 border-amber-200 text-amber-800'
+                              : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
                             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                          ) : (
-                            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                          )}
-                          <span>
-                            {availabilityInfo.available
-                              ? availabilityInfo.status === 'filling_fast'
-                                ? `⚡ High Demand: Only ${availabilityInfo.seatsLeft} seat(s) remaining for ${totalPersons} traveler(s)!`
-                                : `✓ Departure Confirmed: ${availabilityInfo.seatsLeft} seat(s) open for ${totalPersons} traveler(s)`
-                              : availabilityInfo.reason || 'This date is currently unavailable for booking.'}
-                          </span>
+                            <span className="text-xs font-bold">
+                              {availabilityInfo.status === 'filling_fast'
+                                ? 'Filling Fast • Guaranteed Departure'
+                                : 'Available • Guaranteed Departure'}
+                            </span>
+                          </div>
+                          <p className="text-[11px] mt-1 pl-6 opacity-90">
+                            {availabilityInfo.seatsLeft !== undefined
+                              ? `${availabilityInfo.seatsLeft} seat(s) remaining for your dates.`
+                              : availabilityInfo.message || 'Slot confirmed for your dates.'}
+                          </p>
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/80 border border-current">
-                          {availabilityInfo.available ? 'Available' : 'Unavailable'}
-                        </span>
-                      </div>
+                      ) : (
+                        <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                            <span className="text-xs font-bold">Date Unavailable</span>
+                          </div>
+                          <p className="text-[11px] mt-1 pl-6 opacity-90">
+                            {availabilityInfo.reason || 'This date is currently unavailable for booking. Please pick another date.'}
+                          </p>
+                        </div>
+                      )
                     ) : null}
                   </div>
                 )}
 
-                {/* Booking Advance Notice Box (Warm Theme) */}
+                {/* Booking Advance Notice Box */}
                 <div className="bg-[#FFF6F0] border border-[#FED7AA] rounded-xl p-4 flex items-start gap-3">
                   <div className="w-5 h-5 rounded-full bg-[#FF6B16] text-white flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
                     <Info className="w-3 h-3" />
@@ -692,13 +788,22 @@ export function BookingPage() {
                   </p>
                 </div>
 
-                {/* Primary CTA Button (Theme Orange) */}
-                <div className="pt-2">
+                {/* Step 2 Action Buttons */}
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => goToStep(1)}
+                    className="w-1/3 h-12 sm:h-14 rounded-xl border-2 border-neutral-200 text-neutral-700 font-black text-xs sm:text-sm uppercase tracking-wider hover:bg-neutral-50 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Back</span>
+                  </button>
                   <button
                     type="submit"
-                    className="w-full h-12 sm:h-14 bg-[#FF6B16] hover:bg-[#e05809] active:scale-[0.99] text-white font-bold text-sm sm:text-base rounded-xl shadow-lg shadow-[#FF6B16]/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    disabled={isCheckingAvail || (availabilityInfo && availabilityInfo.available === false)}
+                    className="flex-1 h-12 sm:h-14 font-black text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg bg-[#FF6B16] hover:bg-[#e05809] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed text-white shadow-[#FF6B16]/30"
                   >
-                    <span>Continue to Traveler Details</span>
+                    <span>CONTINUE TO TRAVELERS</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -707,14 +812,14 @@ export function BookingPage() {
           )}
 
           {/* ══════════════════════════════════════════════════════════════
-              STEP 2: TRAVELER DETAILS
+              STEP 3: TRAVELER DETAILS
               ══════════════════════════════════════════════════════════════ */}
-          {step === 2 && (
+          {step === 3 && (
             <div className="space-y-6">
               {/* Step Header */}
               <div>
                 <span className="inline-block px-3.5 py-1 rounded-full bg-[#FFF4EE] border border-[#FED7AA] text-[#FF6B16] text-[11px] font-black tracking-wider uppercase mb-2">
-                  Step 2 of 3
+                  Step 3 of 4
                 </span>
                 <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight">
                   TRAVELER DETAILS
@@ -904,11 +1009,11 @@ export function BookingPage() {
                 })}
               </div>
 
-              {/* Step 2 Action Buttons */}
+              {/* Step 3 Action Buttons */}
               <div className="flex items-center gap-3 pt-3">
                 <button
                   type="button"
-                  onClick={() => goToStep(1)}
+                  onClick={() => goToStep(2)}
                   className="h-12 px-5 rounded-xl bg-[#F1F4F8] hover:bg-[#E5EBF2] text-neutral-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />
@@ -928,14 +1033,14 @@ export function BookingPage() {
           )}
 
           {/* ══════════════════════════════════════════════════════════════
-              STEP 3: PAY & CONFIRM
+              STEP 4: PAY & CONFIRM
               ══════════════════════════════════════════════════════════════ */}
-          {step === 3 && (
+          {step === 4 && (
             <div className="space-y-6">
               {/* Step Header */}
               <div>
                 <span className="inline-block px-3.5 py-1 rounded-full bg-[#FFF4EE] border border-[#FED7AA] text-[#FF6B16] text-[11px] font-black tracking-wider uppercase mb-2">
-                  Step 3 of 3
+                  Step 4 of 4
                 </span>
                 <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight">
                   PAY & CONFIRM
@@ -1293,11 +1398,11 @@ export function BookingPage() {
                 </div>
               )}
 
-              {/* 6. Step 3 Action Buttons */}
+              {/* 6. Step 4 Action Buttons */}
               <div className="flex items-center gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => goToStep(2)}
+                  onClick={() => goToStep(3)}
                   disabled={isSubmitting}
                   className="h-12 px-5 rounded-xl bg-[#F1F4F8] hover:bg-[#E5EBF2] text-neutral-700 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
                 >
@@ -1328,9 +1433,9 @@ export function BookingPage() {
           )}
 
           {/* ══════════════════════════════════════════════════════════════
-              STEP 4: BOOKING CONFIRMED SCREEN (SUCCESS VOUCHER)
+              STEP 5: BOOKING CONFIRMED SCREEN (SUCCESS VOUCHER)
               ══════════════════════════════════════════════════════════════ */}
-          {step === 4 && confirmedBooking && (
+          {step === 5 && confirmedBooking && (
             <div className="py-4 text-center space-y-6 animate-scaleUp">
               {/* Celebration Animation Ring */}
               <div className="w-20 h-20 rounded-full bg-[#FFF4EE] text-[#FF6B16] flex items-center justify-center mx-auto shadow-inner shadow-[#FF6B16]/20 ring-4 ring-[#FF6B16]/10">
