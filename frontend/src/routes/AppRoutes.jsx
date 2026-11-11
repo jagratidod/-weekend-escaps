@@ -32,7 +32,7 @@ export function AppRoutes() {
       <Route path="/packages/:id/book" element={<BookingPage />} />
       <Route path="/package/:id/book" element={<BookingPage />} />
       <Route path="/book/:id" element={<BookingPage />} />
-      <Route path="/experiences" element={<PackagesPage scrollToExperiences={true} />} />
+      <Route path="/experiences" element={<ExperiencesPage />} />
       <Route path="/my-bookings" element={<MyBookingsPage />} />
       <Route path="/bookings" element={<Navigate to="/my-bookings" replace />} />
       <Route path="/my-booking" element={<Navigate to="/my-bookings" replace />} />

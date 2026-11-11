@@ -19,7 +19,7 @@ export const PACKAGES = [
     rating: 4.9,
     reviewsCount: 320,
     image: getImageUrl("/newimage/exploresection/kedarkantha.png"),
-    travelType: "Trekking",
+    travelType: "Treks",
     isPrivateTrek: true,
     privateTrekNote: "Direct WhatsApp Booking • Custom Batches",
     difficulty: "Easy to Moderate",
@@ -47,7 +47,7 @@ export const PACKAGES = [
     rating: 4.95,
     reviewsCount: 450,
     image: getImageUrl("/newimage/exploresection/kashmir.png"),
-    travelType: "Honeymoon & Leisure",
+    travelType: "Weekend Getaways",
     difficulty: "Easy",
     season: "All Year Round",
     groupSize: "Family / Couples / Small Groups",
@@ -120,5 +120,91 @@ export const PACKAGES = [
       { day: "Day 6", title: "Uluwatu Sunset Temple & Kecak Fire Dance", desc: "Dramatic cliff temple overlooking the Indian Ocean with fire dance ritual." },
       { day: "Day 7", title: "Spa Session & Flight Home", desc: "Traditional Balinese aroma massage before airport drop-off." }
     ]
+  }
+,
+  {
+    id: "tungnath",
+    name: "Chopta Tungnath & Chandrashila Trek",
+    badge: "Highest Shiva Temple",
+    badgeColor: "bg-[#FF6B16] text-white",
+    duration: "5 Days / 4 Nights",
+    location: "Chopta, Uttarakhand",
+    price: 6499,
+    originalPrice: 8999,
+    pricingType: "sharing",
+    pricingTiers: [
+      { name: "Quad Sharing", subtext: "Camp in Chopta", price: 6499, originalPrice: 8999, isDefault: true },
+      { name: "Triple Sharing", subtext: "Camp in Chopta", price: 6999, originalPrice: 9499, isDefault: false },
+      { name: "Double Sharing", subtext: "Camp in Chopta", price: 7499, originalPrice: 10499, isDefault: false },
+    ],
+    rating: 4.95,
+    reviewsCount: 380,
+    image: getImageUrl("/newimage/exploresection/kedarkantha.png"),
+    travelType: "Treks",
+    difficulty: "Easy to Moderate",
+    season: "All Year Round (Snow in Winter)",
+    groupSize: "12 - 18 Explorers",
+    departureCities: ["Ahmedabad", "Mumbai", "Pune"],
+    isTrending: true,
+    isFeatured: true,
+    isPrivateTrek: false,
+    isActive: true,
+    order: 2,
+    included: [
+      "Alpine Camps & Swiss Tents in Chopta",
+      "Experienced Certified Trek Leader & Mountain Guides",
+      "All Meals during Trek (Healthy Veg & Egg options)",
+      "Forest Entry Permits & Eco Passes",
+      "First Aid Kit & Emergency Oxygen Cylinder Support",
+    ],
+    excluded: [
+      "Personal trekking gear (shoes, backpack, thermals)",
+      "Mule or Porter charges for personal backpack",
+      "Travel insurance",
+      "Any meals during transit",
+    ],
+    itinerary: [
+      { day: "Day 1", title: "Rishikesh to Chopta Basecamp (200 km)", desc: "Scenic mountain drive along the Alaknanda and Mandakini rivers via Devprayag Sangam to Chopta." },
+      { day: "Day 2", title: "Trek to Tungnath Temple & Chandrashila Peak", desc: "Climb through rhododendron forests to the 1,000-year-old Tungnath Temple (highest Shiva shrine) and Chandrashila 4,000m panoramic summit." },
+      { day: "Day 3", title: "Trek to Deoriatal Emerald Alpine Lake", desc: "Short trek through lush oak forests from Sari village to pristine Deoriatal with mirror reflections of Chaukhamba peaks." },
+      { day: "Day 4", title: "Chopta to Rishikesh Return", desc: "Descent drive back to Rishikesh with optional Ganga Aarti and riverside cafe exploration." },
+      { day: "Day 5", title: "Departure", desc: "Breakfast by the Ganges and onward departure for your home city." }
+    ],
+    availability: {
+      scheduleType: "batches",
+      defaultSeatsPerBatch: 16,
+      minAdvanceNoticeDays: 1,
+      batches: [
+        { startDate: "2027-03-05", endDate: "2027-03-10", city: "Ahmedabad", totalSeats: 16, bookedSeats: 2, status: "available", note: "March Batch 1" },
+        { startDate: "2027-03-12", endDate: "2027-03-17", city: "Ahmedabad", totalSeats: 16, bookedSeats: 3, status: "available", note: "March Batch 2" },
+        { startDate: "2027-03-19", endDate: "2027-03-24", city: "Ahmedabad", totalSeats: 16, bookedSeats: 4, status: "available", note: "March Batch 3" },
+        { startDate: "2027-03-26", endDate: "2027-03-31", city: "Ahmedabad", totalSeats: 16, bookedSeats: 1, status: "available", note: "March Batch 4" },
+
+        { startDate: "2027-03-05", endDate: "2027-03-10", city: "Mumbai", totalSeats: 16, bookedSeats: 3, status: "available", note: "Mumbai Group" },
+        { startDate: "2027-03-12", endDate: "2027-03-17", city: "Mumbai", totalSeats: 16, bookedSeats: 2, status: "available", note: "Spring Special" },
+        { startDate: "2027-03-19", endDate: "2027-03-24", city: "Mumbai", totalSeats: 16, bookedSeats: 5, status: "available", note: "High Demand" },
+        { startDate: "2027-03-26", endDate: "2027-03-31", city: "Mumbai", totalSeats: 16, bookedSeats: 2, status: "available", note: "Weekend Explorer" },
+
+        { startDate: "2027-03-05", endDate: "2027-03-10", city: "Pune", totalSeats: 16, bookedSeats: 2, status: "available", note: "Pune Circle" },
+        { startDate: "2027-03-12", endDate: "2027-03-17", city: "Pune", totalSeats: 16, bookedSeats: 4, status: "available", note: "Mid-March Special" },
+        { startDate: "2027-03-19", endDate: "2027-03-24", city: "Pune", totalSeats: 16, bookedSeats: 3, status: "available", note: "Spring Adventure" },
+        { startDate: "2027-03-26", endDate: "2027-03-31", city: "Pune", totalSeats: 16, bookedSeats: 1, status: "available", note: "End-March Departure" },
+
+        { startDate: "2026-04-03", endDate: "2026-04-08", city: "Ahmedabad", totalSeats: 16, bookedSeats: 3, status: "available", note: "Long Weekend Batch" },
+        { startDate: "2026-04-10", endDate: "2026-04-15", city: "Ahmedabad", totalSeats: 16, bookedSeats: 2, status: "available", note: "Spring Snow" },
+        { startDate: "2026-04-17", endDate: "2026-04-22", city: "Ahmedabad", totalSeats: 16, bookedSeats: 5, status: "available", note: "Summit Push" },
+        { startDate: "2026-04-24", endDate: "2026-04-29", city: "Ahmedabad", totalSeats: 16, bookedSeats: 2, status: "available", note: "April Departure" },
+
+        { startDate: "2026-04-03", endDate: "2026-04-08", city: "Mumbai", totalSeats: 16, bookedSeats: 4, status: "available", note: "Long Weekend Batch" },
+        { startDate: "2026-04-10", endDate: "2026-04-15", city: "Mumbai", totalSeats: 16, bookedSeats: 3, status: "available", note: "Spring Snow" },
+        { startDate: "2026-04-17", endDate: "2026-04-22", city: "Mumbai", totalSeats: 16, bookedSeats: 4, status: "available", note: "Summit Push" },
+        { startDate: "2026-04-24", endDate: "2026-04-29", city: "Mumbai", totalSeats: 16, bookedSeats: 1, status: "available", note: "April Departure" },
+
+        { startDate: "2026-04-03", endDate: "2026-04-08", city: "Pune", totalSeats: 16, bookedSeats: 2, status: "available", note: "Long Weekend Batch" },
+        { startDate: "2026-04-10", endDate: "2026-04-15", city: "Pune", totalSeats: 16, bookedSeats: 3, status: "available", note: "Spring Snow" },
+        { startDate: "2026-04-17", endDate: "2026-04-22", city: "Pune", totalSeats: 16, bookedSeats: 4, status: "available", note: "Summit Push" },
+        { startDate: "2026-04-24", endDate: "2026-04-29", city: "Pune", totalSeats: 16, bookedSeats: 2, status: "available", note: "April Departure" },
+      ]
+    }
   }
 ];

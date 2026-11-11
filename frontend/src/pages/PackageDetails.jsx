@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { usePackages } from '../context/PackageContext';
 import { getImageUrl } from '../utils/imageHelper';
@@ -27,6 +27,7 @@ import TripReelsRow from '../components/home/TripReelsRow';
 import WhatToPack from '../components/packages/WhatToPack';
 import PackageFAQ from '../components/packages/PackageFAQ';
 import YouMayAlsoLike from '../components/packages/YouMayAlsoLike';
+import AvailableDatesSection from '../components/packages/AvailableDatesSection';
 
 const WhatsAppIcon = ({ className = 'w-5 h-5' }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -53,29 +54,50 @@ export function PackageDetails() {
 
   const [activeTab, setActiveTab] = useState('itinerary');
   const [selectedDate, setSelectedDate] = useState('');
-  const [travelersCount, setTravelersCount] = useState(2);
+  const [selectedCity, setSelectedCity] = useState(pkg?.departureCities?.[0] || 'Ahmedabad');
 
-  // Dynamic Pricing Tiers State (Sharing & Distance based with 3 default sharing options)
+  const selectedDateLabel = useMemo(() => {
+    if (!selectedDate) return '';
+    try {
+      const d = new Date(selectedDate.includes('T') ? selectedDate : `${selectedDate}T00:00:00`);
+      return d.toLocaleDateString('en-IN', {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch {
+      return selectedDate;
+    }
+  }, [selectedDate]);
+  const [travelersCount, setTravelersCount] = useState(1);
+
+  // Dynamic Pricing Tiers State (Sharing & Distance based)
   const displayTiers = (() => {
     if (Array.isArray(pkg?.pricingTiers) && pkg.pricingTiers.length > 0) {
       return pkg.pricingTiers;
     }
     // If distance package: provide route options
     if (pkg?.pricingType === 'distance') {
-      const base = Number(pkg?.price) || 5999;
+      const base = Number(pkg?.price) > 0 ? Number(pkg.price) : 5999;
       const dest = pkg?.name?.split(' ')[0] || 'Manali';
       return [
-        { name: `${dest} to ${dest}`, subtext: 'Ex-Basecamp (Direct Report)', price: base, originalPrice: Math.round(base * 1.4), isDefault: true },
-        { name: 'Delhi to Delhi', subtext: 'Including AC Volvo Bus Transfers', price: base + 2000, originalPrice: Math.round((base + 2000) * 1.4), isDefault: false },
+        { name: `${dest} to ${dest}`, subtext: 'Ex-Basecamp (Direct Report)', price: base, originalPrice: pkg?.originalPrice ? Number(pkg.originalPrice) : Math.round(base * 1.3), isDefault: true },
+        { name: 'Delhi to Delhi', subtext: 'Including AC Volvo Bus Transfers', price: base + 2000, originalPrice: pkg?.originalPrice ? Number(pkg.originalPrice) + 2000 : Math.round((base + 2000) * 1.3), isDefault: false },
       ];
     }
-    // Default 3 sharing tiers (Quad, Triple, Double) matching user specifications
-    const base = Number(pkg?.price) && Number(pkg.price) >= 3000 ? Number(pkg.price) : 8999;
-    const sub = 'Camp in Kedarnath';
+    // If standard pricing type explicitly set, no tiers
+    if (pkg?.pricingType === 'standard') {
+      return [];
+    }
+    // Default 3 sharing tiers (Quad, Triple, Double) using package price and location
+    const base = Number(pkg?.price) > 0 ? Number(pkg.price) : 4500;
+    const orig = pkg?.originalPrice ? Number(pkg.originalPrice) : null;
+    const locName = pkg?.location ? pkg.location.split(',')[0].trim() : 'Basecamp';
     return [
-      { name: 'Quad Sharing', subtext: sub, price: base, originalPrice: Math.round(base * 1.35), isDefault: true },
-      { name: 'Triple Sharing', subtext: sub, price: base + 500, originalPrice: Math.round((base + 500) * 1.35), isDefault: false },
-      { name: 'Double Sharing', subtext: sub, price: base + 1000, originalPrice: Math.round((base + 1000) * 1.35), isDefault: false },
+      { name: 'Quad Sharing', subtext: `Camp in ${locName}`, price: base, originalPrice: orig || Math.round(base * 1.3), isDefault: true },
+      { name: 'Triple Sharing', subtext: `Camp in ${locName}`, price: base + 500, originalPrice: orig ? orig + 500 : Math.round((base + 500) * 1.3), isDefault: false },
+      { name: 'Double Sharing', subtext: `Camp in ${locName}`, price: base + 1000, originalPrice: orig ? orig + 1000 : Math.round((base + 1000) * 1.3), isDefault: false },
     ];
   })();
 
@@ -89,33 +111,29 @@ export function PackageDetails() {
     if (displayTiers.length > 0) {
       const initial = displayTiers.find((t) => t.isDefault) || displayTiers[0];
       setSelectedTier(initial);
-      if (initial.name.toLowerCase().includes('double')) {
-        setTravelersCount(2);
-      } else if (initial.name.toLowerCase().includes('triple')) {
-        setTravelersCount(3);
-      } else if (initial.name.toLowerCase().includes('quad')) {
-        setTravelersCount(4);
-      }
     } else {
       setSelectedTier(null);
     }
   }, [pkg?.id, pkg?._id]);
 
-  const effectivePrice = selectedTier ? Number(selectedTier.price) : (Number(pkg?.price) || 8999);
-  const effectiveOriginalPrice = selectedTier?.originalPrice || pkg?.originalPrice || Math.round(effectivePrice * 1.4);
+  const effectivePrice = selectedTier ? Number(selectedTier.price) : (Number(pkg?.price) || 0);
+  const effectiveOriginalPrice = selectedTier?.originalPrice || (pkg?.originalPrice ? Number(pkg.originalPrice) : null);
+
+  const discountPercent =
+    effectiveOriginalPrice && effectiveOriginalPrice > effectivePrice
+      ? Math.round(((effectiveOriginalPrice - effectivePrice) / effectiveOriginalPrice) * 100)
+      : null;
+
+  const gstRate = Number(pkg?.gstRate) >= 0 ? Number(pkg?.gstRate) : 5;
+  const baseAmount = effectivePrice * travelersCount;
+  const gstAmount = Number(((baseAmount * gstRate) / 100).toFixed(2));
+  const grandTotal = Number((baseAmount + gstAmount).toFixed(2));
 
   const handleDropdownChange = (val) => {
     if (displayTiers.length > 0) {
       const found = displayTiers.find((t) => t.name === val);
       if (found) {
         setSelectedTier(found);
-        if (found.name.toLowerCase().includes('double')) {
-          setTravelersCount(2);
-        } else if (found.name.toLowerCase().includes('triple')) {
-          setTravelersCount(3);
-        } else if (found.name.toLowerCase().includes('quad')) {
-          setTravelersCount(4);
-        }
       }
     } else {
       setTravelersCount(Number(val));
@@ -191,8 +209,16 @@ export function PackageDetails() {
 
   const handleCheckAvailability = (e, tierToUse = selectedTier, countOverride = null) => {
     if (e?.preventDefault) e.preventDefault();
+    if (!selectedDate) {
+      const el = document.getElementById('available-dates-section');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+      return;
+    }
     const query = new URLSearchParams();
     if (selectedDate) query.append('date', selectedDate);
+    if (selectedCity) query.append('city', selectedCity);
     const travelersToPass = countOverride !== null ? countOverride : travelersCount;
     query.append('travelers', String(travelersToPass));
     if (tierToUse?.name) {
@@ -206,10 +232,7 @@ export function PackageDetails() {
 
   const handleSelectTierAndBook = (tier) => {
     setSelectedTier(tier);
-    let count = travelersCount;
-    if (tier.name.toLowerCase().includes('double')) count = 2;
-    else if (tier.name.toLowerCase().includes('triple')) count = 3;
-    else if (tier.name.toLowerCase().includes('quad')) count = 4;
+    const count = Math.max(1, travelersCount);
     setTravelersCount(count);
 
     if (pkg?.isPrivateTrek) {
@@ -313,6 +336,21 @@ export function PackageDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* Left Column: Itinerary, Inclusions, Highlights */}
           <div className="lg:col-span-8 space-y-8">
+            {/* Available Departure Dates (City & Month Grid matching screenshot) */}
+            <AvailableDatesSection
+              pkg={pkg}
+              selectedDate={selectedDate}
+              selectedCity={selectedCity}
+              onSelectCity={(city) => setSelectedCity(city)}
+              onSelectDate={(date, batch) => {
+                setSelectedDate(date);
+                if (window.innerWidth < 1024) {
+                  const el = document.getElementById('booking-card-form');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+            />
+
             {/* Navigation Tabs */}
             <div className="flex border-b border-neutral-200">
               <button
@@ -450,116 +488,80 @@ export function PackageDetails() {
                     <span className="text-3xl font-black text-[#111111]">
                       {formatCurrency(effectivePrice)}
                     </span>
-                    <span className="text-sm text-neutral-400 font-semibold line-through">
-                      {formatCurrency(effectiveOriginalPrice)}
-                    </span>
+                    {effectiveOriginalPrice && effectiveOriginalPrice > effectivePrice && (
+                      <span className="text-sm text-neutral-400 font-semibold line-through">
+                        {formatCurrency(effectiveOriginalPrice)}
+                      </span>
+                    )}
                   </div>
                 </div>
-                <span className="px-3 py-1 rounded-full bg-[#FFF4EE] text-[#FF6B16] border border-[#FED7AA] text-xs font-black">
-                  Save 30%
-                </span>
-              </div>
-
-              {/* Schedule Type Info Banner */}
-              <div className="px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-200 flex items-center justify-between text-xs">
-                <span className="font-extrabold text-[#1A384C] flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-[#FF6B16]" />
-                  <span>
-                    {scheduleType === 'weekends'
-                      ? 'Every Weekend Departures'
-                      : scheduleType === 'daily'
-                      ? 'Daily Departures (All 365 Days)'
-                      : scheduleType === 'batches'
-                      ? 'Fixed Departure Batches'
-                      : 'Flexible Custom Departures'}
+                {discountPercent ? (
+                  <span className="px-3 py-1 rounded-full bg-[#FFF4EE] text-[#FF6B16] border border-[#FED7AA] text-xs font-black">
+                    Save {discountPercent}%
                   </span>
-                </span>
-                <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  Open
-                </span>
+                ) : null}
               </div>
 
-              {/* Quick Select Upcoming Batches (if available) */}
-              {upcomingSlots.length > 0 && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] font-black text-neutral-700 uppercase tracking-wider">
-                      {scheduleType === 'weekends'
-                        ? 'UPCOMING WEEKEND BATCHES'
-                        : scheduleType === 'batches'
-                        ? 'SCHEDULED BATCH DATES'
-                        : 'UPCOMING DEPARTURE DATES'}
+              {/* Selected Departure Date Indicator */}
+              <div className="pb-1">
+                {selectedDate ? (
+                  <div className="p-3.5 bg-emerald-50/70 border border-emerald-300 rounded-2xl flex items-center justify-between shadow-2xs">
+                    <div className="flex items-center gap-2.5 overflow-hidden">
+                      <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                        <Calendar className="w-4 h-4" />
+                      </div>
+                      <div className="overflow-hidden">
+                        <span className="block text-[10px] uppercase font-bold text-emerald-800 tracking-wider">
+                          Departure Date
+                        </span>
+                        <span className="block text-xs sm:text-sm font-black text-neutral-900 truncate">
+                          {selectedDateLabel || selectedDate}
+                          {selectedCity ? ` (${selectedCity})` : ''}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const el = document.getElementById('available-dates-section');
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="text-xs font-bold text-[#FF6B16] hover:underline cursor-pointer shrink-0 ml-2"
+                    >
+                      Change
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const el = document.getElementById('available-dates-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="w-full p-3.5 bg-orange-50/60 border border-dashed border-[#FF6B16]/50 rounded-2xl flex items-center justify-between text-left hover:bg-orange-50 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center text-[#FF6B16] group-hover:scale-105 transition-transform shrink-0">
+                        <Calendar className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="block text-xs font-black text-neutral-800">
+                          Select Departure Date
+                        </span>
+                        <span className="block text-[10px] text-neutral-500 font-medium">
+                          Choose from Available Dates on left
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-[#FF6B16]">
+                      Choose &rarr;
                     </span>
-                    <span className="text-[10px] font-bold text-neutral-400">Quick Select</span>
-                  </div>
-
-                  <div className="flex gap-2 overflow-x-auto pb-1.5 no-scrollbar">
-                    {upcomingSlots.slice(0, 6).map((slot) => {
-                      const isSelected = selectedDate === slot.date;
-                      const isSoldOut = slot.status === 'sold_out';
-
-                      return (
-                        <button
-                          key={slot.date}
-                          type="button"
-                          disabled={isSoldOut}
-                          onClick={() => setSelectedDate(slot.date)}
-                          className={`px-3 py-2 rounded-xl border text-left shrink-0 transition-all cursor-pointer ${
-                            isSelected
-                              ? 'border-[#FF6B16] bg-orange-50/80 ring-2 ring-[#FF6B16]/20'
-                              : isSoldOut
-                              ? 'border-neutral-200 bg-neutral-100 opacity-50 cursor-not-allowed'
-                              : 'border-neutral-200 bg-white hover:border-neutral-300'
-                          }`}
-                        >
-                          <div className="text-xs font-black text-neutral-900">{slot.label}</div>
-                          <div className="flex items-center gap-1 mt-0.5">
-                            <span
-                              className={`text-[10px] font-extrabold ${
-                                isSoldOut
-                                  ? 'text-rose-600'
-                                  : slot.status === 'filling_fast'
-                                  ? 'text-amber-600'
-                                  : 'text-emerald-600'
-                              }`}
-                            >
-                              {isSoldOut ? 'Sold Out' : `${slot.seatsLeft} seats left`}
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+                  </button>
+                )}
+              </div>
 
               {/* Booking Availability Form */}
-              <form onSubmit={handleCheckAvailability} className="space-y-4">
-                {/* Date Picker (Every Day & Random Day support) */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[11px] font-black text-neutral-700 uppercase tracking-wider">
-                      SELECT ANY DATE (CALENDAR)
-                    </label>
-                    <span className="text-[10px] text-neutral-400 font-bold">
-                      {scheduleType === 'weekends' ? 'Weekend / Custom' : 'Every Day'}
-                    </span>
-                  </div>
-                  <input
-                    type="date"
-                    required
-                    min={tomorrowStr}
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 text-sm font-semibold focus:outline-none focus:border-[#FF6B16] focus:ring-2 focus:ring-[#FF6B16]/10 transition-all cursor-pointer bg-white"
-                  />
-                  <p className="text-[10px] text-neutral-400 mt-1">
-                    {scheduleType === 'weekends'
-                      ? 'Trek departs every Friday/Saturday. You can also pick any date for private batches.'
-                      : 'Choose any date 365 days a year for instant booking.'}
-                  </p>
-                </div>
-
+              <form id="booking-card-form" onSubmit={handleCheckAvailability} className="space-y-4">
                 {/* Unified Sharing / Route / Travelers Dropdown */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
@@ -679,18 +681,35 @@ export function PackageDetails() {
                   </div>
                 )}
 
-                {/* Price Breakdown */}
-                <div className="pt-2 border-t border-neutral-100">
-                  <div className="flex justify-between items-center text-sm font-bold text-neutral-800 pb-1">
-                    <span className="text-neutral-900 font-bold">Total Estimated Cost</span>
-                    <span className="text-[#FF6B16] text-xl font-black">
-                      {formatCurrency(effectivePrice * travelersCount)}
-                    </span>
+                {/* Price Breakdown with GST Box matching screenshot */}
+                <div className="pt-2">
+                  <div className="rounded-2xl border border-teal-400 bg-teal-50/20 p-4 sm:p-5 space-y-2.5">
+                    <div className="flex justify-between items-center text-xs sm:text-sm text-neutral-600 font-semibold">
+                      <span>Base Amount:</span>
+                      <span className="font-extrabold text-neutral-900 font-mono text-sm sm:text-base">
+                        ₹{baseAmount.toFixed(2)}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center text-xs sm:text-sm text-neutral-600 font-semibold">
+                      <span>GST ({gstRate}%):</span>
+                      <span className="font-extrabold text-neutral-900 font-mono text-sm sm:text-base">
+                        ₹{gstAmount.toFixed(2)}
+                      </span>
+                    </div>
+
+                    <div className="pt-2.5 border-t border-dashed border-teal-300 flex justify-between items-center">
+                      <span className="text-sm sm:text-base font-black text-neutral-900">
+                        Grand Total:
+                      </span>
+                      <span className="text-lg sm:text-xl font-black text-[#0D9488] font-mono">
+                        ₹{grandTotal.toFixed(2)}
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-[10px] text-neutral-400 block text-right">
-                    {selectedTier
-                      ? `${selectedTier.name} • ${formatCurrency(effectivePrice)} × ${travelersCount} traveler(s)`
-                      : 'Includes all permits, stays & guided trek'}
+                  <span className="text-[10px] text-neutral-400 block text-right mt-1.5 font-medium">
+                    {selectedTier?.name ? `${selectedTier.name} • ` : ''}
+                    ₹{effectivePrice} × {travelersCount} traveler(s) + {gstRate}% GST
                   </span>
                 </div>
 

@@ -14,6 +14,7 @@ const batchSchema = new mongoose.Schema(
   {
     startDate: { type: String, required: true }, // "YYYY-MM-DD"
     endDate: { type: String, default: '' }, // "YYYY-MM-DD"
+    city: { type: String, default: 'Ahmedabad', trim: true },
     totalSeats: { type: Number, default: 16, min: 1 },
     bookedSeats: { type: Number, default: 0, min: 0 },
     priceOverride: { type: Number, default: null },
@@ -135,6 +136,16 @@ const packageSchema = new mongoose.Schema(
     originalPrice: {
       type: Number,
       default: null,
+    },
+    gstRate: {
+      type: Number,
+      default: 5,
+      min: 0,
+      max: 28,
+    },
+    departureCities: {
+      type: [String],
+      default: ['Ahmedabad', 'Mumbai', 'Pune'],
     },
     pricingType: {
       type: String,

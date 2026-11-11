@@ -73,6 +73,8 @@ const bookingSchema = new mongoose.Schema(
       subtotal: { type: Number, required: true, default: 0 },
       couponCode: { type: String, trim: true, default: '' },
       discountAmount: { type: Number, default: 0 },
+      gstRate: { type: Number, default: 5 },
+      gstAmount: { type: Number, default: 0 },
       totalPayable: { type: Number, required: true, default: 0 },
       advanceAmount: { type: Number, default: 0 },
       remainingBalance: { type: Number, default: 0 },

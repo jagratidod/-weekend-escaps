@@ -127,10 +127,11 @@ export function PackageManager() {
     location: 'Uttarakhand, India',
     price: 8999,
     originalPrice: 12999,
+    gstRate: 5,
     rating: 4.9,
     reviewsCount: 150,
     image: '/newimage/exploresection/kedarkantha.png',
-    travelType: categories[0]?.name || 'Trekking',
+    travelType: categories[0]?.name || 'Treks',
     difficulty: 'Easy to Moderate',
     season: 'All Year Round',
     groupSize: '12 - 18 Explorers',
@@ -392,7 +393,7 @@ export function PackageManager() {
     setEditingPackage(null);
     setFormData({
       ...initialFormData,
-      travelType: categories[0]?.name || 'Trekking',
+      travelType: categories[0]?.name || 'Treks',
       isPrivateTrek: isPrivate,
       badge: isPrivate ? 'Private Trek' : '',
       badgeColor: isPrivate ? 'bg-emerald-600 text-white' : 'bg-[#FF6B16] text-white',
@@ -415,10 +416,11 @@ export function PackageManager() {
       location: pkg.location || '',
       price: pkg.price || 0,
       originalPrice: pkg.originalPrice || '',
+      gstRate: pkg.gstRate !== undefined && pkg.gstRate !== null ? Number(pkg.gstRate) : 5,
       rating: pkg.rating || 4.9,
       reviewsCount: pkg.reviewsCount || 100,
       image: pkg.image || '/newimage/exploresection/kedarkantha.png',
-      travelType: pkg.travelType || categories[0]?.name || 'Trekking',
+      travelType: pkg.travelType || categories[0]?.name || 'Treks',
       difficulty: pkg.difficulty || 'Easy to Moderate',
       season: pkg.season || 'All Year Round',
       groupSize: pkg.groupSize || '12 - 18 Explorers',
@@ -876,9 +878,16 @@ export function PackageManager() {
 
     try {
       setActionLoading(true);
+      const payload = {
+        ...formData,
+        price: Number(formData.price),
+        originalPrice: formData.originalPrice ? Number(formData.originalPrice) : null,
+        gstRate: formData.gstRate !== undefined && formData.gstRate !== '' ? Number(formData.gstRate) : 5,
+      };
+
       if (editingPackage) {
         const targetId = editingPackage._id || editingPackage.id;
-        const res = await updatePackage(targetId, formData);
+        const res = await updatePackage(targetId, payload);
         if (res.success) {
           showToast('success', `Package "${formData.name}" updated successfully!`);
           setShowModal(false);
@@ -886,7 +895,7 @@ export function PackageManager() {
           showToast('error', res.message || 'Update failed');
         }
       } else {
-        const res = await createPackage(formData);
+        const res = await createPackage(payload);
         if (res.success) {
           showToast('success', `Package "${formData.name}" created successfully!`);
           setShowModal(false);
@@ -1268,7 +1277,7 @@ export function PackageManager() {
                         {/* Category */}
                         <td className="py-3 px-4">
                           <span className="px-2.5 py-1 rounded-lg bg-orange-50 text-[#FF6B16] font-bold text-[11px]">
-                            {pkg.travelType || 'Trekking'}
+                            {pkg.travelType || 'Treks'}
                           </span>
                         </td>
 
@@ -1414,9 +1423,22 @@ export function PackageManager() {
           {/* Categories Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {categories.map((cat, idx) => {
-              const packageCount = packages.filter(
-                (p) => p.travelType && p.travelType.toLowerCase() === cat.name.toLowerCase()
-              ).length;
+              const packageCount = packages.filter((p) => {
+                const pt = (p.travelType || '').toLowerCase().trim();
+                const pn = (p.name || '').toLowerCase().trim();
+                const ct = (cat.name || '').toLowerCase().trim();
+                if (pt === ct || pt.includes(ct) || ct.includes(pt)) return true;
+                const words = ct
+                  .split(/[&,/ \-_]+/)
+                  .map((w) => w.trim().toLowerCase())
+                  .filter((w) => w.length >= 3 && !['trips', 'tours', 'escapes'].includes(w));
+                return words.some((w) => {
+                  let stem = w;
+                  if (stem.endsWith('ing') && stem.length > 5) stem = stem.slice(0, -3);
+                  else if (stem.endsWith('s') && stem.length > 3) stem = stem.slice(0, -1);
+                  return (pt && pt.includes(stem)) || (pn && pn.includes(stem));
+                });
+              }).length;
 
               return (
                 <div
@@ -1765,10 +1787,10 @@ export function PackageManager() {
               {/* ── TAB 2: PRICING & BADGES ── */}
               {activeFormTab === 'pricing' && (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-neutral-700 mb-1">
-                        Selling Price (₹ per person) <span className="text-rose-500">*</span>
+                        Selling Price (₹ / person) <span className="text-rose-500">*</span>
                       </label>
                       <input
                         type="number"
@@ -1783,7 +1805,7 @@ export function PackageManager() {
 
                     <div>
                       <label className="block text-xs font-bold text-neutral-700 mb-1">
-                        Original / Strikethrough Price (₹)
+                        Original / Strikethrough (₹)
                       </label>
                       <input
                         type="number"
@@ -1793,6 +1815,40 @@ export function PackageManager() {
                         placeholder="12999"
                         className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs font-medium focus:outline-none focus:border-[#FF6B16]"
                       />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-bold text-neutral-700">
+                          GST Rate (%)
+                        </label>
+                        <span className="text-[10px] font-black text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">
+                          +{Number(formData.gstRate !== undefined ? formData.gstRate : 5)}% GST
+                        </span>
+                      </div>
+                      <input
+                        type="number"
+                        step="0.5"
+                        min="0"
+                        max="28"
+                        value={formData.gstRate !== undefined ? formData.gstRate : 5}
+                        onChange={(e) => setFormData({ ...formData, gstRate: e.target.value })}
+                        placeholder="5"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs font-medium focus:outline-none focus:border-[#FF6B16]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* GST Calculation Preview Strip */}
+                  <div className="p-3 bg-teal-50/50 rounded-xl border border-teal-200 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-neutral-700">Live Breakdown:</span>
+                      <span className="text-neutral-500">
+                        Base ₹{Number(formData.price || 0).toLocaleString('en-IN')} + ₹{((Number(formData.price || 0) * Number(formData.gstRate !== undefined ? formData.gstRate : 5)) / 100).toFixed(2)} ({formData.gstRate !== undefined ? formData.gstRate : 5}% GST)
+                      </span>
+                    </div>
+                    <div className="font-black text-teal-700 text-sm">
+                      Total: ₹{(Number(formData.price || 0) + ((Number(formData.price || 0) * Number(formData.gstRate !== undefined ? formData.gstRate : 5)) / 100)).toFixed(2)}
                     </div>
                   </div>
 

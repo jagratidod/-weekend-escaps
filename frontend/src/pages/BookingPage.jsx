@@ -54,12 +54,12 @@ export function BookingPage() {
         { name: 'Delhi to Delhi', subtext: 'Including AC Volvo Bus Transfers', price: base + 2000, isDefault: false },
       ];
     }
-    const base = Number(pkg?.price) && Number(pkg.price) >= 3000 ? Number(pkg.price) : 8999;
-    const sub = 'Camp in Kedarnath';
+    const base = Number(pkg?.price) > 0 ? Number(pkg.price) : 4500;
+    const locName = pkg?.location ? pkg.location.split(',')[0].trim() : 'Basecamp';
     return [
-      { name: 'Quad Sharing', subtext: sub, price: base, isDefault: true },
-      { name: 'Triple Sharing', subtext: sub, price: base + 500, isDefault: false },
-      { name: 'Double Sharing', subtext: sub, price: base + 1000, isDefault: false },
+      { name: 'Quad Sharing', subtext: `Camp in ${locName}`, price: base, isDefault: true },
+      { name: 'Triple Sharing', subtext: `Camp in ${locName}`, price: base + 500, isDefault: false },
+      { name: 'Double Sharing', subtext: `Camp in ${locName}`, price: base + 1000, isDefault: false },
     ];
   })();
 
@@ -216,7 +216,11 @@ export function BookingPage() {
   // Pricing calculations
   const pricePerPerson = customPricePerPerson || pkg?.price || 8999;
   const subtotal = pricePerPerson * totalPersons;
-  const totalPayable = Math.max(0, subtotal - appliedDiscount);
+  const gstRate = Number(pkg?.gstRate) >= 0 ? Number(pkg?.gstRate) : 5;
+  const taxableBase = Math.max(0, subtotal - appliedDiscount);
+  const gstAmount = Number(((taxableBase * gstRate) / 100).toFixed(2));
+  const grandTotal = Number((taxableBase + gstAmount).toFixed(2));
+  const totalPayable = grandTotal;
   const advancePayable = ADVANCE_PER_PERSON * totalPersons;
   const finalPayableNow = paymentOption === 'advance' ? advancePayable : totalPayable;
 
@@ -995,38 +999,33 @@ export function BookingPage() {
                 </div>
               </div>
 
-              {/* 2. Price Breakdown Box */}
-              <div className="border border-neutral-200 rounded-2xl p-5 space-y-2.5 text-xs sm:text-sm bg-white">
-                <div className="flex items-center justify-between text-neutral-600">
-                  <span>Price per person</span>
-                  <span className="font-semibold text-neutral-800">
-                    {formatCurrency(pricePerPerson)}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-neutral-600">
-                  <span>Persons</span>
-                  <span className="font-semibold text-neutral-800">× {totalPersons}</span>
-                </div>
-
-                <div className="flex items-center justify-between text-neutral-600">
-                  <span>Subtotal</span>
-                  <span className="font-semibold text-neutral-800">
-                    {formatCurrency(subtotal)}
+              {/* 2. Price Breakdown Box matching screenshot */}
+              <div className="rounded-2xl border border-teal-400 bg-teal-50/20 p-5 space-y-2.5 text-xs sm:text-sm">
+                <div className="flex items-center justify-between text-neutral-600 font-semibold">
+                  <span>Base Amount:</span>
+                  <span className="font-extrabold text-neutral-900 font-mono text-sm sm:text-base">
+                    ₹{subtotal.toFixed(2)}
                   </span>
                 </div>
 
                 {appliedDiscount > 0 && (
                   <div className="flex items-center justify-between text-[#FF6B16] font-bold">
-                    <span>Discount Applied</span>
-                    <span>- {formatCurrency(appliedDiscount)}</span>
+                    <span>Discount Applied ({couponCode || 'PROMO'}):</span>
+                    <span className="font-mono text-sm">- ₹{appliedDiscount.toFixed(2)}</span>
                   </div>
                 )}
 
-                <div className="pt-2 border-t border-neutral-200 flex items-center justify-between">
-                  <span className="text-sm font-black text-neutral-900">Total Payable</span>
-                  <span className="text-lg font-black text-neutral-900">
-                    {formatCurrency(totalPayable)}
+                <div className="flex items-center justify-between text-neutral-600 font-semibold">
+                  <span>GST ({gstRate}%):</span>
+                  <span className="font-extrabold text-neutral-900 font-mono text-sm sm:text-base">
+                    ₹{gstAmount.toFixed(2)}
+                  </span>
+                </div>
+
+                <div className="pt-2.5 border-t border-dashed border-teal-300 flex items-center justify-between">
+                  <span className="text-base font-black text-neutral-900">Grand Total:</span>
+                  <span className="text-xl font-black text-[#0D9488] font-mono">
+                    ₹{grandTotal.toFixed(2)}
                   </span>
                 </div>
               </div>

@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { usePackages } from '../../context/PackageContext';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Compass, Calendar, Users, Search, Plus, Minus, Check, CalendarDays, SlidersHorizontal } from 'lucide-react';
 import { DESTINATIONS } from '../../data/destinations';
 
 export function TravelSearch({ onSearch }) {
   const navigate = useNavigate();
+  const { categories } = usePackages();
 
   const [destination, setDestination] = useState('');
   const [travelType, setTravelType] = useState('');
@@ -14,15 +16,30 @@ export function TravelSearch({ onSearch }) {
 
   const [openDropdown, setOpenDropdown] = useState(null); // 'destination', 'type', 'travelers', null
 
-  const travelTypes = [
-    'All Types',
-    'Trekking',
-    'Adventure',
-    'Honeymoon',
-    'Family Trips',
-    'Group Tours',
-    'International'
-  ];
+  const travelTypes = useMemo(() => {
+    const defaultList = [
+      'Backpacking Trips',
+      'Weekend Getaways',
+      'Treks',
+      'Spiritual Tours',
+      'International',
+      'Adventure',
+    ];
+
+    let names = [];
+    if (Array.isArray(categories) && categories.length > 0) {
+      names = categories
+        .filter((c) => c.isActive !== false && c.name)
+        .sort((a, b) => (a.order || 99) - (b.order || 99))
+        .map((c) => c.name.trim());
+    }
+
+    if (names.length === 0) {
+      names = defaultList;
+    }
+
+    return ['All Types', ...names];
+  }, [categories]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -112,7 +129,7 @@ export function TravelSearch({ onSearch }) {
                   Travel Type
                 </span>
                 <span className="block text-[10px] sm:text-xs text-neutral-400 font-medium truncate mt-0.5">
-                  {travelType ? travelType : 'Trekking, Honeymoon...'}
+                  {travelType ? travelType : 'Treks, Adventure...'}
                 </span>
               </div>
             </div>

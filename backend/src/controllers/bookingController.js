@@ -67,7 +67,10 @@ export const createBooking = async (req, res) => {
     const subtotal = Number(pricing?.subtotal) || pricePerPerson * personsCount;
     const discountAmount = Number(pricing?.discountAmount) || 0;
     const couponCode = pricing?.couponCode || '';
-    const totalPayable = Math.max(0, subtotal - discountAmount);
+    const baseAfterDiscount = Math.max(0, subtotal - discountAmount);
+    const gstRate = Number(pricing?.gstRate) >= 0 ? Number(pricing?.gstRate) : 5;
+    const gstAmount = Number(pricing?.gstAmount) >= 0 ? Number(pricing?.gstAmount) : Number(((baseAfterDiscount * gstRate) / 100).toFixed(2));
+    const totalPayable = Number((baseAfterDiscount + gstAmount).toFixed(2));
 
     const advancePerPerson = 2000;
     const advanceAmount = advancePerPerson * personsCount;
@@ -107,6 +110,8 @@ export const createBooking = async (req, res) => {
         subtotal,
         couponCode,
         discountAmount,
+        gstRate,
+        gstAmount,
         totalPayable,
         advanceAmount,
         remainingBalance,

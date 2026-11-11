@@ -11,6 +11,7 @@ import {
   createPackageCategory,
   updatePackageCategory,
   deletePackageCategory,
+  syncDefaultCategories,
   checkPackageAvailability,
   getUpcomingSlots,
 } from '../controllers/packageController.js';
@@ -23,6 +24,7 @@ router.get('/categories/all', getPackageCategories);
 router.post('/categories', protect, createPackageCategory);
 router.put('/categories/:id', protect, updatePackageCategory);
 router.delete('/categories/:id', protect, deletePackageCategory);
+router.post('/categories/sync-defaults', protect, syncDefaultCategories);
 
 // ── Admin Seeding Route ──
 router.post('/seed', protect, resetToDefaultPackages);

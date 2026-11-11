@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams, useLocation, Link } from 'react-router-dom';
 import { usePackages } from '../context/PackageContext';
 import { useSettings } from '../context/SettingsContext';
-import { EXPERIENCES } from '../data/experiences';
 import { getImageUrl } from '../utils/imageHelper';
 import { formatCurrency } from '../utils/helpers';
 import PackageCard from '../components/home/PackageCard';
@@ -12,136 +11,65 @@ import PackageFAQ from '../components/packages/PackageFAQ';
 import {
   Search,
   RotateCcw,
-  ArrowRight,
-  Mountain,
-  Compass,
-  Heart,
   Users,
-  Flame,
-  Globe,
   MessageCircle,
   Shield,
   Calendar,
   Clock,
   Star,
   MapPin,
+  X,
+  Loader2,
+  SlidersHorizontal,
 } from 'lucide-react';
 
-const iconMap = {
-  Mountain,
-  Compass,
-  Heart,
-  Users,
-  Flame,
-  Globe,
-};
-
-// Visual theme for each experience matching photo board style
-const EXPERIENCE_VISUALS = {
-  trekking: {
-    bg: getImageUrl('/images/gallery/gallery-4.webp'),
-    kicker: 'BEYOND THE',
-    highlight: 'TOURIST TRAPS:',
-    subheading: 'UNIQUE HIMALAYAN TREKS',
-    tagline: 'Explore the hidden trails of Uttarakhand & Kashmir.',
-    polaroids: [
-      { img: getImageUrl('/newimage/exploresection/kedarkantha.png'), alt: 'Kedarkantha Summit' },
-      { img: getImageUrl('/images/gallery/gallery-1.webp'), alt: 'Summit Ridge Push' },
-      { img: getImageUrl('/newimage/about/kedarkantha.png'), alt: 'Alpine Ridge Camp' },
-      { img: getImageUrl('/newimage/other sections image/image1.png'), alt: 'Himalayan Trekker' },
-    ],
-  },
-  adventure: {
-    bg: getImageUrl('/newimage/exploresection/manali.png'),
-    kicker: 'BEYOND THE',
-    highlight: 'ORDINARY:',
-    subheading: 'HIGH-ALTITUDE ADVENTURES',
-    tagline: 'Feel the adrenaline on snow slopes and rapids.',
-    polaroids: [
-      { img: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?q=85&w=600&auto=format&fit=crop', alt: 'Solang Skiing' },
-      { img: 'https://images.unsplash.com/photo-1502784444187-359ac186c5bb?q=85&w=600&auto=format&fit=crop', alt: 'Gulmarg Gondola' },
-      { img: 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?q=85&w=600&auto=format&fit=crop', alt: 'White Water Rafting' },
-      { img: getImageUrl('/newimage/exploresection/vally.png'), alt: 'Spiti 4x4 Expedition' },
-    ],
-  },
-  honeymoon: {
-    bg: getImageUrl('/images/gallery/gallery-2.webp'),
-    kicker: 'BEYOND THE',
-    highlight: 'TOURIST TRAPS:',
-    subheading: 'ROMANTIC MOUNTAIN ESCAPES',
-    tagline: 'Private sanctuaries crafted for intimate memories.',
-    polaroids: [
-      { img: getImageUrl('/newimage/exploresection/kashmir.png'), alt: 'Sunset Shikara' },
-      { img: 'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?q=85&w=600&auto=format&fit=crop', alt: 'Alpine Chalet Bed' },
-      { img: getImageUrl('/newimage/exploresection/bali.png'), alt: 'Bali Sunset Cliff' },
-      { img: 'https://images.unsplash.com/photo-1517824806704-9040b037703b?q=85&w=600&auto=format&fit=crop', alt: 'Stargazing Camp' },
-    ],
-  },
-  family: {
-    bg: getImageUrl('/images/gallery/gallery-5.webp'),
-    kicker: 'BEYOND THE',
-    highlight: 'ORDINARY:',
-    subheading: 'CAREFREE FAMILY CIRCUITS',
-    tagline: 'Comforting, scenic journeys for every generation.',
-    polaroids: [
-      { img: getImageUrl('/newimage/about/kashmir.png'), alt: 'Kashmir Valley' },
-      { img: getImageUrl('/newimage/about/manali.png'), alt: 'Manali Apple Orchards' },
-      { img: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?q=85&w=600&auto=format&fit=crop', alt: 'Heritage Houseboat' },
-      { img: getImageUrl('/newimage/exploresection/manali.png'), alt: 'Pine Valley' },
-    ],
-  },
-  group: {
-    bg: getImageUrl('/newimage/herosecction/heroimage.png'),
-    kicker: 'BEYOND THE',
-    highlight: 'COMMUTE:',
-    subheading: 'EPIC GROUP EXPEDITIONS',
-    tagline: 'Join fellow wanderers for stories around the bonfire.',
-    polaroids: [
-      { img: getImageUrl('/images/gallery/gallery-1.webp'), alt: 'Group Summit' },
-      { img: 'https://images.unsplash.com/photo-1659187313578-66ec5323bc2f?q=85&w=600&auto=format&fit=crop', alt: 'Acoustic Bonfire' },
-      { img: getImageUrl('/newimage/about/vally.png'), alt: 'Spiti Pass' },
-      { img: 'https://images.unsplash.com/photo-1517824806704-9040b037703b?q=85&w=600&auto=format&fit=crop', alt: 'Campfire Galaxy' },
-    ],
-  },
-  international: {
-    bg: getImageUrl('/images/gallery/gallery-6.webp'),
-    kicker: 'BEYOND THE',
-    highlight: 'USUAL HORIZONS:',
-    subheading: 'CURATED GLOBAL GETAWAYS',
-    tagline: 'Explore tropical paradises and ancient sacred culture.',
-    polaroids: [
-      { img: getImageUrl('/newimage/exploresection/bali.png'), alt: 'Nusa Penida Cliff' },
-      { img: getImageUrl('/newimage/about/bali.png'), alt: 'Bali Rice Terraces' },
-      { img: getImageUrl('/images/gallery/gallery-6.webp'), alt: 'Water Temple' },
-      { img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=85&w=600&auto=format&fit=crop', alt: 'Tropical Beach' },
-    ],
-  },
-};
-
-export function PackagesPage({ scrollToExperiences = false }) {
-  const { packages, categories, loading } = usePackages();
-  const { whatsappUrl, getCustomWhatsAppUrl } = useSettings();
+export function PackagesPage() {
+  const { packages: contextPackages, categories, loading: contextLoading } = usePackages();
+  const { whatsappUrl, getCustomWhatsAppUrl, API_BASE_URL } = useSettings();
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
 
-  const initialDestination = searchParams.get('destination') || '';
+  // Read initial values from URL (supports both 'search' and 'destination' from home search bar)
+  const initialSearch = searchParams.get('search') || searchParams.get('destination') || '';
   const initialType = searchParams.get('type') || 'All';
+  const initialMaxPrice = searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : null;
 
-  const [searchTerm, setSearchTerm] = useState(initialDestination);
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [selectedType, setSelectedType] = useState(initialType);
-  const [maxPrice, setMaxPrice] = useState(80000);
+  const [maxPrice, setMaxPrice] = useState(initialMaxPrice || 80000);
+
+  // Backend packages list & loading state
+  const [backendPackages, setBackendPackages] = useState(null); // null = not yet queried, fall back to contextPackages
+  const [isFilterLoading, setIsFilterLoading] = useState(false);
+
+  // Compute dynamic price boundaries from available packages
+  const priceStats = useMemo(() => {
+    const list = Array.isArray(contextPackages) && contextPackages.length > 0 ? contextPackages : [];
+    const validPrices = list.map((p) => Number(p.price)).filter((p) => !isNaN(p) && p > 0);
+    const min = validPrices.length > 0 ? Math.min(...validPrices) : 3000;
+    const max = validPrices.length > 0 ? Math.max(...validPrices, 80000) : 80000;
+    return { min, max };
+  }, [contextPackages]);
+
+  // Ensure default maxPrice aligns with package price bounds if not specified
+  useEffect(() => {
+    if (!initialMaxPrice && priceStats.max && maxPrice < priceStats.max) {
+      setMaxPrice(priceStats.max);
+    }
+  }, [priceStats.max, initialMaxPrice]);
 
   // Private Treks (Custom batches with WhatsApp direct booking)
-  const privateTrekPackages = packages.filter((pkg) => {
+  const basePackages = backendPackages !== null ? backendPackages : contextPackages || [];
+  const privateTrekPackages = basePackages.filter((pkg) => {
     if (pkg.isActive === false) return false;
     return pkg.isPrivateTrek === true;
   });
 
-  // If admin has not yet marked any package as private, provide curated defaults
   const displayPrivateTreks =
     privateTrekPackages.length > 0
       ? privateTrekPackages
-      : packages
+      : (contextPackages || [])
           .filter(
             (pkg) =>
               pkg.isActive !== false &&
@@ -151,32 +79,70 @@ export function PackagesPage({ scrollToExperiences = false }) {
           )
           .slice(0, 4);
 
-  // Dynamic travel types from active categories & packages
-  const activeCategoryNames = Array.isArray(categories)
-    ? categories.filter((c) => c.isActive !== false).map((c) => c.name)
-    : [];
+  // ── DYNAMIC REAL CATEGORIES (STRICTLY FROM ADMIN / BACKEND CATEGORIES) ──
+  const travelTypes = useMemo(() => {
+    const defaultList = [
+      'Backpacking Trips',
+      'Weekend Getaways',
+      'Treks',
+      'Spiritual Tours',
+      'International',
+      'Adventure',
+    ];
 
-  const dynamicTypes = Array.from(
-    new Set([
-      'All',
-      ...activeCategoryNames,
-      ...packages.map((p) => p.travelType).filter(Boolean),
-    ])
-  );
-  const travelTypes =
-    dynamicTypes.length > 1
-      ? dynamicTypes
-      : ['All', 'Trekking', 'Honeymoon & Leisure', 'Adventure', 'International'];
-
-  // Handle URL query changes
-  useEffect(() => {
-    const qType = searchParams.get('type');
-    if (qType) {
-      setSelectedType(qType);
+    let names = [];
+    if (Array.isArray(categories) && categories.length > 0) {
+      names = categories
+        .filter((cat) => cat.isActive !== false && cat.name)
+        .sort((a, b) => (a.order || 99) - (b.order || 99))
+        .map((cat) => cat.name.trim());
     }
+
+    if (names.length === 0) {
+      names = defaultList;
+    }
+
+    return [
+      { name: 'All', label: 'Style: All Categories' },
+      ...names.map((name) => ({
+        name,
+        label: `Style: ${name}`,
+      })),
+    ];
+  }, [categories]);
+
+  // Normalize aliases (e.g. 'Trekking' -> 'Treks') or reset invalid selections
+  useEffect(() => {
+    if (selectedType && selectedType !== 'All' && travelTypes.length > 1) {
+      const st = selectedType.toLowerCase().trim();
+      const matched = travelTypes.find((t) => {
+        const tn = t.name.toLowerCase().trim();
+        if (tn === st) return true;
+        if (tn === 'treks' && (st === 'trekking' || st === 'trek')) return true;
+        if (tn === 'weekend getaways' && (st === 'weekend escapes' || st === 'honeymoon & leisure' || st === 'honeymoon')) return true;
+        return false;
+      });
+
+      if (matched && matched.name !== selectedType) {
+        setSelectedType(matched.name);
+      } else if (!matched) {
+        setSelectedType('All');
+      }
+    }
+  }, [travelTypes, selectedType]);
+
+  // Handle URL query changes from outside (e.g. back/forward navigation or clicking external links)
+  useEffect(() => {
+    const qSearch = searchParams.get('search') || searchParams.get('destination') || '';
+    const qType = searchParams.get('type') || 'All';
+    const qMax = searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : null;
+
+    if (qSearch !== searchTerm) setSearchTerm(qSearch);
+    if (qType !== selectedType) setSelectedType(qType);
+    if (qMax && qMax !== maxPrice) setMaxPrice(qMax);
   }, [searchParams]);
 
-  // Handle hash scrolling (e.g. #experiences or #trekking or scrollToExperiences prop)
+  // Handle hash scrolling (e.g. #packages-grid-top or #private-treks)
   useEffect(() => {
     if (location.hash) {
       const el = document.querySelector(location.hash);
@@ -185,54 +151,123 @@ export function PackagesPage({ scrollToExperiences = false }) {
           el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 150);
       }
-    } else if (scrollToExperiences) {
-      const el = document.getElementById('experiences');
-      if (el) {
-        setTimeout(() => {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 150);
-      }
     }
-  }, [location.hash, scrollToExperiences]);
+  }, [location.hash]);
 
-  const filteredPackages = packages.filter((pkg) => {
-    if (pkg.isActive === false) return false;
+  // ── BACKEND CONNECTED FILTER QUERY WITH DEBOUNCE ──
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    let isCancelled = false;
+    setIsFilterLoading(true);
 
-    const matchesSearch =
-      (pkg.name && pkg.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (pkg.location && pkg.location.toLowerCase().includes(searchTerm.toLowerCase()));
+    const debounceDelay = isFirstRender.current ? 0 : 250;
+    isFirstRender.current = false;
 
-    const matchesType =
-      selectedType === 'All' ||
-      (pkg.travelType && pkg.travelType.toLowerCase().includes(selectedType.toLowerCase()));
+    const timer = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams();
+        const trimmedSearch = searchTerm.trim();
+        if (trimmedSearch) {
+          params.set('search', trimmedSearch);
+        }
+        if (selectedType && selectedType !== 'All') {
+          params.set('type', selectedType);
+        }
+        if (maxPrice && maxPrice < priceStats.max) {
+          params.set('maxPrice', maxPrice);
+        }
 
-    const matchesPrice = Number(pkg.price) <= maxPrice;
+        // Keep URL in sync with active filters
+        setSearchParams(params, { replace: true });
 
-    return matchesSearch && matchesType && matchesPrice;
-  });
+        // Query Backend API endpoint /api/packages
+        const baseUrl = API_BASE_URL || 'http://localhost:5000/api';
+        const url = `${baseUrl}/packages?${params.toString()}`;
 
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          if (!isCancelled && data.success && Array.isArray(data.packages)) {
+            setBackendPackages(data.packages);
+            setIsFilterLoading(false);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('[PackagesPage] Backend query error, falling back to local dataset:', err);
+      }
+
+      if (!isCancelled) {
+        setIsFilterLoading(false);
+      }
+    }, debounceDelay);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchTerm, selectedType, maxPrice, priceStats.max, API_BASE_URL, setSearchParams]);
+
+  // Fallback in-memory filter if backend query is in transit or offline
+  const displayPackages = useMemo(() => {
+    if (backendPackages !== null) {
+      return backendPackages;
+    }
+
+    return (contextPackages || []).filter((pkg) => {
+      if (pkg.isActive === false) return false;
+
+      const s = searchTerm.toLowerCase().trim();
+      const matchesSearch =
+        !s ||
+        (pkg.name && pkg.name.toLowerCase().includes(s)) ||
+        (pkg.location && pkg.location.toLowerCase().includes(s)) ||
+        (pkg.travelType && pkg.travelType.toLowerCase().includes(s));
+
+      let matchesType = selectedType === 'All';
+      if (!matchesType && selectedType) {
+        const pt = (pkg.travelType || '').toLowerCase().trim();
+        const pn = (pkg.name || '').toLowerCase().trim();
+        const st = selectedType.toLowerCase().trim();
+
+        if (pt === st || pt.includes(st) || st.includes(pt)) {
+          matchesType = true;
+        } else {
+          // Check stem matching (e.g. "Treks" vs "Trekking" / "Kedarkantha Trek")
+          const words = st
+            .split(/[&,/ \-_]+/)
+            .map((w) => w.trim().toLowerCase())
+            .filter((w) => w.length >= 3 && !['trips', 'tours', 'escapes'].includes(w));
+
+          matchesType = words.some((w) => {
+            let stem = w;
+            if (stem.endsWith('ing') && stem.length > 5) stem = stem.slice(0, -3);
+            else if (stem.endsWith('s') && stem.length > 3) stem = stem.slice(0, -1);
+            return (pt && pt.includes(stem)) || (pn && pn.includes(stem));
+          });
+        }
+      }
+
+      const matchesPrice = !maxPrice || Number(pkg.price) <= maxPrice;
+
+      return matchesSearch && matchesType && matchesPrice;
+    });
+  }, [backendPackages, contextPackages, searchTerm, selectedType, maxPrice]);
+
+  // Reset all filters to default
   const handleReset = () => {
     setSearchTerm('');
     setSelectedType('All');
-    setMaxPrice(80000);
+    setMaxPrice(priceStats.max || 80000);
+    setBackendPackages(null);
+    setSearchParams({}, { replace: true });
   };
 
-  // Filter packages by clicked experience and scroll back up
-  const handleFilterByExperience = (experienceTitle) => {
-    const matched =
-      travelTypes.find(
-        (t) =>
-          t.toLowerCase() === experienceTitle.toLowerCase() ||
-          experienceTitle.toLowerCase().includes(t.toLowerCase())
-      ) || experienceTitle;
-
-    setSelectedType(matched);
-
-    const topGrid = document.getElementById('packages-grid-top');
-    if (topGrid) {
-      topGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
+  const hasActiveFilters = Boolean(
+    searchTerm.trim() ||
+      (selectedType && selectedType !== 'All') ||
+      (maxPrice && maxPrice < priceStats.max)
+  );
 
   return (
     <div className="pt-28 pb-24 bg-[#F7F7F5] min-h-screen text-[#111111]">
@@ -258,9 +293,12 @@ export function PackagesPage({ scrollToExperiences = false }) {
             <div className="flex items-center justify-center gap-2.5 mt-5 flex-wrap">
               <a
                 href="#packages-grid-top"
-                className="px-4 py-1.5 rounded-full bg-white border border-neutral-200 text-xs font-bold text-neutral-800 hover:border-[#FF6B16] hover:text-[#FF6B16] transition-all shadow-xs"
+                className="px-4 py-1.5 rounded-full bg-white border border-neutral-200 text-xs font-bold text-neutral-800 hover:border-[#FF6B16] hover:text-[#FF6B16] transition-all shadow-xs flex items-center gap-1.5"
               >
-                Group Expeditions ({filteredPackages.length})
+                <span>Group Expeditions</span>
+                <span className="px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-[11px] font-black">
+                  {displayPackages.length}
+                </span>
               </a>
               <a
                 href="#private-treks"
@@ -268,12 +306,6 @@ export function PackagesPage({ scrollToExperiences = false }) {
               >
                 <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Private Treks ({displayPrivateTreks.length})</span>
-              </a>
-              <a
-                href="#experiences"
-                className="px-4 py-1.5 rounded-full bg-white border border-neutral-200 text-xs font-bold text-neutral-600 hover:border-[#FF6B16] hover:text-[#FF6B16] transition-all shadow-xs"
-              >
-                Curated Experiences
               </a>
               <a
                 href={
@@ -291,83 +323,158 @@ export function PackagesPage({ scrollToExperiences = false }) {
             </div>
           </div>
 
-          {/* Filter & Search Bar */}
-          <div className="bg-white rounded-3xl p-5 md:p-6 shadow-md border border-neutral-100 mb-12">
+          {/* ── BACKEND CONNECTED FILTER & SEARCH BAR ── */}
+          <div className="bg-white rounded-3xl p-5 md:p-6 shadow-md border border-neutral-100 mb-10 transition-all">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-              {/* Search Input */}
-              <div className="md:col-span-4 relative">
-                <Search className="w-4 h-4 text-neutral-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              {/* 1. Search Input */}
+              <div className="md:col-span-5 relative">
+                <Search className="w-4 h-4 text-neutral-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search trip name or location..."
-                  className="w-full pl-11 pr-4 py-3 rounded-2xl bg-neutral-50 border border-neutral-200 text-sm focus:outline-none focus:border-[#FF6B16] text-[#111111]"
+                  placeholder="Search trip name, destination, or highlights..."
+                  className="w-full pl-11 pr-10 py-3 rounded-2xl bg-neutral-50 border border-neutral-200 text-sm focus:outline-none focus:border-[#FF6B16] focus:bg-white text-[#111111] transition-all font-medium"
                 />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                    title="Clear search"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-neutral-400 hover:text-neutral-700 rounded-full hover:bg-neutral-200/60 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
 
-              {/* Travel Type Select */}
-              <div className="md:col-span-4">
+              {/* 2. Travel Type / Style Select */}
+              <div className="md:col-span-3">
                 <select
                   value={selectedType}
                   onChange={(e) => setSelectedType(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl bg-neutral-50 border border-neutral-200 text-sm focus:outline-none focus:border-[#FF6B16] text-neutral-800 font-semibold cursor-pointer"
+                  className="w-full px-4 py-3 rounded-2xl bg-neutral-50 border border-neutral-200 text-sm focus:outline-none focus:border-[#FF6B16] focus:bg-white text-neutral-800 font-semibold cursor-pointer transition-all"
                 >
-                  {travelTypes.map((type) => (
-                    <option key={type} value={type}>
-                      Style: {type}
+                  {travelTypes.map((item) => (
+                    <option key={item.name} value={item.name}>
+                      {item.label}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Price Slider */}
+              {/* 3. Budget Max Slider */}
               <div className="md:col-span-3 px-2">
-                <div className="flex justify-between text-xs font-bold text-neutral-600 mb-1">
+                <div className="flex justify-between items-center text-xs font-bold text-neutral-600 mb-1">
                   <span>Budget Max:</span>
-                  <span className="text-[#FF6B16]">₹{maxPrice.toLocaleString('en-IN')}</span>
+                  <span className="text-[#FF6B16] text-sm font-black">
+                    ₹{maxPrice.toLocaleString('en-IN')}
+                  </span>
                 </div>
                 <input
                   type="range"
-                  min="5000"
-                  max="80000"
-                  step="2000"
+                  min={priceStats.min || 3000}
+                  max={priceStats.max || 80000}
+                  step={1000}
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(Number(e.target.value))}
-                  className="w-full accent-[#FF6B16] cursor-pointer"
+                  className="w-full accent-[#FF6B16] cursor-pointer h-2 bg-neutral-200 rounded-lg"
                 />
+                <div className="flex justify-between text-[10px] text-neutral-400 font-semibold mt-0.5">
+                  <span>₹{(priceStats.min || 3000).toLocaleString('en-IN')}</span>
+                  <span>₹{(priceStats.max || 80000).toLocaleString('en-IN')}</span>
+                </div>
               </div>
 
-              {/* Reset Button */}
+              {/* 4. Reset Button */}
               <div className="md:col-span-1 flex justify-center">
                 <button
                   type="button"
                   onClick={handleReset}
-                  title="Reset Filters"
-                  className="p-3 rounded-2xl border border-neutral-200 hover:border-[#FF6B16] text-neutral-500 hover:text-[#FF6B16] transition-colors cursor-pointer"
+                  disabled={!hasActiveFilters && !isFilterLoading}
+                  title={hasActiveFilters ? 'Reset all filters' : 'Filters at default'}
+                  className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-center ${
+                    hasActiveFilters
+                      ? 'border-[#FF6B16] text-[#FF6B16] bg-[#FF6B16]/5 hover:bg-[#FF6B16] hover:text-white shadow-xs'
+                      : 'border-neutral-200 text-neutral-400 hover:border-neutral-300 hover:text-neutral-600'
+                  }`}
                 >
-                  <RotateCcw className="w-4 h-4" />
+                  <RotateCcw className={`w-4 h-4 ${isFilterLoading ? 'animate-spin' : ''}`} />
                 </button>
               </div>
             </div>
+
+            {/* Active Filters Summary Strip */}
+            {hasActiveFilters && (
+              <div className="mt-3 pt-3 border-t border-neutral-100 flex items-center justify-between flex-wrap gap-2 text-xs">
+                <div className="flex items-center gap-1.5 flex-wrap text-neutral-500">
+                  <span className="font-bold text-neutral-700">Active Filters:</span>
+                  {searchTerm.trim() && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-neutral-100 text-neutral-800 font-semibold">
+                      Keyword: "{searchTerm.trim()}"
+                      <button onClick={() => setSearchTerm('')} className="hover:text-rose-500">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+                  {selectedType !== 'All' && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-neutral-100 text-neutral-800 font-semibold">
+                      Category: {selectedType}
+                      <button onClick={() => setSelectedType('All')} className="hover:text-rose-500">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+                  {maxPrice < priceStats.max && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-neutral-100 text-neutral-800 font-semibold">
+                      Max Price: ₹{maxPrice.toLocaleString('en-IN')}
+                      <button onClick={() => setMaxPrice(priceStats.max)} className="hover:text-rose-500">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+                </div>
+
+                <div className="text-[11px] font-bold text-neutral-400">
+                  {isFilterLoading ? (
+                    <span className="inline-flex items-center gap-1 text-[#FF6B16]">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Querying database...
+                    </span>
+                  ) : (
+                    <span>{displayPackages.length} package{displayPackages.length === 1 ? '' : 's'} matched</span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Packages Results Grid */}
-          {filteredPackages.length > 0 ? (
+          {/* ── Packages Results Grid ── */}
+          {isFilterLoading && displayPackages.length === 0 ? (
+            <div className="py-24 text-center">
+              <div className="w-10 h-10 border-4 border-[#FF6B16]/20 border-t-[#FF6B16] rounded-full animate-spin mx-auto mb-3" />
+              <p className="text-sm font-bold text-neutral-600">Querying packages from database...</p>
+            </div>
+          ) : displayPackages.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filteredPackages.map((pkg) => (
+              {displayPackages.map((pkg) => (
                 <PackageCard key={pkg._id || pkg.id} pkg={pkg} />
               ))}
             </div>
           ) : (
             <div className="text-center py-20 bg-white rounded-3xl border border-neutral-200">
+              <div className="w-14 h-14 rounded-2xl bg-neutral-100 flex items-center justify-center text-neutral-400 mx-auto mb-3">
+                <Search className="w-6 h-6" />
+              </div>
               <p className="text-lg font-bold text-neutral-800">No packages match your criteria.</p>
-              <p className="text-sm text-neutral-500 mt-1">Try resetting the filters or modifying your search terms.</p>
+              <p className="text-sm text-neutral-500 mt-1 max-w-md mx-auto">
+                We couldn't find any trips matching your current search terms or budget. Try clearing your filters or exploring another category!
+              </p>
               <button
                 onClick={handleReset}
-                className="mt-4 px-6 py-2.5 rounded-full bg-[#FF6B16] text-white text-xs font-bold shadow-md hover:bg-[#e05809] cursor-pointer"
+                className="mt-5 px-6 py-2.5 rounded-full bg-[#FF6B16] hover:bg-[#e05809] text-white text-xs font-bold shadow-md cursor-pointer transition-all inline-flex items-center gap-1.5"
               >
-                Reset Filters
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset All Filters</span>
               </button>
             </div>
           )}
@@ -387,157 +494,93 @@ export function PackagesPage({ scrollToExperiences = false }) {
             <p className="mt-3 text-neutral-600 text-base sm:text-lg">
               Want to trek exclusively with your friends, family, or corporate team? Pick any date, trek at your own pace with a dedicated trek leader, and get instant custom quotes directly on WhatsApp.
             </p>
-
-            {/* 4 Feature Badges */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 text-left">
-              <div className="bg-white p-3.5 rounded-2xl border border-neutral-200/80 shadow-xs flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                  <Shield className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-black text-neutral-900">100% Private</div>
-                  <div className="text-[10px] text-neutral-500 font-semibold">No outside strangers</div>
-                </div>
-              </div>
-
-              <div className="bg-white p-3.5 rounded-2xl border border-neutral-200/80 shadow-xs flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                  <Calendar className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-black text-neutral-900">Your Own Dates</div>
-                  <div className="text-[10px] text-neutral-500 font-semibold">365 Days availability</div>
-                </div>
-              </div>
-
-              <div className="bg-white p-3.5 rounded-2xl border border-neutral-200/80 shadow-xs flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                  <Users className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-black text-neutral-900">Dedicated Guide</div>
-                  <div className="text-[10px] text-neutral-500 font-semibold">Custom pace & safety</div>
-                </div>
-              </div>
-
-              <div className="bg-white p-3.5 rounded-2xl border border-neutral-200/80 shadow-xs flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                  <MessageCircle className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-black text-neutral-900">WhatsApp Connect</div>
-                  <div className="text-[10px] text-neutral-500 font-semibold">Direct custom quote</div>
-                </div>
-              </div>
-            </div>
           </div>
 
-          {/* Private Treks Grid */}
+          {/* 4 Featured Private Treks Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {displayPrivateTreks.map((pkg) => {
-              const waMessage = `Hi Weekend Escapes! I would like to inquire about booking a *Private Trek* for *${pkg.name}*. We have our own group and want to discuss custom departure dates and pricing.`;
-              const waUrl = getCustomWhatsAppUrl ? getCustomWhatsAppUrl(waMessage) : (whatsappUrl || 'https://wa.me/917983695277');
+              const inquiryMessage = `Hi Weekend Escapes! I would like to inquire about a Private Custom Batch for *${pkg.name}* (${pkg.location || 'Himalayas'}). Please connect me with a trek leader.`;
+              const finalWhatsappLink = getCustomWhatsAppUrl
+                ? getCustomWhatsAppUrl(inquiryMessage)
+                : `${whatsappUrl || 'https://wa.me/917983695277'}?text=${encodeURIComponent(inquiryMessage)}`;
 
               return (
                 <div
-                  key={pkg._id || pkg.id}
-                  className="group flex flex-col rounded-3xl overflow-hidden bg-white p-3 shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1.5 border border-emerald-100 hover:border-emerald-300"
+                  key={`private-${pkg._id || pkg.id}`}
+                  className="bg-white rounded-3xl overflow-hidden border border-emerald-200/90 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col group hover:-translate-y-1 relative"
                 >
-                  {/* Image with Private Badges */}
-                  <div className="relative aspect-[16/10.5] w-full rounded-2xl overflow-hidden bg-neutral-100">
+                  {/* Image container */}
+                  <div className="aspect-[4/3] w-full relative overflow-hidden bg-neutral-100">
                     <img
                       src={getImageUrl(pkg.image)}
                       alt={pkg.name}
-                      loading="lazy"
-                      className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
 
-                    {/* Top Left: Private Trek Badge */}
-                    <div className="absolute top-2.5 left-2.5">
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide shadow-md bg-emerald-600 text-white flex items-center gap-1">
+                    {/* Private Batch Badge */}
+                    <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10">
+                      <span className="px-3 py-1 rounded-full text-[11px] font-black tracking-wide uppercase shadow-md bg-emerald-600 text-white flex items-center gap-1">
                         <Shield className="w-3 h-3" />
                         <span>Private Trek</span>
                       </span>
                     </div>
 
-                    {/* Top Right: WhatsApp Direct Badge */}
-                    <div className="absolute top-2.5 right-2.5">
-                      <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-emerald-400 text-[10px] font-black border border-emerald-500/30">
-                        <MessageCircle className="w-3 h-3 text-emerald-400" />
-                        <span>WhatsApp Only</span>
-                      </div>
+                    {/* Difficulty Badge */}
+                    <div className="absolute bottom-3 left-3 z-10">
+                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-black/60 backdrop-blur-xs text-white">
+                        {pkg.difficulty || 'Custom Pace'}
+                      </span>
                     </div>
                   </div>
 
                   {/* Body Content */}
-                  <div className="pt-3 pb-1 px-1 flex flex-col flex-1 justify-between">
+                  <div className="p-5 flex flex-col flex-grow justify-between bg-white">
                     <div>
-                      {/* Duration & Location */}
-                      <div className="flex items-center justify-between text-[11px] text-neutral-500 font-bold mb-1.5">
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-emerald-600" />
-                          {pkg.duration}
+                      {/* Location & Duration */}
+                      <div className="flex items-center justify-between text-xs text-neutral-500 font-semibold mb-1.5">
+                        <span className="flex items-center gap-1 truncate max-w-[60%]">
+                          <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span className="truncate">{pkg.location}</span>
                         </span>
-                        <span className="truncate max-w-[120px] text-neutral-600">
-                          {pkg.location ? pkg.location.split(',')[0] : 'Uttarakhand'}
+                        <span className="flex items-center gap-1 shrink-0">
+                          <Clock className="w-3.5 h-3.5 text-neutral-400" />
+                          <span>{pkg.duration}</span>
                         </span>
                       </div>
 
-                      {/* Trek Title */}
-                      <Link
-                        to={`/packages/${pkg.id || pkg._id}`}
-                        className="text-base font-black text-[#111111] group-hover:text-emerald-700 transition-colors line-clamp-1 leading-snug block"
-                      >
+                      {/* Title */}
+                      <h3 className="text-base font-black text-neutral-900 line-clamp-1 group-hover:text-emerald-700 transition-colors">
                         {pkg.name}
-                      </Link>
+                      </h3>
 
-                      {/* Custom Inclusions Pill */}
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-600">
-                          Dedicated Guide
-                        </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700">
-                          Custom Dates
-                        </span>
-                      </div>
-
-                      {/* Pricing */}
-                      <div className="mt-3 flex items-baseline justify-between border-t border-neutral-100 pt-2">
-                        <div>
-                          <span className="text-[10px] font-extrabold uppercase text-neutral-400 block">
-                            Starting from
-                          </span>
-                          <span className="text-lg sm:text-xl font-black text-neutral-900">
-                            {formatCurrency(pkg.price)}
-                          </span>
-                          <span className="text-[10px] font-semibold text-neutral-400 ml-1">
-                            / person
-                          </span>
-                        </div>
-                        <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-emerald-100 text-emerald-800">
-                          Custom Group
-                        </span>
-                      </div>
+                      {/* Custom note */}
+                      <p className="text-xs text-neutral-500 mt-1 line-clamp-2">
+                        {pkg.privateTrekNote || 'Custom dates for your squad • Dedicated trek marshal & private camps.'}
+                      </p>
                     </div>
 
-                    {/* WhatsApp Action Button (NO ONLINE BOOKING, DIRECT WHATSAPP) */}
-                    <div className="mt-4 space-y-2">
+                    {/* Pricing & WhatsApp CTA */}
+                    <div className="pt-4 mt-4 border-t border-neutral-100 flex items-center justify-between gap-2">
+                      <div>
+                        <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+                          Starts From
+                        </div>
+                        <div className="text-sm font-black text-neutral-900">
+                          {formatCurrency(pkg.price)}
+                          <span className="text-[10px] text-neutral-400 font-normal"> / person</span>
+                        </div>
+                      </div>
+
                       <a
-                        href={waUrl}
+                        href={finalWhatsappLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-xs sm:text-[13px] shadow-md shadow-[#25D366]/25 hover:shadow-lg hover:shadow-[#25D366]/35 transition-all duration-200 cursor-pointer text-center"
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition-all shadow-md flex items-center gap-1.5 hover:scale-105 active:scale-95 cursor-pointer shrink-0"
                       >
-                        <MessageCircle className="w-4 h-4 fill-white" />
-                        <span>Connect on WhatsApp</span>
+                        <MessageCircle className="w-3.5 h-3.5 fill-white text-emerald-600" />
+                        <span>Inquire</span>
                       </a>
-
-                      <Link
-                        to={`/packages/${pkg.id || pkg._id}`}
-                        className="w-full block text-center py-1 text-[11px] font-bold text-neutral-500 hover:text-emerald-700 transition-colors"
-                      >
-                        View Trek Itinerary & Details →
-                      </Link>
                     </div>
                   </div>
                 </div>
@@ -545,18 +588,17 @@ export function PackagesPage({ scrollToExperiences = false }) {
             })}
           </div>
 
-          {/* Custom Private Trek Callout Banner */}
-          <div className="mt-12 bg-gradient-to-r from-emerald-900 to-[#1A384C] rounded-3xl p-6 sm:p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+          {/* Banner under Private Treks */}
+          <div className="mt-10 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-emerald-900 via-emerald-800 to-neutral-900 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
             <div className="space-y-1.5 text-center md:text-left">
-              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-black uppercase tracking-wider">
-                <Shield className="w-3 h-3" />
-                <span>Custom Mountain Expeditions</span>
-              </div>
+              <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-black uppercase tracking-wider border border-emerald-400/30">
+                Custom Dates • Dedicated Marshals • Tailored Menus
+              </span>
               <h3 className="text-xl sm:text-2xl font-black">
-                Have a Custom Route, Peak or College / Corporate Group?
+                Have a Specific Peak or Off-Beat Trail in Mind?
               </h3>
-              <p className="text-xs sm:text-sm text-neutral-300 max-w-2xl">
-                We craft bespoke private expeditions across Uttarakhand, Himachal, Kashmir, and Ladakh tailored precisely to your team size, fitness level, and budget.
+              <p className="text-xs sm:text-sm text-neutral-300 max-w-xl">
+                Tell us your group size, preferred dates, and fitness level. We handle high-altitude camping logistics, forest permits, gear, and safety marshals.
               </p>
             </div>
 
@@ -575,147 +617,6 @@ export function PackagesPage({ scrollToExperiences = false }) {
               <MessageCircle className="w-4 h-4 fill-white" />
               <span>Chat with Trek Leader</span>
             </a>
-          </div>
-        </div>
-
-        {/* ── SECTION 3: CURATED EXPERIENCES (MERGED FROM /experiences) ── */}
-        <div id="experiences" className="pt-24 mt-24 border-t border-neutral-200/90 scroll-mt-28">
-          {/* Experiences Section Header */}
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <div className="inline-flex items-center gap-2 mb-3">
-              <span className="w-2 h-2 rounded-full bg-[#FF6B16]"></span>
-              <span className="text-[#FF6B16] font-bold text-xs uppercase tracking-widest">
-                TRAVEL YOUR WAY
-              </span>
-            </div>
-            <h2 className="text-4xl sm:text-5xl font-black text-[#111111] tracking-tight">
-              Curated Experiences
-            </h2>
-            <p className="mt-3 text-neutral-600 text-base sm:text-lg">
-              No two explorers seek the exact same journey. Select your favorite adventure style and let us tailor every mile.
-            </p>
-          </div>
-
-          {/* Experience Blocks */}
-          <div className="space-y-14">
-            {EXPERIENCES.map((exp, idx) => {
-              const Icon = iconMap[exp.icon] || Mountain;
-              const isReversed = idx % 2 === 1;
-              const visual = EXPERIENCE_VISUALS[exp.id] || EXPERIENCE_VISUALS.trekking;
-
-              return (
-                <div
-                  key={exp.id}
-                  id={exp.id}
-                  className={`bg-white rounded-3xl p-6 sm:p-8 lg:p-10 border border-neutral-200 shadow-md flex flex-col ${
-                    isReversed ? 'lg:flex-row-reverse' : 'lg:flex-row'
-                  } gap-8 lg:gap-12 items-center justify-between transition-all duration-300 hover:shadow-xl scroll-mt-32`}
-                >
-                  {/* Visual Postcard & Polaroids Card matching Reference Photo Board Style */}
-                  <div className="w-full lg:w-1/2 aspect-[4/3] sm:aspect-[16/11] lg:aspect-[4/3] rounded-3xl relative overflow-hidden flex flex-col items-center justify-center border border-neutral-200/90 shadow-lg group">
-                    {/* Scenic Mountain Backdrop Image */}
-                    <img
-                      src={visual.bg}
-                      alt={exp.title}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                    />
-                    {/* Subtle dark vignette */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/15 to-black/25" />
-
-                    {/* Centered Cream Plaque */}
-                    <div className="relative z-10 w-[88%] sm:w-[82%] bg-[#FAF8F5] border border-[#E3DDD1] shadow-2xl rounded-2xl p-5 sm:p-7 pt-6 sm:pt-8 text-center flex flex-col items-center select-none -translate-y-6 sm:-translate-y-8">
-                      <span className="text-[11px] sm:text-xs font-black tracking-[0.25em] uppercase text-neutral-800">
-                        {visual.kicker}
-                      </span>
-                      <h3
-                        className="text-lg sm:text-xl md:text-2xl font-serif font-black tracking-tight text-neutral-700 uppercase mt-0.5"
-                        style={{ fontFamily: 'Georgia, serif' }}
-                      >
-                        {visual.highlight}
-                      </h3>
-                      <h4 className="text-xs sm:text-sm md:text-base font-black tracking-wider text-neutral-900 uppercase mt-1">
-                        {visual.subheading}
-                      </h4>
-                      <p className="text-xs sm:text-sm text-neutral-600 mt-2 font-normal italic">
-                        {visual.tagline}
-                      </p>
-                    </div>
-
-                    {/* Overlapping 4 Polaroids fanned out at bottom */}
-                    <div className="absolute -bottom-2 left-0 right-0 z-20 flex justify-center items-end px-2 pb-3 pointer-events-none">
-                      <div className="flex items-end justify-center -space-x-3 sm:-space-x-5 pointer-events-auto">
-                        {visual.polaroids.map((p, pIdx) => {
-                          const rotations = [
-                            'transform -rotate-6 sm:-rotate-12 hover:rotate-0 hover:scale-115 hover:z-30',
-                            'transform -rotate-2 sm:-rotate-4 hover:rotate-0 hover:scale-115 hover:z-30 z-10',
-                            'transform rotate-2 sm:rotate-4 hover:rotate-0 hover:scale-115 hover:z-30 z-10',
-                            'transform rotate-6 sm:rotate-12 hover:rotate-0 hover:scale-115 hover:z-30',
-                          ];
-
-                          return (
-                            <div
-                              key={pIdx}
-                              className={`${rotations[pIdx]} transition-all duration-300 bg-white p-1.5 pb-4 sm:p-2 sm:pb-6 rounded-sm shadow-2xl border border-neutral-200/80 w-18 sm:w-24 md:w-28 shrink-0 cursor-pointer`}
-                            >
-                              <div className="aspect-square overflow-hidden bg-neutral-100 rounded-[1px]">
-                                <img
-                                  src={p.img}
-                                  alt={p.alt}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Details Side */}
-                  <div className="w-full lg:w-1/2 space-y-5">
-                    <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FF6B16]/10 text-[#FF6B16] text-xs font-black uppercase tracking-wider">
-                      <Icon className="w-3.5 h-3.5" />
-                      <span>{exp.count}</span>
-                    </div>
-
-                    <h3 className="text-3xl sm:text-4xl font-black text-[#111111] tracking-tight">
-                      {exp.title} Trips
-                    </h3>
-
-                    <p className="text-neutral-600 text-sm sm:text-base leading-relaxed">
-                      {exp.description}
-                    </p>
-
-                    <div>
-                      <h4 className="text-[11px] font-black uppercase tracking-wider text-neutral-400 mb-2.5">
-                        Popular Trips in this Style:
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {exp.popularTrips.map((trip, i) => (
-                          <span
-                            key={i}
-                            className="px-3.5 py-1.5 rounded-xl bg-[#F7F7F5] border border-neutral-200/80 text-xs font-bold text-neutral-800 hover:border-[#FF6B16] transition-colors"
-                          >
-                            {trip}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="pt-2">
-                      <button
-                        type="button"
-                        onClick={() => handleFilterByExperience(exp.title)}
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#FF6B16] hover:bg-[#ff7d33] text-white text-xs font-black uppercase tracking-wider shadow-md hover:shadow-lg transition-all cursor-pointer"
-                      >
-                        <span>Explore {exp.title} Packages</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
           </div>
         </div>
       </Container>

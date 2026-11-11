@@ -5,13 +5,12 @@ import mongoose from 'mongoose';
 import { DEFAULT_PACKAGES, seedDefaultPackages, seedFaqsForExistingPackages } from '../utils/seedPackages.js';
 
 export const DEFAULT_PACKAGE_CATEGORIES = [
-  { name: 'Trekking', slug: 'trekking', description: 'Himalayan and summit treks, high altitude mountain trails.', order: 1 },
-  { name: 'Honeymoon & Leisure', slug: 'honeymoon-leisure', description: 'Romantic getaways, luxury houseboats, and serene resorts.', order: 2 },
-  { name: 'Adventure', slug: 'adventure', description: 'River rafting, paragliding, ATV rides, and camping.', order: 3 },
-  { name: 'International', slug: 'international', description: 'Exotic global destinations, private villas, and island tours.', order: 4 },
-  { name: 'Weekend Escapes', slug: 'weekend-escapes', description: 'Quick weekend road trips and basecamp stays from major cities.', order: 5 },
-  { name: 'Family Vacation', slug: 'family-vacation', description: 'Comfortable family journeys with sightseeing, safe stays, and curated itineraries.', order: 6 },
-  { name: 'Spiritual & Heritage', slug: 'spiritual-heritage', description: 'Sacred pilgrimages, ancient temples, and heritage trails.', order: 7 },
+  { name: 'Backpacking Trips', slug: 'backpacking-trips', description: 'Custom tour style category for travel packages.', order: 1 },
+  { name: 'Weekend Getaways', slug: 'weekend-getaways', description: 'Quick weekend road trips and basecamp stays from major cities.', order: 2 },
+  { name: 'Treks', slug: 'treks', description: 'Himalayan and summit treks, high altitude mountain trails.', order: 3 },
+  { name: 'Spiritual Tours', slug: 'spiritual-tours', description: 'Sacred pilgrimages, ancient temples, and heritage trails.', order: 4 },
+  { name: 'International', slug: 'international', description: 'Exotic global destinations, private villas, and island tours.', order: 5 },
+  { name: 'Adventure', slug: 'adventure', description: 'River rafting, paragliding, ATV rides, and camping.', order: 6 },
 ];
 
 /**
@@ -49,10 +48,36 @@ export const getPackageCategories = async (req, res) => {
 
     const categories = await PackageCategory.find(filter).sort({ order: 1, name: 1 });
 
+    // Compute live package counts for each category
+    const activePackages = await Package.find({ isActive: true }).select('travelType name');
+    const categoriesWithCount = categories.map((cat) => {
+      const catObj = cat.toObject();
+      const count = activePackages.filter((p) => {
+        const pt = (p.travelType || '').toLowerCase().trim();
+        const pn = (p.name || '').toLowerCase().trim();
+        const ct = cat.name.toLowerCase().trim();
+        if (pt === ct || pt.includes(ct) || ct.includes(pt)) return true;
+
+        const words = ct
+          .split(/[&,/ \-_]+/)
+          .map((w) => w.trim().toLowerCase())
+          .filter((w) => w.length >= 3 && !['trips', 'tours', 'escapes'].includes(w));
+
+        return words.some((w) => {
+          let stem = w;
+          if (stem.endsWith('ing') && stem.length > 5) stem = stem.slice(0, -3);
+          else if (stem.endsWith('s') && stem.length > 3) stem = stem.slice(0, -1);
+          return (pt && pt.includes(stem)) || (pn && pn.includes(stem));
+        });
+      }).length;
+      catObj.packageCount = count;
+      return catObj;
+    });
+
     res.status(200).json({
       success: true,
-      count: categories.length,
-      categories,
+      count: categoriesWithCount.length,
+      categories: categoriesWithCount,
     });
   } catch (error) {
     console.error('[PackageController] getPackageCategories error:', error);
@@ -221,6 +246,37 @@ export const deletePackageCategory = async (req, res) => {
  * @route   GET /api/packages
  * @access  Public
  */
+
+/**
+ * @desc    Sync / restore default categories in DB
+ * @route   POST /api/packages/categories/sync-defaults
+ * @access  Private (Admin)
+ */
+export const syncDefaultCategories = async (req, res) => {
+  try {
+    for (const cat of DEFAULT_PACKAGE_CATEGORIES) {
+      await PackageCategory.findOneAndUpdate(
+        { slug: cat.slug },
+        { $set: { name: cat.name, description: cat.description, order: cat.order, isActive: true } },
+        { upsert: true, new: true }
+      );
+    }
+    const categories = await PackageCategory.find().sort({ order: 1, name: 1 });
+    res.status(200).json({
+      success: true,
+      message: 'Default categories synchronized successfully',
+      categories,
+    });
+  } catch (error) {
+    console.error('[PackageController] syncDefaultCategories error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to sync categories',
+      error: error.message,
+    });
+  }
+};
+
 export const getPackages = async (req, res) => {
   try {
     // If no packages exist in DB, automatically seed defaults
@@ -232,38 +288,72 @@ export const getPackages = async (req, res) => {
       await seedFaqsForExistingPackages();
     }
 
-    const { search, type, maxPrice, trending, featured, all } = req.query;
+    const { search, destination, type, maxPrice, trending, featured, all } = req.query;
 
-    const filter = {};
+    const escapeRegex = (text) => String(text || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    const conditions = [];
 
     // Only active packages for public unless `all=true` (for admin)
     if (all !== 'true') {
-      filter.isActive = true;
+      conditions.push({ isActive: true });
     }
 
     if (trending === 'true') {
-      filter.isTrending = true;
+      conditions.push({ isTrending: true });
     }
 
     if (featured === 'true') {
-      filter.isFeatured = true;
+      conditions.push({ isFeatured: true });
     }
 
     if (type && type !== 'All') {
-      filter.travelType = { $regex: new RegExp(type, 'i') };
+      const cleanType = String(type).trim();
+      const safeType = escapeRegex(cleanType);
+      const typeOr = [{ travelType: { $regex: new RegExp(safeType, 'i') } }];
+
+      // Stem matching for compound or plural categories like "Treks", "Weekend Getaways"
+      const words = cleanType
+        .split(/[&,/ \-_]+/)
+        .map((w) => w.trim().toLowerCase())
+        .filter((w) => w.length >= 3 && !['trips', 'tours', 'escapes'].includes(w));
+
+      for (const word of words) {
+        let stem = word;
+        if (stem.endsWith('ing') && stem.length > 5) stem = stem.slice(0, -3);
+        else if (stem.endsWith('s') && stem.length > 3) stem = stem.slice(0, -1);
+
+        const safeStem = escapeRegex(stem);
+        typeOr.push({ travelType: { $regex: new RegExp(safeStem, 'i') } });
+        typeOr.push({ name: { $regex: new RegExp(safeStem, 'i') } });
+      }
+
+      conditions.push({ $or: typeOr });
     }
 
     if (maxPrice) {
       const numMaxPrice = Number(maxPrice);
       if (!isNaN(numMaxPrice) && numMaxPrice > 0) {
-        filter.price = { $lte: numMaxPrice };
+        conditions.push({ price: { $lte: numMaxPrice } });
       }
     }
 
-    if (search && search.trim()) {
-      const regex = new RegExp(search.trim(), 'i');
-      filter.$or = [{ name: regex }, { location: regex }, { description: regex }];
+    const searchTerm = (search || destination || '').trim();
+    if (searchTerm) {
+      const safeSearch = escapeRegex(searchTerm);
+      const searchRegex = new RegExp(safeSearch, 'i');
+      conditions.push({
+        $or: [
+          { name: searchRegex },
+          { location: searchRegex },
+          { travelType: searchRegex },
+          { description: searchRegex },
+          { badge: searchRegex },
+        ],
+      });
     }
+
+    const filter = conditions.length > 0 ? { $and: conditions } : {};
 
     const packages = await Package.find(filter).sort({ order: 1, createdAt: -1 });
 
@@ -392,6 +482,8 @@ export const createPackage = async (req, res) => {
       duration,
       location,
       price: Number(price),
+      gstRate: req.body.gstRate !== undefined ? Number(req.body.gstRate) : 5,
+      departureCities: Array.isArray(req.body.departureCities) ? req.body.departureCities : ['Ahmedabad', 'Mumbai', 'Pune'],
       originalPrice: originalPrice ? Number(originalPrice) : null,
       pricingType: req.body.pricingType || 'standard',
       pricingTiers: Array.isArray(req.body.pricingTiers) ? req.body.pricingTiers : [],
@@ -471,6 +563,8 @@ export const updatePackage = async (req, res) => {
       'duration',
       'location',
       'price',
+      'gstRate',
+      'departureCities',
       'originalPrice',
       'pricingType',
       'pricingTiers',
@@ -502,6 +596,12 @@ export const updatePackage = async (req, res) => {
       if (req.body[field] !== undefined) {
         if (field === 'reels' && Array.isArray(req.body.reels)) {
           pkg.reels = req.body.reels.slice(0, 5);
+        } else if (field === 'gstRate') {
+          pkg.gstRate = req.body.gstRate !== '' && !isNaN(Number(req.body.gstRate)) ? Number(req.body.gstRate) : 5;
+        } else if (field === 'price') {
+          pkg.price = Number(req.body.price);
+        } else if (field === 'originalPrice') {
+          pkg.originalPrice = req.body.originalPrice ? Number(req.body.originalPrice) : null;
         } else {
           pkg[field] = req.body[field];
         }
@@ -857,6 +957,7 @@ export const checkPackageAvailability = async (req, res) => {
 export const getUpcomingSlots = async (req, res) => {
   try {
     const { id } = req.params;
+    const { city } = req.query;
 
     let pkg = null;
     if (mongoose.Types.ObjectId.isValid(id)) {
@@ -864,6 +965,13 @@ export const getUpcomingSlots = async (req, res) => {
     }
     if (!pkg) {
       pkg = await Package.findOne({ id: id });
+    }
+    if (!pkg) {
+      // Check in DEFAULT_PACKAGES if newly added (e.g. tungnath)
+      const def = DEFAULT_PACKAGES.find((p) => p.id === id);
+      if (def) {
+        pkg = await Package.create(def).catch(() => def);
+      }
     }
 
     if (!pkg) {
@@ -881,7 +989,10 @@ export const getUpcomingSlots = async (req, res) => {
       blackoutDates: [],
     };
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const departureCities = Array.isArray(pkg.departureCities) && pkg.departureCities.length > 0
+      ? pkg.departureCities
+      : ['Ahmedabad', 'Mumbai', 'Pune'];
+
     const scheduleType = avail.scheduleType || 'daily';
     const slots = [];
 
@@ -899,20 +1010,58 @@ export const getUpcomingSlots = async (req, res) => {
       }
     };
 
+    const formatDayMonth = (dateStr) => {
+      try {
+        const d = new Date(`${dateStr}T00:00:00`);
+        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+      } catch {
+        return dateStr;
+      }
+    };
+
+    const durationDays = parseInt(pkg.duration) || 5;
+
     // 1. Explicit upcoming batches
     if (avail.batches && avail.batches.length > 0) {
-      const upcomingBatches = avail.batches
-        .filter((b) => b.startDate >= todayStr)
-        .sort((a, b) => a.startDate.localeCompare(b.startDate));
+      let filteredBatches = avail.batches;
+      if (city) {
+        const cityMatch = avail.batches.filter(
+          (b) => b.city && b.city.toLowerCase() === city.toLowerCase()
+        );
+        if (cityMatch.length > 0) {
+          filteredBatches = cityMatch;
+        }
+      }
 
-      upcomingBatches.forEach((b) => {
+      filteredBatches.sort((a, b) => (a.startDate || '').localeCompare(b.startDate || ''));
+
+      filteredBatches.forEach((b) => {
         const total = b.totalSeats || avail.defaultSeatsPerBatch || 16;
         const booked = b.bookedSeats || 0;
         const left = Math.max(0, total - booked);
+
+        let endDate = b.endDate;
+        if (!endDate && b.startDate) {
+          try {
+            const endD = new Date(`${b.startDate}T00:00:00`);
+            endD.setDate(endD.getDate() + (durationDays - 1));
+            endDate = endD.toISOString().split('T')[0];
+          } catch {
+            endDate = '';
+          }
+        }
+
+        const rangeLabel = endDate
+          ? `${formatDayMonth(b.startDate)} - ${formatDayMonth(endDate)}`
+          : formatNiceDate(b.startDate);
+
         slots.push({
           date: b.startDate,
-          endDate: b.endDate || '',
+          startDate: b.startDate,
+          endDate: endDate || '',
+          city: b.city || city || 'Ahmedabad',
           label: formatNiceDate(b.startDate),
+          rangeLabel,
           totalSeats: total,
           seatsLeft: left,
           status:
@@ -927,31 +1076,34 @@ export const getUpcomingSlots = async (req, res) => {
       });
     }
 
-    // 2. If schedule is 'weekends' and not enough batches defined, auto-generate upcoming weekends
-    if (scheduleType === 'weekends' && slots.length < 8) {
+    // 2. If no batches or not enough slots, auto-generate for weekends / daily
+    if (slots.length === 0) {
       const existingDates = new Set(slots.map((s) => s.date));
       const blackoutSet = new Set((avail.blackoutDates || []).map((b) => b.date));
 
       const cursor = new Date();
-      cursor.setDate(cursor.getDate() + (avail.minAdvanceNoticeDays || 1));
+      cursor.setDate(cursor.getDate() + (avail.minAdvanceNoticeDays || 2));
 
-      for (let i = 0; i < 45 && slots.length < 10; i++) {
+      for (let i = 0; i < 45 && slots.length < 8; i++) {
         const dayOfWeek = cursor.getDay();
         const dateStr = cursor.toISOString().split('T')[0];
 
-        if (
-          (dayOfWeek === 5 || dayOfWeek === 6) &&
-          !existingDates.has(dateStr) &&
-          !blackoutSet.has(dateStr)
-        ) {
+        if ((dayOfWeek === 5 || dayOfWeek === 6 || scheduleType === 'daily') && !existingDates.has(dateStr) && !blackoutSet.has(dateStr)) {
+          const endD = new Date(cursor);
+          endD.setDate(endD.getDate() + (durationDays - 1));
+          const endDateStr = endD.toISOString().split('T')[0];
+
           slots.push({
             date: dateStr,
-            endDate: '',
+            startDate: dateStr,
+            endDate: endDateStr,
+            city: city || 'Ahmedabad',
             label: formatNiceDate(dateStr),
+            rangeLabel: `${formatDayMonth(dateStr)} - ${formatDayMonth(endDateStr)}`,
             totalSeats: avail.defaultSeatsPerBatch || 16,
             seatsLeft: avail.defaultSeatsPerBatch || 16,
             status: 'available',
-            note: dayOfWeek === 5 ? 'Friday Weekend Departure' : 'Saturday Weekend Departure',
+            note: dayOfWeek === 5 ? 'Friday Departure' : 'Saturday Departure',
             isBatch: false,
           });
           existingDates.add(dateStr);
@@ -960,38 +1112,11 @@ export const getUpcomingSlots = async (req, res) => {
       }
     }
 
-    // 3. If schedule is 'daily' and not enough slots, auto-generate next 14 daily slots
-    if ((scheduleType === 'daily' || scheduleType === 'custom') && slots.length < 10) {
-      const existingDates = new Set(slots.map((s) => s.date));
-      const blackoutSet = new Set((avail.blackoutDates || []).map((b) => b.date));
-
-      const cursor = new Date();
-      cursor.setDate(cursor.getDate() + (avail.minAdvanceNoticeDays || 1));
-
-      for (let i = 0; i < 30 && slots.length < 14; i++) {
-        const dateStr = cursor.toISOString().split('T')[0];
-        if (!existingDates.has(dateStr) && !blackoutSet.has(dateStr)) {
-          slots.push({
-            date: dateStr,
-            endDate: '',
-            label: formatNiceDate(dateStr),
-            totalSeats: avail.defaultSeatsPerBatch || 16,
-            seatsLeft: avail.defaultSeatsPerBatch || 16,
-            status: 'available',
-            note: 'Daily Departure',
-            isBatch: false,
-          });
-          existingDates.add(dateStr);
-        }
-        cursor.setDate(cursor.getDate() + 1);
-      }
-    }
-
-    // Sort final slots chronologically
-    slots.sort((a, b) => a.date.localeCompare(b.date));
+    slots.sort((a, b) => (a.startDate || a.date).localeCompare(b.startDate || b.date));
 
     res.status(200).json({
       success: true,
+      departureCities,
       scheduleType,
       defaultSeats: avail.defaultSeatsPerBatch || 16,
       minAdvanceNoticeDays: avail.minAdvanceNoticeDays || 1,

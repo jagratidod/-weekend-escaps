@@ -4,13 +4,12 @@ import { useAuth } from './AuthContext';
 import { PACKAGES as DEFAULT_PACKAGES } from '../data/packages';
 
 export const DEFAULT_PACKAGE_CATEGORIES = [
-  { _id: 'cat_1', name: 'Trekking', slug: 'trekking', description: 'Himalayan and summit treks, high altitude mountain trails.', order: 1, isActive: true },
-  { _id: 'cat_2', name: 'Honeymoon & Leisure', slug: 'honeymoon-leisure', description: 'Romantic getaways, luxury houseboats, and serene resorts.', order: 2, isActive: true },
-  { _id: 'cat_3', name: 'Adventure', slug: 'adventure', description: 'River rafting, paragliding, ATV rides, and camping.', order: 3, isActive: true },
-  { _id: 'cat_4', name: 'International', slug: 'international', description: 'Exotic global destinations, private villas, and island tours.', order: 4, isActive: true },
-  { _id: 'cat_5', name: 'Weekend Escapes', slug: 'weekend-escapes', description: 'Quick weekend road trips and basecamp stays from major cities.', order: 5, isActive: true },
-  { _id: 'cat_6', name: 'Family Vacation', slug: 'family-vacation', description: 'Comfortable family journeys with sightseeing, safe stays, and curated itineraries.', order: 6, isActive: true },
-  { _id: 'cat_7', name: 'Spiritual & Heritage', slug: 'spiritual-heritage', description: 'Sacred pilgrimages, ancient temples, and heritage trails.', order: 7, isActive: true },
+  { _id: 'cat_1', name: 'Backpacking Trips', slug: 'backpacking-trips', description: 'Custom tour style category for travel packages.', order: 1, isActive: true },
+  { _id: 'cat_2', name: 'Weekend Getaways', slug: 'weekend-getaways', description: 'Quick weekend road trips and basecamp stays from major cities.', order: 2, isActive: true },
+  { _id: 'cat_3', name: 'Treks', slug: 'treks', description: 'Himalayan and summit treks, high altitude mountain trails.', order: 3, isActive: true },
+  { _id: 'cat_4', name: 'Spiritual Tours', slug: 'spiritual-tours', description: 'Sacred pilgrimages, ancient temples, and heritage trails.', order: 4, isActive: true },
+  { _id: 'cat_5', name: 'International', slug: 'international', description: 'Exotic global destinations, private villas, and island tours.', order: 5, isActive: true },
+  { _id: 'cat_6', name: 'Adventure', slug: 'adventure', description: 'River rafting, paragliding, ATV rides, and camping.', order: 6, isActive: true },
 ];
 
 export const PACKAGES_CACHE_KEY = 'we_cached_packages';
@@ -37,7 +36,12 @@ export const getInitialCachedCategories = () => {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        const hasValidCategory = parsed.some(
+          (c) => c.name === 'Backpacking Trips' || c.name === 'Treks' || c.name === 'Weekend Getaways'
+        );
+        if (hasValidCategory) {
+          return parsed;
+        }
       }
     }
   } catch (err) {
@@ -251,6 +255,26 @@ export function PackageProvider({ children }) {
   };
 
   // ── CATEGORY CRUD ──
+    const syncCategories = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/packages/categories/sync-defaults`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchCategories(true);
+        return { success: true, message: data.message };
+      }
+      throw new Error(data.message || 'Sync failed');
+    } catch (err) {
+      console.error('[PackageContext] syncCategories error:', err);
+      return { success: false, message: err.message };
+    }
+  };
+
   const createCategory = async (categoryData) => {
     try {
       const res = await fetch(`${API_BASE_URL}/packages/categories`, {
@@ -350,15 +374,87 @@ export function PackageProvider({ children }) {
     }
   };
 
-  const getUpcomingSlots = async (packageId) => {
+  const getUpcomingSlots = async (packageId, city = '') => {
     try {
-      const res = await fetch(`${API_BASE_URL}/packages/${packageId}/slots`);
+      const cityQuery = city ? `?city=${encodeURIComponent(city)}` : '';
+      const res = await fetch(`${API_BASE_URL}/packages/${packageId}/slots${cityQuery}`);
       if (res.ok) {
-        return await res.json();
+        const data = await res.json();
+        if (data.success && Array.isArray(data.slots) && data.slots.length > 0) {
+          return data;
+        }
       }
     } catch (err) {
       console.warn('[PackageContext] Upcoming slots fallback:', err.message);
     }
+
+    // Local in-memory fallback
+    const pkg =
+      packages.find((p) => p.id === packageId || p._id === packageId) ||
+      DEFAULT_PACKAGES.find((p) => p.id === packageId);
+
+    if (pkg) {
+      const departureCities =
+        Array.isArray(pkg.departureCities) && pkg.departureCities.length > 0
+          ? pkg.departureCities
+          : ['Ahmedabad', 'Mumbai', 'Pune'];
+
+      const avail = pkg.availability || {};
+      const batches = Array.isArray(avail.batches) ? avail.batches : [];
+
+      let filtered = batches;
+      if (city) {
+        const cityMatch = batches.filter(
+          (b) => b.city && b.city.toLowerCase() === city.toLowerCase()
+        );
+        if (cityMatch.length > 0) filtered = cityMatch;
+      }
+
+      const formatDayMonth = (dateStr) => {
+        try {
+          const d = new Date(`${dateStr}T00:00:00`);
+          return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+        } catch {
+          return dateStr;
+        }
+      };
+
+      const durationDays = parseInt(pkg.duration) || 5;
+
+      const slots = filtered.map((b) => {
+        let endDate = b.endDate;
+        if (!endDate && b.startDate) {
+          try {
+            const endD = new Date(`${b.startDate}T00:00:00`);
+            endD.setDate(endD.getDate() + (durationDays - 1));
+            endDate = endD.toISOString().split('T')[0];
+          } catch {
+            endDate = '';
+          }
+        }
+        return {
+          date: b.startDate,
+          startDate: b.startDate,
+          endDate: endDate || '',
+          city: b.city || city || 'Ahmedabad',
+          rangeLabel: endDate
+            ? `${formatDayMonth(b.startDate)} - ${formatDayMonth(endDate)}`
+            : b.startDate,
+          totalSeats: b.totalSeats || 16,
+          seatsLeft: Math.max(0, (b.totalSeats || 16) - (b.bookedSeats || 0)),
+          status: b.status || 'available',
+          note: b.note || '',
+          isBatch: true,
+        };
+      });
+
+      return {
+        success: true,
+        departureCities,
+        slots,
+      };
+    }
+
     return { success: false, slots: [] };
   };
 
@@ -403,6 +499,7 @@ export function PackageProvider({ children }) {
     createCategory,
     updateCategory,
     deleteCategory,
+    syncCategories,
     checkAvailability,
     getUpcomingSlots,
   };
