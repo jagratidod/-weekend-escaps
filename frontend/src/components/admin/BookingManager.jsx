@@ -56,7 +56,6 @@ export default function BookingManager() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [medicalOnly, setMedicalOnly] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [copiedRef, setCopiedRef] = useState('');
@@ -73,7 +72,6 @@ export default function BookingManager() {
       const params = new URLSearchParams();
       if (selectedStatus !== 'all') params.append('status', selectedStatus);
       if (search.trim()) params.append('search', search.trim());
-      if (medicalOnly) params.append('medicalOnly', 'true');
 
       const res = await fetch(`${API_BASE_URL}/bookings?${params.toString()}`, {
         headers: {
@@ -95,7 +93,7 @@ export default function BookingManager() {
 
   useEffect(() => {
     fetchBookings();
-  }, [selectedStatus, medicalOnly]);
+  }, [selectedStatus]);
 
   // Debounced search
   useEffect(() => {
@@ -317,7 +315,7 @@ export default function BookingManager() {
               </h1>
             </div>
             <p className="text-xs text-neutral-500 mt-1">
-              Track traveler reservations, manage departure manifests, payments, and mountain medical safety.
+              Track traveler reservations, manage departure manifests, payments, and booking statuses.
             </p>
           </div>
 
@@ -402,23 +400,8 @@ export default function BookingManager() {
           ))}
         </div>
 
-        {/* Search Bar + Medical Filter */}
+        {/* Search Bar */}
         <div className="flex items-center gap-2">
-          {/* Medical Alert Filter Toggle */}
-          <button
-            type="button"
-            onClick={() => setMedicalOnly(!medicalOnly)}
-            className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition-all cursor-pointer ${
-              medicalOnly
-                ? 'bg-rose-50 border-rose-300 text-rose-700 ring-2 ring-rose-200'
-                : 'border-neutral-200 text-neutral-600 hover:bg-neutral-50'
-            }`}
-            title="Filter by travelers with medical conditions"
-          >
-            <HeartPulse className="w-3.5 h-3.5 text-rose-500" />
-            <span>Medical Alerts ({stats.medicalAlerts})</span>
-          </button>
-
           {/* Search Input */}
           <div className="relative flex-1 sm:w-64">
             <input
@@ -445,7 +428,7 @@ export default function BookingManager() {
             <CalendarCheck className="w-10 h-10 text-neutral-300 mx-auto" />
             <p className="text-sm font-bold text-neutral-700">No bookings found</p>
             <p className="text-xs text-neutral-400">
-              {search || selectedStatus !== 'all' || medicalOnly
+              {search || selectedStatus !== 'all'
                 ? 'Try adjusting your search filters.'
                 : 'Customer bookings submitted from the website will appear here in real time.'}
             </p>
@@ -517,22 +500,29 @@ export default function BookingManager() {
                       {/* Tour Package & Date */}
                       <td className="py-3 px-4">
                         <p className="font-bold text-[#1A384C]">{booking.packageName}</p>
-                        <div className="flex items-center gap-1 text-[11px] text-neutral-500 mt-0.5">
-                          <Calendar className="w-3 h-3 text-[#FF6B16]" />
-                          <span>{booking.friendlyTravelDate || booking.travelDate}</span>
+                        <div className="flex items-center gap-1.5 text-[11px] text-neutral-500 mt-1 flex-wrap">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3 text-[#FF6B16]" />
+                            <span>{booking.friendlyTravelDate || booking.travelDate}</span>
+                          </div>
+                          {booking.departureCity && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                              <MapPin className="w-2.5 h-2.5 text-sky-600" />
+                              {booking.departureCity}
+                            </span>
+                          )}
                         </div>
                       </td>
 
-                      {/* Travelers & Medical */}
+                      {/* Travelers & Occupancy */}
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1.5 font-semibold text-neutral-800">
                           <Users className="w-3.5 h-3.5 text-neutral-400" />
                           <span>{booking.totalPersons} Person(s)</span>
                         </div>
-                        {booking.hasMedicalAlert && (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-black bg-rose-100 text-rose-700 mt-1">
-                            <HeartPulse className="w-2.5 h-2.5" />
-                            <span>Medical Alert</span>
+                        {booking.sharingType && (
+                          <span className="text-[10px] text-neutral-500 font-medium block truncate max-w-[130px]" title={booking.sharingType}>
+                            {booking.sharingType}
                           </span>
                         )}
                       </td>
@@ -633,12 +623,6 @@ export default function BookingManager() {
                     {selectedBooking.bookingRef}
                   </span>
                   {getStatusBadge(selectedBooking.bookingStatus)}
-                  {selectedBooking.hasMedicalAlert && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-700">
-                      <HeartPulse className="w-3 h-3" />
-                      <span>Medical Disclaimer</span>
-                    </span>
-                  )}
                 </div>
                 <p className="text-xs text-neutral-500 mt-0.5">
                   Registered on {new Date(selectedBooking.createdAt).toLocaleString('en-GB')}
@@ -675,10 +659,20 @@ export default function BookingManager() {
                   <h3 className="text-base font-black text-[#1A384C]">
                     {selectedBooking.packageName}
                   </h3>
-                  <div className="flex items-center gap-3 text-neutral-600 mt-1">
+                  <div className="flex items-center gap-2.5 text-neutral-600 mt-1.5 flex-wrap">
                     <span>Date: <strong>{selectedBooking.friendlyTravelDate || selectedBooking.travelDate}</strong></span>
                     <span>•</span>
                     <span>Travelers: <strong>{selectedBooking.totalPersons} Person(s)</strong></span>
+                    <span>•</span>
+                    <span className="inline-flex items-center gap-1 text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200 font-bold">
+                      <MapPin className="w-3 h-3 text-sky-600" />
+                      Boarding: {selectedBooking.departureCity || 'Ahmedabad'}
+                    </span>
+                    <span>•</span>
+                    <span className="inline-flex items-center gap-1 text-orange-700 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200 font-bold">
+                      <Tag className="w-3 h-3 text-orange-600" />
+                      {selectedBooking.sharingType || 'Standard Sharing'}
+                    </span>
                   </div>
                 </div>
 
@@ -792,7 +786,7 @@ export default function BookingManager() {
                       key={t.id || idx}
                       className="p-3 rounded-xl border border-neutral-200/90 bg-[#FAFBFD] space-y-1.5"
                     >
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center gap-2">
                           <span className="w-5 h-5 rounded-full bg-[#1A384C] text-white text-[10px] font-black flex items-center justify-center">
                             {idx + 1}
@@ -804,8 +798,19 @@ export default function BookingManager() {
                             </span>
                           )}
                         </div>
-                        <div className="text-neutral-500 text-[11px]">
-                          <span>{t.gender || 'N/A'}</span>, <span>Age: {t.age || 'N/A'}</span>
+                        <div className="flex items-center gap-2 text-neutral-500 text-[11px] flex-wrap">
+                          <span>{t.gender || 'N/A'}</span>
+                          <span>•</span>
+                          <span>Age: {t.age || 'N/A'}</span>
+                          {t.phone && (
+                            <>
+                              <span>•</span>
+                              <span className="font-mono text-neutral-700 font-bold flex items-center gap-1">
+                                <Phone className="w-3 h-3 text-neutral-400" />
+                                {t.phone}
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
 
@@ -831,13 +836,19 @@ export default function BookingManager() {
                 </span>
                 <div className="space-y-1.5 pt-1">
                   <div className="flex justify-between text-neutral-600">
-                    <span>Base Package Price (x{selectedBooking.totalPersons}):</span>
+                    <span>Base Package Price (x{selectedBooking.totalPersons}) - {selectedBooking.sharingType || 'Standard'}:</span>
                     <span>{formatCurrency(selectedBooking.pricing?.subtotal || 0)}</span>
                   </div>
                   {selectedBooking.pricing?.discountAmount > 0 && (
                     <div className="flex justify-between text-emerald-700 font-semibold">
                       <span>Discount (Coupon: {selectedBooking.pricing?.couponCode || 'PROMO'}):</span>
                       <span>-{formatCurrency(selectedBooking.pricing?.discountAmount)}</span>
+                    </div>
+                  )}
+                  {Number(selectedBooking.pricing?.gstAmount) > 0 && (
+                    <div className="flex justify-between text-neutral-600">
+                      <span>GST ({selectedBooking.pricing?.gstRate ?? 5}%):</span>
+                      <span>{formatCurrency(selectedBooking.pricing?.gstAmount)}</span>
                     </div>
                   )}
                   <div className="flex justify-between font-bold text-neutral-900 border-t border-neutral-200 pt-1.5">

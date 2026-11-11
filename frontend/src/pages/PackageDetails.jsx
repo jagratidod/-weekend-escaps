@@ -468,7 +468,7 @@ export function PackageDetails() {
 
           {/* Right Column: Pricing & Smart Availability Booking Card */}
           <div className="lg:col-span-4">
-            <div className="sticky top-28 bg-white rounded-3xl p-6 sm:p-7 border border-neutral-200/80 shadow-xl space-y-5">
+            <div className="sticky top-28 bg-white rounded-3xl p-5 sm:p-6 border border-neutral-200/80 shadow-xl space-y-5">
               {/* Price Row */}
               <div className="flex items-center justify-between pb-4 border-b border-neutral-100">
                 <div>
@@ -564,7 +564,7 @@ export function PackageDetails() {
                   </span>
                 </div>
 
-                {/* Primary CTA */}
+                {/* Primary CTA & Custom Dates Row */}
                 {pkg?.isPrivateTrek ? (
                   <a
                     href={
@@ -576,43 +576,57 @@ export function PackageDetails() {
                     }
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full py-4 rounded-full font-black text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg bg-[#25D366] hover:bg-[#20ba5a] text-white shadow-[#25D366]/30 active:scale-[0.99]"
+                    className="w-full h-12 rounded-xl font-black text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg bg-[#25D366] hover:bg-[#20ba5a] text-white shadow-[#25D366]/30 active:scale-[0.99]"
                   >
-                    <MessageCircle className="w-4 h-4 fill-white" />
+                    <MessageCircle className="w-5 h-5 fill-white" />
                     <span>Inquire on WhatsApp</span>
                   </a>
                 ) : (
-                  <button
-                    type="submit"
-                    disabled={availabilityResult && availabilityResult.available === false}
-                    className={`w-full py-4 rounded-full font-black text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg ${
-                      availabilityResult && availabilityResult.available === false
-                        ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed shadow-none'
-                        : 'bg-[#FF6B16] hover:bg-[#e05809] active:scale-[0.99] text-white shadow-[#FF6B16]/30'
-                    }`}
-                  >
-                    <span>
-                      {availabilityResult && availabilityResult.available === false
-                        ? 'SELECT ANOTHER DATE'
-                        : 'PROCEED TO BOOKING'}
-                    </span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
+                  <div className="space-y-2 pt-1">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="submit"
+                        disabled={availabilityResult && availabilityResult.available === false}
+                        className={`flex-1 min-w-0 h-12 px-3 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md ${
+                          availabilityResult && availabilityResult.available === false
+                            ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed shadow-none'
+                            : 'bg-[#FF6B16] hover:bg-[#e05809] active:scale-[0.99] text-white shadow-[#FF6B16]/25'
+                        }`}
+                      >
+                        <span className="truncate">
+                          {availabilityResult && availabilityResult.available === false
+                            ? 'SELECT ANOTHER DATE'
+                            : 'PROCEED TO BOOKING'}
+                        </span>
+                        <ArrowRight className="w-4 h-4 shrink-0" />
+                      </button>
+
+                      <a
+                        href={packageWaUrl || BRAND.whatsappUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Custom Dates? Inquire on WhatsApp"
+                        aria-label="Inquire on WhatsApp"
+                        className="h-12 w-12 shrink-0 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 hover:border-emerald-400 text-emerald-600 flex items-center justify-center transition-all cursor-pointer shadow-xs group"
+                      >
+                        <MessageCircle className="w-5 h-5 text-emerald-600 group-hover:scale-110 transition-transform" />
+                      </a>
+                    </div>
+
+                    <p className="text-[11px] text-neutral-400 text-center font-medium">
+                      Need custom dates or private batch?{' '}
+                      <a
+                        href={packageWaUrl || BRAND.whatsappUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-emerald-600 hover:text-emerald-700 font-bold hover:underline"
+                      >
+                        Chat on WhatsApp
+                      </a>
+                    </p>
+                  </div>
                 )}
               </form>
-
-              {/* WhatsApp Support Button */}
-              <div className="pt-3 border-t border-neutral-100">
-                <a
-                  href={packageWaUrl || BRAND.whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-2.5 rounded-full border border-neutral-300 hover:border-emerald-500 hover:bg-emerald-50/50 text-neutral-800 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
-                >
-                  <MessageCircle className="w-4 h-4 text-emerald-600" />
-                  <span>Custom Dates? Inquire on WhatsApp</span>
-                </a>
-              </div>
             </div>
           </div>
         </div>

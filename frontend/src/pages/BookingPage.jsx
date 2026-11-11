@@ -442,6 +442,8 @@ export function BookingPage() {
         subtotal,
         couponCode: appliedDiscount > 0 ? couponCode : '',
         discountAmount: appliedDiscount,
+        gstRate,
+        gstAmount,
         totalPayable,
         advanceAmount: advancePayable,
         paymentOption,
