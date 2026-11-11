@@ -79,10 +79,10 @@ export function Footer() {
         {/* Main Footer Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8 pb-14 border-b border-neutral-800">
           {/* Col 1: Brand & Logo */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-4 text-center md:text-left flex flex-col items-center md:items-start">
             <Link to="/" className="inline-block">
               {/* Logo with light styling */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center md:justify-start gap-3">
                 <img
                   src={
                     (footerLogoUrl && !footerLogoUrl.includes('/logo/weekend-escapes-logo.svg'))
@@ -103,7 +103,7 @@ export function Footer() {
                 />
               </div>
             </Link>
-            <p className="text-neutral-400 text-sm leading-relaxed max-w-sm">
+            <p className="text-neutral-400 text-sm leading-relaxed max-w-sm mx-auto md:mx-0">
               Crafting adventures, creating unforgettable memories. From high-altitude Himalayan summits to tropical island sanctuaries, we turn travel dreams into reality.
             </p>
             <div className="pt-2">
@@ -115,7 +115,7 @@ export function Footer() {
           </div>
 
           {/* Col 2: Quick Links */}
-          <div className="space-y-4">
+          <div className="space-y-4 text-center md:text-left">
             <h4 className="text-sm font-bold tracking-wider uppercase text-white/90">
               Quick Links
             </h4>
@@ -144,7 +144,7 @@ export function Footer() {
           </div>
 
           {/* Col 3: Travel Info */}
-          <div className="space-y-4">
+          <div className="space-y-4 text-center md:text-left">
             <h4 className="text-sm font-bold tracking-wider uppercase text-white/90">
               Travel Info
             </h4>
@@ -178,29 +178,29 @@ export function Footer() {
           </div>
 
           {/* Col 4: Contact & Subscribe */}
-          <div className="space-y-4">
+          <div className="space-y-4 text-center md:text-left">
             <h4 className="text-sm font-bold tracking-wider uppercase text-white/90">
               Contact Us
             </h4>
             <div className="space-y-2.5 text-xs text-neutral-400">
-              <p className="flex items-start gap-2.5">
+              <p className="flex items-start justify-center md:justify-start gap-2.5 text-center md:text-left">
                 <MapPin className="w-4 h-4 text-[#FF6B16] shrink-0 mt-0.5" />
                 <span>{contactInfo?.address || BRAND.address}</span>
               </p>
-              <p className="flex items-center gap-2.5">
+              <p className="flex items-center justify-center md:justify-start gap-2.5">
                 <Mail className="w-4 h-4 text-[#FF6B16] shrink-0" />
                 <a href={`mailto:${contactInfo?.emailPrimary || BRAND.email}`} className="hover:text-white transition-colors">
                   {contactInfo?.emailPrimary || BRAND.email}
                 </a>
               </p>
-              <p className="flex items-center gap-2.5">
+              <p className="flex items-center justify-center md:justify-start gap-2.5">
                 <Phone className="w-4 h-4 text-[#FF6B16] shrink-0" />
                 <a href={`tel:${contactInfo?.phone || BRAND.phone}`} className="hover:text-white transition-colors">
                   {contactInfo?.phone || BRAND.phone}
                 </a>
               </p>
               {whatsappNumber && (
-                <p className="flex items-center gap-2.5">
+                <p className="flex items-center justify-center md:justify-start gap-2.5">
                   <MessageCircle className="w-4 h-4 text-emerald-500 shrink-0" />
                   <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 transition-colors">
                     {whatsappNumber}
@@ -210,7 +210,7 @@ export function Footer() {
             </div>
 
             {/* Social Icons */}
-            <div className="flex items-center gap-2.5 pt-2">
+            <div className="flex items-center justify-center md:justify-start gap-2.5 pt-2">
               <a
                 href={whatsappUrl}
                 target="_blank"
@@ -262,7 +262,7 @@ export function Footer() {
             {/* Newsletter Subscription */}
             <div className="pt-2">
               <h5 className="text-xs font-bold text-neutral-300 mb-2">Subscribe for Travel Updates</h5>
-              <form onSubmit={handleSubscribe} className="relative flex items-center">
+              <form onSubmit={handleSubscribe} className="relative flex items-center max-w-sm mx-auto md:mx-0">
                 <input
                   type="email"
                   value={email}
@@ -273,14 +273,14 @@ export function Footer() {
                 <button
                   type="submit"
                   aria-label="Subscribe"
-                  className="absolute right-1 w-7 h-7 rounded-full bg-[#FF6B16] hover:bg-[#e05809] text-white flex items-center justify-center transition-all"
+                  className="absolute right-1 w-7 h-7 rounded-full bg-[#FF6B16] hover:bg-[#e05809] text-white flex items-center justify-center transition-all cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
                 </button>
               </form>
               {error && <p className="text-[11px] text-red-400 mt-1">{error}</p>}
               {subscribed && (
-                <p className="flex items-center gap-1 text-[11px] text-emerald-400 mt-1">
+                <p className="flex items-center justify-center md:justify-start gap-1 text-[11px] text-emerald-400 mt-1">
                   <CheckCircle2 className="w-3 h-3" /> Subscribed successfully!
                 </p>
               )}
@@ -289,9 +289,9 @@ export function Footer() {
         </div>
 
         {/* Bottom copyright line */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500">
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500 text-center sm:text-left">
           <p>© {new Date().getFullYear()} Weekend Escapes. All rights reserved.</p>
-          <p className="flex items-center gap-1">
+          <p className="flex items-center justify-center sm:justify-start gap-1">
             Made with <Heart className="w-3.5 h-3.5 text-[#FF6B16] fill-[#FF6B16]" /> for explorers & wanderers
           </p>
         </div>

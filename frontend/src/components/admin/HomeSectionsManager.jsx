@@ -883,10 +883,7 @@ export default function HomeSectionsManager() {
                     {formData.hero?.primaryButtonText || 'Explore Packages'}
                   </span>
                 </div>
-                <div className="mt-4 flex items-center gap-2 text-xs font-bold text-neutral-800">
-                  <span>★ {formData.hero?.socialProof?.rating || '4.9'}</span>
-                  <span>{formData.hero?.socialProof?.travelersText || '500+ Happy Travelers'}</span>
-                </div>
+
               </div>
             </div>
           </div>
@@ -1079,82 +1076,6 @@ export default function HomeSectionsManager() {
                 }
                 className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:border-[#FF6B16]"
               />
-            </div>
-
-            <h3 className="text-base font-black text-[#1A384C] border-b pb-3 pt-4">Social Proof & Ratings</h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-neutral-700 mb-1">Happy Travelers Text</label>
-                <input
-                  type="text"
-                  value={formData.hero?.socialProof?.travelersText || ''}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      hero: {
-                        ...formData.hero,
-                        socialProof: { ...formData.hero.socialProof, travelersText: e.target.value },
-                      },
-                    })
-                  }
-                  className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:border-[#FF6B16]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-neutral-700 mb-1">Rating Score</label>
-                <input
-                  type="text"
-                  value={formData.hero?.socialProof?.rating || ''}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      hero: {
-                        ...formData.hero,
-                        socialProof: { ...formData.hero.socialProof, rating: e.target.value },
-                      },
-                    })
-                  }
-                  className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:border-[#FF6B16]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-neutral-700 mb-1">Reviews Count Text</label>
-                <input
-                  type="text"
-                  value={formData.hero?.socialProof?.reviewsText || ''}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      hero: {
-                        ...formData.hero,
-                        socialProof: { ...formData.hero.socialProof, reviewsText: e.target.value },
-                      },
-                    })
-                  }
-                  className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:border-[#FF6B16]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-neutral-700 mb-1">Avatar Stack Count</label>
-                <input
-                  type="text"
-                  value={formData.hero?.socialProof?.badgeCount || ''}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      hero: {
-                        ...formData.hero,
-                        socialProof: { ...formData.hero.socialProof, badgeCount: e.target.value },
-                      },
-                    })
-                  }
-                  className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:border-[#FF6B16]"
-                />
-              </div>
             </div>
 
             <div className="pt-2 flex justify-end">

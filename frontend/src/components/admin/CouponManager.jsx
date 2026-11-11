@@ -61,7 +61,7 @@ export default function CouponManager() {
     code: '',
     title: '',
     description: '',
-    discountType: 'percentage',
+    discountType: 'flat', // 'flat' (Total Amount) | 'per_person' | 'percentage'
     discountValue: '',
     maxDiscount: '',
     minBookingAmount: '',
@@ -123,7 +123,7 @@ export default function CouponManager() {
       code: '',
       title: '',
       description: '',
-      discountType: 'percentage',
+      discountType: 'flat',
       discountValue: '',
       maxDiscount: '',
       minBookingAmount: '',
@@ -538,9 +538,9 @@ export default function CouponManager() {
             className="h-10 px-3 text-xs font-semibold rounded-xl border border-neutral-200 bg-white text-neutral-700 outline-none focus:border-[#FF6B16] cursor-pointer"
           >
             <option value="all">All Discount Types</option>
+            <option value="flat">Total Amount (Flat ₹)</option>
+            <option value="per_person">Per Person / Traveler (₹)</option>
             <option value="percentage">Percentage (%)</option>
-            <option value="flat">Flat Discount (₹)</option>
-            <option value="per_person">Per Person (₹)</option>
           </select>
         </div>
       </div>
@@ -946,55 +946,193 @@ export default function CouponManager() {
                 )}
               </div>
 
-              {/* Row 2: Discount Type & Value */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-neutral-700 mb-1.5">
-                    Discount Type *
+              {/* ── Discount Application Type / Scope ── */}
+              <div className="p-4 rounded-2xl bg-neutral-50 border border-neutral-200/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-black uppercase tracking-wider text-neutral-800">
+                    Discount Calculation Type *
                   </label>
-                  <select
-                    value={formData.discountType}
-                    onChange={(e) => handleInputChange('discountType', e.target.value)}
-                    className="w-full h-11 px-3.5 rounded-xl border border-neutral-200 bg-white text-xs sm:text-sm font-semibold outline-none focus:border-[#FF6B16] focus:ring-2 focus:ring-[#FF6B16]/10 cursor-pointer"
-                  >
-                    <option value="percentage">Percentage (%) Discount</option>
-                    <option value="flat">Flat Amount (₹) Off</option>
-                    <option value="per_person">Per Person (₹) Discount</option>
-                  </select>
+                  <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+                    Total Amount vs Per Person vs %
+                  </span>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-neutral-700 mb-1.5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {/* Card 1: Total Amount (Flat) */}
+                  <button
+                    type="button"
+                    onClick={() => handleInputChange('discountType', 'flat')}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                      formData.discountType === 'flat'
+                        ? 'bg-white border-[#FF6B16] shadow-xs ring-1 ring-[#FF6B16]/30'
+                        : 'bg-white/60 border-neutral-200 hover:border-neutral-300'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                            formData.discountType === 'flat'
+                              ? 'border-[#FF6B16] bg-[#FF6B16]'
+                              : 'border-neutral-300'
+                          }`}
+                        >
+                          {formData.discountType === 'flat' && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                          )}
+                        </div>
+                        <span className="text-xs font-bold text-neutral-900">
+                          Total Amount (Flat ₹)
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-neutral-500 mt-1 pl-5.5 leading-snug">
+                        Flat deduction on total booking bill (e.g. ₹500 off total).
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Card 2: Per Person / Traveler */}
+                  <button
+                    type="button"
+                    onClick={() => handleInputChange('discountType', 'per_person')}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                      formData.discountType === 'per_person'
+                        ? 'bg-white border-[#FF6B16] shadow-xs ring-1 ring-[#FF6B16]/30'
+                        : 'bg-white/60 border-neutral-200 hover:border-neutral-300'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                            formData.discountType === 'per_person'
+                              ? 'border-[#FF6B16] bg-[#FF6B16]'
+                              : 'border-neutral-300'
+                          }`}
+                        >
+                          {formData.discountType === 'per_person' && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                          )}
+                        </div>
+                        <span className="text-xs font-bold text-neutral-900">
+                          Per Person (₹ / Head)
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-neutral-500 mt-1 pl-5.5 leading-snug">
+                        Multiplied by traveler count (e.g. 12 × ₹500 = ₹6,000 off).
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Card 3: Percentage (%) */}
+                  <button
+                    type="button"
+                    onClick={() => handleInputChange('discountType', 'percentage')}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                      formData.discountType === 'percentage'
+                        ? 'bg-white border-[#FF6B16] shadow-xs ring-1 ring-[#FF6B16]/30'
+                        : 'bg-white/60 border-neutral-200 hover:border-neutral-300'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                            formData.discountType === 'percentage'
+                              ? 'border-[#FF6B16] bg-[#FF6B16]'
+                              : 'border-neutral-300'
+                          }`}
+                        >
+                          {formData.discountType === 'percentage' && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                          )}
+                        </div>
+                        <span className="text-xs font-bold text-neutral-900">
+                          Percentage (%)
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-neutral-500 mt-1 pl-5.5 leading-snug">
+                        Percentage off booking subtotal (e.g. 10% off entire booking).
+                      </p>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Discount Value Input with Dynamic Context */}
+                <div className="pt-2">
+                  <label className="block text-[11px] font-bold text-neutral-700 mb-1">
                     {formData.discountType === 'percentage'
                       ? 'Discount Percentage (%) *'
-                      : formData.discountType === 'flat'
-                      ? 'Flat Discount Amount (₹) *'
-                      : 'Discount Per Person (₹) *'}
+                      : formData.discountType === 'per_person'
+                      ? 'Discount Per Person / Traveler (₹) *'
+                      : 'Flat Discount on Total Amount (₹) *'}
                   </label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    placeholder={
-                      formData.discountType === 'percentage'
-                        ? '10'
-                        : formData.discountType === 'flat'
-                        ? '500'
-                        : '1000'
-                    }
-                    value={formData.discountValue}
-                    onChange={(e) => handleInputChange('discountValue', e.target.value)}
-                    className={`w-full h-11 px-3.5 rounded-xl border text-xs sm:text-sm font-bold outline-none transition-all ${
-                      formErrors.discountValue
-                        ? 'border-rose-400 focus:ring-2 focus:ring-rose-400/20'
-                        : 'border-neutral-200 focus:border-[#FF6B16] focus:ring-2 focus:ring-[#FF6B16]/10'
-                    }`}
-                  />
+                  <div className="relative">
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      placeholder={
+                        formData.discountType === 'percentage'
+                          ? 'e.g. 10'
+                          : 'e.g. 500'
+                      }
+                      value={formData.discountValue}
+                      onChange={(e) => handleInputChange('discountValue', e.target.value)}
+                      className={`w-full h-11 pl-3.5 pr-10 rounded-xl border text-xs sm:text-sm font-bold outline-none transition-all ${
+                        formErrors.discountValue
+                          ? 'border-rose-400 focus:ring-2 focus:ring-rose-400/20'
+                          : 'border-neutral-200 focus:border-[#FF6B16] focus:ring-2 focus:ring-[#FF6B16]/10'
+                      }`}
+                    />
+                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-neutral-400 pointer-events-none">
+                      {formData.discountType === 'percentage' ? '%' : '₹'}
+                    </div>
+                  </div>
                   {formErrors.discountValue && (
                     <p className="text-[11px] text-rose-600 font-semibold mt-1">
                       {formErrors.discountValue}
                     </p>
                   )}
+
+                  {/* Contextual Explanatory / Example Box */}
+                  <div className="mt-2 p-2.5 rounded-xl bg-white border border-neutral-200/80 text-[11px] text-neutral-600 flex items-start gap-2">
+                    <Sparkles className="w-4 h-4 text-[#FF6B16] flex-shrink-0 mt-0.5" />
+                    <div>
+                      {formData.discountType === 'flat' && (
+                        <span>
+                          <strong>Total Amount Mode:</strong> Flat ₹{Number(formData.discountValue) > 0 ? Number(formData.discountValue).toLocaleString('en-IN') : '500'} is deducted once from total booking payable, irrespective of how many travelers are in the group.
+                        </span>
+                      )}
+                      {formData.discountType === 'per_person' && (
+                        <span>
+                          <strong>Per Person Mode:</strong> Discount scales with travelers! At ₹{Number(formData.discountValue) > 0 ? Number(formData.discountValue).toLocaleString('en-IN') : '500'}/person, a group of <strong>12 travelers</strong> gets{' '}
+                          <strong className="text-emerald-600">
+                            ₹{((Number(formData.discountValue) || 500) * 12).toLocaleString('en-IN')} OFF
+                          </strong>{' '}
+                          {formData.maxDiscount && Number(formData.maxDiscount) > 0 ? (
+                            <span className="text-neutral-500 font-medium">
+                              (capped at max ₹{Number(formData.maxDiscount).toLocaleString('en-IN')} if specified below)
+                            </span>
+                          ) : (
+                            <span className="text-neutral-400 font-medium">
+                              (set Max Discount Cap below if you wish to cap large groups)
+                            </span>
+                          )}.
+                        </span>
+                      )}
+                      {formData.discountType === 'percentage' && (
+                        <span>
+                          <strong>Percentage Mode:</strong> Customer receives {formData.discountValue || '10'}% off booking subtotal{' '}
+                          {formData.maxDiscount && Number(formData.maxDiscount) > 0 && (
+                            <span className="text-neutral-500 font-medium">
+                              (capped at max ₹{Number(formData.maxDiscount).toLocaleString('en-IN')})
+                            </span>
+                          )}.
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 

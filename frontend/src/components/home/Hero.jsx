@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Star } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import TravelSearch from './TravelSearch';
 import { useSettings } from '../../context/SettingsContext';
@@ -53,20 +53,6 @@ export function Hero() {
     heroData.primaryButtonLink === '/destinations'
       ? '/packages'
       : (heroData.primaryButtonLink || '/packages');
-
-  const socialProof = heroData.socialProof || {};
-  const travelersText = socialProof.travelersText || '500+ Happy Travelers';
-  const ratingValue = socialProof.rating || '4.9';
-  const reviewsText = socialProof.reviewsText || '(500+ Reviews)';
-  const badgeCount = socialProof.badgeCount || '500+';
-  const avatars =
-    Array.isArray(socialProof.avatars) && socialProof.avatars.length > 0
-      ? socialProof.avatars
-      : [
-          '/images/testimonials/priya-sharma.webp',
-          '/images/testimonials/rahul-verma.webp',
-          '/images/testimonials/sneha-patel.webp',
-        ];
 
   return (
     <section className="relative min-h-screen flex flex-col justify-between pt-24 sm:pt-28 overflow-x-clip bg-[#F7F7F5]">
@@ -137,43 +123,6 @@ export function Hero() {
               <span>{primaryButtonText}</span>
               <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
-          </motion.div>
-
-          {/* Social Proof Stack (matches screenshot) */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.45 }}
-            className="mt-8 flex flex-wrap items-center gap-3 sm:gap-4"
-          >
-            {/* Avatars Stack */}
-            <div className="flex -space-x-2.5">
-              {avatars.map((av, idx) => (
-                <img
-                  key={idx}
-                  src={formatImageUrl(av)}
-                  alt="Traveler"
-                  className="w-9 h-9 rounded-full border-2 border-white object-cover shadow-xs"
-                />
-              ))}
-              <div className="w-9 h-9 rounded-full border-2 border-white bg-[#111111] text-[#FF6B16] text-[10px] font-black flex items-center justify-center shadow-xs">
-                {badgeCount}
-              </div>
-            </div>
-
-            {/* Ratings Text matching screenshot */}
-            <div className="text-xs">
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold text-neutral-800">{travelersText}</span>
-                <div className="flex items-center gap-0.5 ml-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-3.5 h-3.5 fill-[#FF6B16] text-[#FF6B16]" />
-                  ))}
-                </div>
-                <span className="font-bold text-neutral-800 ml-1">{ratingValue}</span>
-                <span className="text-neutral-500 font-medium">{reviewsText}</span>
-              </div>
-            </div>
           </motion.div>
         </div>
       </div>
