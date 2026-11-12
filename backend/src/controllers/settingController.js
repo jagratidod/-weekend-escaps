@@ -353,6 +353,18 @@ const getOrCreateDefaultSettings = async () => {
         needsSave = true;
       }
       if (
+        !settings.homeSections.trustedCompanies ||
+        !Array.isArray(settings.homeSections.trustedCompanies.items) ||
+        settings.homeSections.trustedCompanies.items.length === 0
+      ) {
+        settings.homeSections.trustedCompanies = {
+          ...DEFAULT_HOME_SECTIONS.trustedCompanies,
+          ...(settings.homeSections.trustedCompanies || {}),
+          items: DEFAULT_HOME_SECTIONS.trustedCompanies.items,
+        };
+        needsSave = true;
+      }
+      if (
         !settings.homeSections.sectionOrder ||
         !Array.isArray(settings.homeSections.sectionOrder) ||
         settings.homeSections.sectionOrder.length === 0

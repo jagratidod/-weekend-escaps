@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import Container from '../common/Container';
 import { useSettings } from '../../context/SettingsContext';
 import { DEFAULT_HOME_SECTIONS } from '../../utils/defaultHomeSections';
-import { Building2, Sparkles, ExternalLink } from 'lucide-react';
+import { Building2, Sparkles } from 'lucide-react';
 
 export function TrustedCompanies() {
   const { homeSections, formatImageUrl } = useSettings();
@@ -14,12 +14,17 @@ export function TrustedCompanies() {
     data?.subtitle ||
     'From fast-growing startups to enterprise leaders, top teams trust Weekend Escapes for their offsites & expeditions.';
 
-  const rawItems = Array.isArray(data?.items) && data.items.length > 0
-    ? data.items
-    : DEFAULT_HOME_SECTIONS.trustedCompanies.items;
+  const rawItems = useMemo(() => {
+    const list = Array.isArray(data?.items) && data.items.length > 0
+      ? data.items
+      : DEFAULT_HOME_SECTIONS.trustedCompanies.items;
+    // Filter out invalid items that have neither name nor logo
+    const valid = list.filter((item) => item && (item.name || item.logo));
+    return valid.length > 0 ? valid : DEFAULT_HOME_SECTIONS.trustedCompanies.items;
+  }, [data?.items]);
 
-  // Ensure minimum items for a smooth infinite marquee without gaps on large viewports
-  const items = React.useMemo(() => {
+  // Ensure enough items to create a smooth, gapless infinite continuous marquee
+  const items = useMemo(() => {
     if (!rawItems || rawItems.length === 0) return [];
     let list = [...rawItems];
     while (list.length < 12) {
@@ -35,7 +40,7 @@ export function TrustedCompanies() {
       {/* Subtle background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-orange-100/30 via-amber-50/20 to-sky-100/20 blur-3xl pointer-events-none -z-10 rounded-full" />
 
-      <Container className="relative z-10 mb-8 sm:mb-10 text-center">
+      <Container className="relative z-10 mb-8 sm:mb-12 text-center">
         {/* Eyebrow Badge */}
         {badgeText && (
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-orange-50 border border-orange-200/60 text-[#FF6B16] text-[11px] font-black uppercase tracking-widest mb-3 shadow-2xs">
@@ -58,7 +63,7 @@ export function TrustedCompanies() {
       </Container>
 
       {/* Marquee Row Container with Gradient Edge Fades */}
-      <div className="relative w-full overflow-hidden group select-none">
+      <div className="relative w-full overflow-hidden select-none">
         {/* Left Gradient Edge Fade */}
         <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 sm:w-28 md:w-36 bg-gradient-to-r from-white via-white/80 to-transparent z-10" />
 
@@ -66,7 +71,7 @@ export function TrustedCompanies() {
         <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 sm:w-28 md:w-36 bg-gradient-to-l from-white via-white/80 to-transparent z-10" />
 
         {/* Continuous Running Marquee Ribbon (Right-to-Left) */}
-        <div className="animate-marquee-continuous flex items-center gap-4 sm:gap-6 md:gap-8 py-3 px-2">
+        <div className="animate-marquee-continuous flex items-center gap-8 sm:gap-12 md:gap-16 py-4 px-4">
           {/* First loop of items */}
           {items.map((company, index) => {
             const key = `company-a-${company.id || index}-${index}`;
@@ -97,14 +102,15 @@ export function TrustedCompanies() {
 }
 
 /**
- * Single Company Card with Hover Zoom & Transition Effects
+ * Single Company Logo rendered directly on the background without enclosing card/box
+ * With smooth hover zoom & color reveal
  */
 function CompanyCard({ company, formatImageUrl }) {
-  const [imgError, setImgError] = React.useState(false);
+  const [imgError, setImgError] = useState(false);
 
   const cardContent = (
     <div
-      className="group/card relative h-14 sm:h-16 md:h-18 px-6 sm:px-8 py-2.5 sm:py-3 rounded-2xl bg-neutral-50/90 hover:bg-white border border-neutral-200/80 hover:border-[#FF6B16]/50 shadow-2xs hover:shadow-lg transition-all duration-300 ease-out transform hover:scale-110 sm:hover:scale-115 flex items-center justify-center shrink-0 cursor-pointer min-w-[130px] sm:min-w-[150px]"
+      className="group/logo relative shrink-0 flex items-center justify-center min-w-[120px] sm:min-w-[140px] md:min-w-[160px] h-12 sm:h-14 px-3 sm:px-4 cursor-pointer transition-transform duration-300 ease-out transform hover:scale-115 sm:hover:scale-120 outline-none"
       title={company.name || 'Partner Company'}
     >
       {company.logo && !imgError ? (
@@ -112,41 +118,37 @@ function CompanyCard({ company, formatImageUrl }) {
           src={formatImageUrl(company.logo)}
           alt={company.name || 'Company'}
           onError={() => setImgError(true)}
-          className="max-h-7 sm:max-h-8 md:max-h-9 max-w-[110px] sm:max-w-[130px] w-auto object-contain filter grayscale opacity-70 group-hover/card:grayscale-0 group-hover/card:opacity-100 transition-all duration-300"
-          loading="lazy"
+          className="h-8 sm:h-9 md:h-10 w-auto max-w-[120px] sm:max-w-[140px] object-contain filter grayscale opacity-60 group-hover/logo:grayscale-0 group-hover/logo:opacity-100 transition-all duration-300 drop-shadow-2xs select-none pointer-events-none"
         />
       ) : (
-        <div className="flex items-center gap-2 text-neutral-700 group-hover/card:text-[#FF6B16] transition-colors">
-          <Building2 className="w-4 h-4 text-neutral-400 group-hover/card:text-[#FF6B16]" />
-          <span className="text-xs sm:text-sm font-extrabold tracking-tight whitespace-nowrap">
+        <div className="flex items-center gap-2 text-neutral-600 group-hover/logo:text-[#FF6B16] transition-colors select-none">
+          <Building2 className="w-5 h-5 text-neutral-400 group-hover/logo:text-[#FF6B16] transition-colors shrink-0" />
+          <span className="text-sm sm:text-base font-extrabold tracking-tight whitespace-nowrap">
             {company.name || 'Company'}
           </span>
         </div>
       )}
-
-      {/* Subtle indicator icon if link is present */}
-      {company.website && (
-        <span className="absolute top-1.5 right-1.5 opacity-0 group-hover/card:opacity-100 transition-opacity text-neutral-400 hover:text-[#FF6B16]">
-          <ExternalLink className="w-2.5 h-2.5" />
-        </span>
-      )}
     </div>
   );
 
-  if (company.website && company.website.trim() !== '') {
+  if (company.website && typeof company.website === 'string' && company.website.trim() !== '') {
+    const href = company.website.startsWith('http')
+      ? company.website
+      : `https://${company.website}`;
+
     return (
       <a
-        href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
+        href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-block"
+        className="shrink-0 flex items-center justify-center outline-none focus:outline-none no-underline"
       >
         {cardContent}
       </a>
     );
   }
 
-  return cardContent;
+  return <div className="shrink-0 flex items-center justify-center">{cardContent}</div>;
 }
 
 export default TrustedCompanies;
