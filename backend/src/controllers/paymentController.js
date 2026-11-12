@@ -2,6 +2,7 @@ import Booking from '../models/Booking.js';
 import Payment from '../models/Payment.js';
 import Coupon from '../models/Coupon.js';
 import Lead from '../models/Lead.js';
+import { adjustBatchSeats } from './packageController.js';
 import {
   phonePeClient,
   clientInitialized,
@@ -50,6 +51,13 @@ const confirmBookingPayment = async (booking, payment, transactionId = '', payme
     } catch (couponErr) {
       console.warn('[Payment Confirmation] Could not increment coupon usedCount:', couponErr.message);
     }
+  }
+
+  // 3b. Update package batch inventory (increment booked seats)
+  try {
+    await adjustBatchSeats(booking.packageId, booking.travelDate, booking.totalPersons || 1);
+  } catch (seatErr) {
+    console.warn('[Payment Confirmation] Could not adjust batch seats:', seatErr.message);
   }
 
   // 4. Mirror confirmed booking into Leads collection for CRM records

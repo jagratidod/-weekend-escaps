@@ -26,13 +26,16 @@ export function PaymentReturnPage() {
   const merchantOrderId = searchParams.get('merchantOrderId') || '';
 
   const [loading, setLoading] = useState(true);
+  const [isPolling, setIsPolling] = useState(false);
+  const [pollCount, setPollCount] = useState(0);
+  const MAX_POLLS = 5;
   const [paymentStatus, setPaymentStatus] = useState('VERIFYING'); // 'VERIFYING', 'COMPLETED', 'PENDING', 'FAILED', 'ERROR'
   const [bookingData, setBookingData] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [retryCount, setRetryCount] = useState(0);
 
-  const verifyPayment = async () => {
+  const verifyPayment = async (isSilentPoll = false) => {
     if (!merchantOrderId) {
       setPaymentStatus('ERROR');
       setErrorMessage('Missing merchant order identification in return URL.');
@@ -40,7 +43,12 @@ export function PaymentReturnPage() {
       return;
     }
 
-    setLoading(true);
+    if (!isSilentPoll) {
+      setLoading(true);
+    } else {
+      setIsPolling(true);
+    }
+
     try {
       const res = await fetch(`${API_BASE_URL}/payments/phonepe/status/${merchantOrderId}`);
       const data = await res.json();
@@ -72,12 +80,24 @@ export function PaymentReturnPage() {
       }
     } finally {
       setLoading(false);
+      setIsPolling(false);
     }
   };
 
   useEffect(() => {
     verifyPayment();
   }, [merchantOrderId, retryCount]);
+
+  // Auto-poll PhonePe status when payment is in PENDING state
+  useEffect(() => {
+    if (paymentStatus === 'PENDING' && pollCount < MAX_POLLS && !loading && !isPolling) {
+      const timer = setTimeout(() => {
+        setPollCount((prev) => prev + 1);
+        verifyPayment(true);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [paymentStatus, pollCount, loading, isPolling]);
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pt-28 sm:pt-36 pb-20 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-start">
@@ -124,6 +144,12 @@ export function PaymentReturnPage() {
               <p className="text-white/90 text-sm mt-1">
                 PhonePe is processing your payment. We will update your booking status shortly.
               </p>
+              {pollCount < MAX_POLLS && (
+                <div className="mt-3 inline-flex items-center gap-2 bg-white/20 px-3.5 py-1.5 rounded-full text-xs font-medium text-white shadow-sm">
+                  <div className="w-2 h-2 rounded-full bg-amber-300 animate-ping" />
+                  <span>Auto-checking with bank ({pollCount + 1}/{MAX_POLLS})...</span>
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex flex-col items-center">
@@ -249,10 +275,13 @@ export function PaymentReturnPage() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   type="button"
-                  onClick={() => verifyPayment()}
+                  onClick={() => {
+                    setPollCount(0);
+                    verifyPayment(false);
+                  }}
                   className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#1A384C] hover:bg-[#122837] font-bold text-white transition shadow-md text-sm"
                 >
-                  <RotateCcw className="w-4 h-4" />
+                  <RotateCcw className={`w-4 h-4 ${isPolling ? 'animate-spin' : ''}`} />
                   Re-check Status Now
                 </button>
                 <a

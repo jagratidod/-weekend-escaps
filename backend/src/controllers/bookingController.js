@@ -2,6 +2,7 @@ import Package from '../models/Package.js';
 import Booking from '../models/Booking.js';
 import Lead from '../models/Lead.js';
 import Coupon from '../models/Coupon.js';
+import { adjustBatchSeats } from './packageController.js';
 import { notifyAdmins, notifyCustomer } from '../services/firebaseNotificationService.js';
 import { sendOfflineRegistrationEmail } from '../services/emailService.js';
 
@@ -64,13 +65,45 @@ export const createBooking = async (req, res) => {
 
     // Calculate financials
     const pricePerPerson = Number(pricing?.pricePerPerson) || 8999;
-    const personsCount = Number(totalPersons) || travelers.length;
+    const personsCount = Number(totalPersons) || (Array.isArray(travelers) && travelers.length > 0 ? travelers.length : 1);
     const subtotal = Number(pricing?.subtotal) || pricePerPerson * personsCount;
-    const discountAmount = Number(pricing?.discountAmount) || 0;
-    const couponCode = pricing?.couponCode || '';
+
+    // Server-Side Coupon Verification (prevents price tampering / expired code bypass)
+    let verifiedDiscount = 0;
+    let verifiedCouponCode = '';
+    const rawCode = (pricing?.couponCode || '').trim().toUpperCase();
+
+    if (rawCode) {
+      try {
+        const coupon = await Coupon.findOne({ code: rawCode });
+        if (coupon) {
+          const phoneForAuth = primaryContact?.phone || (travelers[0]?.phone) || '';
+          const calcResult = coupon.calculateDiscount({
+            subtotal,
+            totalPersons: personsCount,
+            packageId,
+            phone: phoneForAuth,
+          });
+
+          if (calcResult.valid) {
+            verifiedDiscount = calcResult.discountAmount;
+            verifiedCouponCode = coupon.code;
+          } else {
+            console.warn(`[createBooking] Inapplicable coupon "${rawCode}" rejected: ${calcResult.message}`);
+          }
+        } else {
+          console.warn(`[createBooking] Coupon "${rawCode}" not found in database`);
+        }
+      } catch (couponErr) {
+        console.error('[createBooking] Coupon server validation error:', couponErr.message);
+      }
+    }
+
+    const discountAmount = verifiedDiscount;
+    const couponCode = verifiedCouponCode;
     const baseAfterDiscount = Math.max(0, subtotal - discountAmount);
     const gstRate = Number(pricing?.gstRate) >= 0 ? Number(pricing?.gstRate) : 5;
-    const gstAmount = Number(pricing?.gstAmount) >= 0 ? Number(pricing?.gstAmount) : Number(((baseAfterDiscount * gstRate) / 100).toFixed(2));
+    const gstAmount = Number(((baseAfterDiscount * gstRate) / 100).toFixed(2));
     const totalPayable = Number((baseAfterDiscount + gstAmount).toFixed(2));
 
     const advancePerPerson = 2000;
@@ -292,6 +325,9 @@ export const updateBookingStatus = async (req, res) => {
       });
     }
 
+    const prevBookingStatus = booking.bookingStatus;
+    const prevPaymentStatus = booking.paymentStatus;
+
     if (bookingStatus !== undefined) booking.bookingStatus = bookingStatus;
     if (paymentStatus !== undefined) booking.paymentStatus = paymentStatus;
     if (tripStatus !== undefined) booking.tripStatus = tripStatus;
@@ -314,6 +350,36 @@ export const updateBookingStatus = async (req, res) => {
     }
 
     await booking.save();
+
+    // Rollback or re-reserve batch seats and coupons on status change
+    try {
+      if (
+        booking.bookingStatus === 'cancelled' &&
+        prevBookingStatus !== 'cancelled' &&
+        prevPaymentStatus !== 'unpaid'
+      ) {
+        await adjustBatchSeats(booking.packageId, booking.travelDate, -(booking.totalPersons || 1));
+        if (booking.pricing?.couponCode) {
+          await Coupon.findOneAndUpdate(
+            { code: booking.pricing.couponCode.trim().toUpperCase(), usedCount: { $gt: 0 } },
+            { $inc: { usedCount: -1 } }
+          );
+        }
+      } else if (
+        booking.bookingStatus === 'confirmed' &&
+        prevBookingStatus === 'cancelled'
+      ) {
+        await adjustBatchSeats(booking.packageId, booking.travelDate, booking.totalPersons || 1);
+        if (booking.pricing?.couponCode) {
+          await Coupon.findOneAndUpdate(
+            { code: booking.pricing.couponCode.trim().toUpperCase() },
+            { $inc: { usedCount: 1 } }
+          );
+        }
+      }
+    } catch (statusAdjustErr) {
+      console.warn('[updateBookingStatus] Seat/Coupon adjustment notice:', statusAdjustErr.message);
+    }
 
     res.status(200).json({
       success: true,
@@ -341,6 +407,21 @@ export const deleteBooking = async (req, res) => {
         success: false,
         message: 'Booking not found',
       });
+    }
+
+    // Rollback batch seats and coupon usage if confirmed booking deleted
+    try {
+      if (booking.bookingStatus === 'confirmed' && booking.paymentStatus !== 'unpaid') {
+        await adjustBatchSeats(booking.packageId, booking.travelDate, -(booking.totalPersons || 1));
+        if (booking.pricing?.couponCode) {
+          await Coupon.findOneAndUpdate(
+            { code: booking.pricing.couponCode.trim().toUpperCase(), usedCount: { $gt: 0 } },
+            { $inc: { usedCount: -1 } }
+          );
+        }
+      }
+    } catch (seatErr) {
+      console.warn('[deleteBooking] Seat/Coupon rollback notice:', seatErr.message);
     }
 
     res.status(200).json({
@@ -497,6 +578,13 @@ export const createOfflineRegistration = async (req, res) => {
 
     await newBooking.save();
 
+    // Adjust package batch inventory (increment booked seats)
+    try {
+      await adjustBatchSeats(newBooking.packageId, newBooking.travelDate, newBooking.totalPersons || 1);
+    } catch (seatErr) {
+      console.warn('[createOfflineRegistration] Batch seat adjust notice:', seatErr.message);
+    }
+
     // Increment coupon used count if valid coupon applied
     if (couponCode) {
       try {
@@ -505,7 +593,7 @@ export const createOfflineRegistration = async (req, res) => {
           { $inc: { usedCount: 1 } }
         );
       } catch (couponErr) {
-        console.warn('[createBooking - Online] Could not increment coupon usedCount:', couponErr.message);
+        console.warn('[createOfflineRegistration] Could not increment coupon usedCount:', couponErr.message);
       }
     }
 
