@@ -902,7 +902,8 @@ export const checkPackageAvailability = async (req, res) => {
       const existingBookings = await Booking.find({
         packageId: { $in: [pkg.id, pkg._id.toString()] },
         travelDate: date,
-        bookingStatus: { $ne: 'cancelled' },
+        bookingStatus: { $in: ['confirmed', 'completed'] },
+        paymentStatus: { $ne: 'unpaid' },
       });
       bookedCount = existingBookings.reduce((acc, b) => acc + (b.totalPersons || 1), 0);
     } catch (e) {
@@ -1137,4 +1138,46 @@ export const getUpcomingSlots = async (req, res) => {
     });
   }
 };
+
+/**
+ * Adjusts booked seats count on a package batch when bookings are confirmed, offline registered, or cancelled
+ * @param {string} packageId - Package slug or ObjectId
+ * @param {string} travelDate - YYYY-MM-DD
+ * @param {number} deltaPersons - Positive number to add, negative to subtract
+ */
+export const adjustBatchSeats = async (packageId, travelDate, deltaPersons) => {
+  if (!packageId || !travelDate || !deltaPersons) return;
+  try {
+    let pkg = null;
+    if (mongoose.Types.ObjectId.isValid(packageId)) {
+      pkg = await Package.findById(packageId);
+    }
+    if (!pkg) {
+      pkg = await Package.findOne({ id: packageId });
+    }
+    if (!pkg || !Array.isArray(pkg.availability?.batches)) return;
+
+    const batch = pkg.availability.batches.find((b) => b.startDate === travelDate);
+    if (!batch) return;
+
+    const currentBooked = Number(batch.bookedSeats) || 0;
+    const newBooked = Math.max(0, currentBooked + Number(deltaPersons));
+    batch.bookedSeats = newBooked;
+
+    const total = Number(batch.totalSeats) || Number(pkg.availability?.defaultSeatsPerBatch) || 16;
+    if (newBooked >= total) {
+      batch.status = 'sold_out';
+    } else if (total - newBooked <= 4) {
+      batch.status = 'filling_fast';
+    } else {
+      batch.status = 'available';
+    }
+
+    await pkg.save();
+    console.log(`[Batch Seats Adjusted] Package: ${pkg.name} | Date: ${travelDate} | Booked: ${newBooked}/${total} | Status: ${batch.status}`);
+  } catch (err) {
+    console.warn('[adjustBatchSeats Error]:', err.message);
+  }
+};
+
 

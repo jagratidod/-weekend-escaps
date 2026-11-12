@@ -199,7 +199,11 @@ export default function CouponManager() {
         discountValue: Number(formData.discountValue),
         maxDiscount: formData.maxDiscount ? Number(formData.maxDiscount) : null,
         minBookingAmount: formData.minBookingAmount ? Number(formData.minBookingAmount) : 0,
-        expiryDate: formData.expiryDate ? new Date(formData.expiryDate).toISOString() : null,
+        expiryDate: formData.expiryDate
+          ? (formData.expiryDate.includes('T')
+              ? new Date(formData.expiryDate).toISOString()
+              : new Date(`${formData.expiryDate}T23:59:59.999Z`).toISOString())
+          : null,
         usageLimit: formData.usageLimit ? Number(formData.usageLimit) : null,
         targetType: formData.targetType,
         assignedPhones: formData.assignedPhones,

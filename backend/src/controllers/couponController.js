@@ -16,6 +16,17 @@ const sanitizePhonesList = (input) => {
     .filter((p) => p && p.length === 10);
 };
 
+// Helper to normalize expiry date to end-of-day so coupon remains valid all day
+const parseExpiryDate = (input) => {
+  if (!input) return null;
+  const d = new Date(input);
+  if (isNaN(d.getTime())) return null;
+  if (typeof input === 'string' && input.length === 10) {
+    d.setUTCHours(23, 59, 59, 999);
+  }
+  return d;
+};
+
 /**
  * Public Endpoint: Discover available coupons for a booking / customer
  * GET /api/coupons/available
@@ -303,7 +314,7 @@ export const createCoupon = async (req, res) => {
       maxDiscount: maxDiscount ? Number(maxDiscount) : null,
       minBookingAmount: minBookingAmount ? Number(minBookingAmount) : 0,
       startDate: startDate ? new Date(startDate) : null,
-      expiryDate: expiryDate ? new Date(expiryDate) : null,
+      expiryDate: parseExpiryDate(expiryDate),
       usageLimit: usageLimit ? Number(usageLimit) : null,
       targetType: chosenTarget,
       assignedPhones: cleanedPhones,
@@ -396,7 +407,7 @@ export const updateCoupon = async (req, res) => {
       coupon.startDate = startDate ? new Date(startDate) : null;
     }
     if (expiryDate !== undefined) {
-      coupon.expiryDate = expiryDate ? new Date(expiryDate) : null;
+      coupon.expiryDate = parseExpiryDate(expiryDate);
     }
     if (usageLimit !== undefined) {
       coupon.usageLimit = usageLimit ? Number(usageLimit) : null;

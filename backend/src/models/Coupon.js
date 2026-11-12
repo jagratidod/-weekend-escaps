@@ -132,8 +132,15 @@ couponSchema.methods.calculateDiscount = function ({
     return { valid: false, message: 'This coupon offer has not started yet.' };
   }
 
-  if (this.expiryDate && new Date(this.expiryDate) < now) {
-    return { valid: false, message: 'This coupon has expired.' };
+  if (this.expiryDate) {
+    const exp = new Date(this.expiryDate);
+    // If time is set to midnight (date-only entry), consider it valid through the end of that day
+    if (exp.getUTCHours() === 0 && exp.getUTCMinutes() === 0) {
+      exp.setUTCHours(23, 59, 59, 999);
+    }
+    if (exp < now) {
+      return { valid: false, message: 'This coupon has expired.' };
+    }
   }
 
   if (this.usageLimit && this.usedCount >= this.usageLimit) {
@@ -183,6 +190,7 @@ couponSchema.methods.calculateDiscount = function ({
       discountType: this.discountType,
       discountValue: this.discountValue,
       maxDiscount: this.maxDiscount,
+      minBookingAmount: this.minBookingAmount || 0,
       targetType: this.targetType,
       isExclusive: this.targetType === 'specific_users',
     },

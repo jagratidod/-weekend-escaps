@@ -39,7 +39,7 @@ export function BookingPage() {
   const { whatsappUrl, getCustomWhatsAppUrl, API_BASE_URL } = useSettings();
 
   // Find package by ID
-  const { getPackageById, checkAvailability } = usePackages();
+  const { getPackageById, checkAvailability, loading: packagesLoading } = usePackages();
   const pkg = getPackageById(id);
   const tripTitle = pkg?.name || pkg?.title || 'Expedition Trek';
 
@@ -350,35 +350,12 @@ export function BookingPage() {
       }
     } catch (err) {
       console.error('Coupon validation error:', err);
-      // Fallback in case of temporary offline/network issues
-      if (code === 'EARLYBIRD') {
-        const disc = Math.min(1000 * totalPersons, subtotal * 0.2);
-        setAppliedDiscount(disc);
-        setCouponMessage({
-          type: 'success',
-          text: `Awesome! Coupon EARLYBIRD applied (-₹${disc.toLocaleString('en-IN')})`,
-        });
-      } else if (code === 'WEEKEND10') {
-        const disc = Math.round(subtotal * 0.1);
-        setAppliedDiscount(disc);
-        setCouponMessage({
-          type: 'success',
-          text: `Coupon WEEKEND10 applied! 10% discount (-₹${disc.toLocaleString('en-IN')})`,
-        });
-      } else if (code === 'ESCAPE500') {
-        setAppliedDiscount(500);
-        setCouponMessage({
-          type: 'success',
-          text: 'Coupon ESCAPE500 applied! Flat ₹500 discount.',
-        });
-      } else {
-        setAppliedDiscount(0);
-        setAppliedCouponInfo(null);
-        setCouponMessage({
-          type: 'error',
-          text: 'Unable to verify coupon right now. Please try again.',
-        });
-      }
+      setAppliedDiscount(0);
+      setAppliedCouponInfo(null);
+      setCouponMessage({
+        type: 'error',
+        text: 'Unable to verify coupon right now. Please check your connection and try again.',
+      });
     } finally {
       setIsCouponVerifying(false);
     }
@@ -394,6 +371,19 @@ export function BookingPage() {
   // Recalculate discount if travelers count or subtotal change while coupon is active
   useEffect(() => {
     if (appliedDiscount > 0 && couponCode && appliedCouponInfo) {
+      // Check if subtotal is below minimum booking amount for this coupon
+      const minRequired = Number(appliedCouponInfo.minBookingAmount) || 0;
+      if (minRequired > 0 && subtotal < minRequired) {
+        setAppliedDiscount(0);
+        setAppliedCouponInfo(null);
+        setCouponCode('');
+        setCouponMessage({
+          type: 'error',
+          text: `Coupon removed: Requires a minimum booking subtotal of ₹${minRequired.toLocaleString('en-IN')}.`,
+        });
+        return;
+      }
+
       if (appliedCouponInfo.discountType === 'percentage') {
         let disc = Math.round(subtotal * (appliedCouponInfo.discountValue / 100));
         if (appliedCouponInfo.maxDiscount) disc = Math.min(disc, appliedCouponInfo.maxDiscount);
@@ -406,7 +396,7 @@ export function BookingPage() {
         setAppliedDiscount(Math.min(appliedCouponInfo.discountValue, subtotal));
       }
     }
-  }, [totalPersons, subtotal]);
+  }, [totalPersons, subtotal, appliedDiscount, couponCode, appliedCouponInfo]);
 
   // Final Confirmation & Payment Gateway Action
   const handlePayAndConfirm = async () => {
@@ -421,7 +411,7 @@ export function BookingPage() {
     const primary = travelers[0] || {};
 
     const bookingData = {
-      packageId: pkg?.id || 'tour-package',
+      packageId: pkg?.id || pkg?._id || id || 'tour-package',
       packageName: tripTitle,
       visitorId: getVisitorId(),
       travelDate,
@@ -501,13 +491,43 @@ export function BookingPage() {
 
   const primaryTraveler = travelers[0] || {};
 
+  if (packagesLoading && !pkg) {
+    return (
+      <div className="min-h-screen bg-[#F7F7F5] pt-32 pb-16 px-4 flex flex-col items-center justify-center">
+        <Loader2 className="w-10 h-10 text-[#FF6B16] animate-spin mb-4" />
+        <p className="text-sm font-semibold text-neutral-600">Loading expedition details...</p>
+      </div>
+    );
+  }
+
+  if (!packagesLoading && !pkg) {
+    return (
+      <div className="min-h-screen bg-[#F7F7F5] pt-32 pb-16 px-4 flex flex-col items-center justify-center text-center">
+        <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mb-4 text-[#FF6B16]">
+          <AlertCircle className="w-8 h-8" />
+        </div>
+        <h2 className="text-xl font-bold text-neutral-800 mb-2">Package Not Found</h2>
+        <p className="text-neutral-500 text-sm max-w-md mb-6">
+          The package you are trying to book does not exist or may have been updated.
+        </p>
+        <Link
+          to="/packages"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-[#FF6B16] text-white font-bold rounded-xl text-sm hover:bg-[#E05307] transition-all shadow-md"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Explore All Packages</span>
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F7F7F5] pt-24 sm:pt-28 pb-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto space-y-6">
         {/* ── Top Navigation & Breadcrumbs Bar ── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2">
           <Link
-            to={`/packages/${pkg.id}`}
+            to={`/packages/${pkg?.id || id}`}
             className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-neutral-600 hover:text-[#FF6B16] transition-colors group"
           >
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1 text-[#FF6B16]" />
