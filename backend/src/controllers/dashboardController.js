@@ -11,7 +11,7 @@ import FcmDevice from '../models/FcmDevice.js';
  */
 export const getDashboardStats = async (req, res) => {
   try {
-    // 1. Parallel collection count queries
+    // 1. Parallel collection count queries (only verified/paid bookings count in stats)
     const [
       totalPackages,
       activePackages,
@@ -25,9 +25,9 @@ export const getDashboardStats = async (req, res) => {
     ] = await Promise.all([
       Package.countDocuments(),
       Package.countDocuments({ isActive: { $ne: false } }),
-      Booking.countDocuments(),
-      Booking.countDocuments({ bookingStatus: 'confirmed' }),
-      Booking.countDocuments({ bookingStatus: 'pending' }),
+      Booking.countDocuments({ bookingStatus: { $in: ['confirmed', 'completed', 'cancelled'] }, paymentStatus: { $ne: 'unpaid' } }),
+      Booking.countDocuments({ bookingStatus: 'confirmed', paymentStatus: { $ne: 'unpaid' } }),
+      Booking.countDocuments({ $or: [{ bookingStatus: 'pending' }, { paymentStatus: 'unpaid' }] }),
       Booking.countDocuments({ bookingStatus: 'completed' }),
       Booking.countDocuments({ bookingStatus: 'cancelled' }),
       Lead.countDocuments(),
@@ -42,9 +42,9 @@ export const getDashboardStats = async (req, res) => {
       totalSubscribers = 0;
     }
 
-    // 2. Aggregate travelers and financial revenue from non-cancelled bookings
+    // 2. Aggregate travelers and financial revenue from verified non-cancelled bookings
     const financialAgg = await Booking.aggregate([
-      { $match: { bookingStatus: { $ne: 'cancelled' } } },
+      { $match: { bookingStatus: { $in: ['confirmed', 'completed'] }, paymentStatus: { $ne: 'unpaid' } } },
       {
         $group: {
           _id: null,
@@ -94,7 +94,8 @@ export const getDashboardStats = async (req, res) => {
       {
         $match: {
           createdAt: { $gte: sixMonthsAgo },
-          bookingStatus: { $ne: 'cancelled' },
+          bookingStatus: { $in: ['confirmed', 'completed'] },
+          paymentStatus: { $ne: 'unpaid' },
         },
       },
       {

@@ -175,10 +175,6 @@ export default function PackageFAQ({ packageData }) {
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Header Badge & Title */}
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-orange-100/70 border border-orange-200/80 text-[#FF6B16] text-[11px] font-black uppercase tracking-wider mb-3 shadow-2xs">
-            <HelpCircle className="w-3.5 h-3.5" />
-            <span>{badgeText}</span>
-          </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#111111] tracking-tight">
             {renderTitle()}

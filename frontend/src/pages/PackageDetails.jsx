@@ -559,9 +559,6 @@ export function PackageDetails() {
                       </span>
                     </div>
                   </div>
-                  <span className="text-[10px] text-neutral-400 block text-right mt-1.5 font-medium">
-                    Base ₹{effectivePrice.toLocaleString('en-IN')} + {gstRate}% GST per person
-                  </span>
                 </div>
 
                 {/* Primary CTA & Custom Dates Row */}

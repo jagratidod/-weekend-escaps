@@ -76,12 +76,13 @@ export const createBooking = async (req, res) => {
     const advancePerPerson = 2000;
     const advanceAmount = advancePerPerson * personsCount;
     const chosenOption = paymentOption === 'full' ? 'full' : 'advance';
-    const amountPaidNow = chosenOption === 'full' ? totalPayable : advanceAmount;
-    const remainingBalance = Math.max(0, totalPayable - amountPaidNow);
+    // Before payment gateway completion, amountPaidNow is 0 and full totalPayable remains due
+    const amountPaidNow = 0;
+    const remainingBalance = totalPayable;
 
     const hasMedicalAlert = detectMedicalAlert(travelers);
 
-    // Create the booking document
+    // Create the booking document in pending/unpaid state until payment success
     const newBooking = new Booking({
       bookingRef,
       packageId: packageId || 'custom-tour',
@@ -120,73 +121,22 @@ export const createBooking = async (req, res) => {
         paymentOption: chosenOption,
         amountPaidNow,
       },
-      bookingStatus: 'confirmed',
-      paymentStatus: 'advance_paid',
+      bookingStatus: 'pending',
+      paymentStatus: 'unpaid',
       paymentMethod:
         chosenOption === 'full'
-          ? 'Full Package Payment (Gateway Ready)'
-          : `Advance Deposit of ₹${advanceAmount.toLocaleString('en-IN')} (Balance ₹${remainingBalance.toLocaleString('en-IN')} at Basecamp)`,
+          ? 'PhonePe Standard Checkout (Full Payment)'
+          : `PhonePe Standard Checkout (Advance Deposit of ₹${advanceAmount.toLocaleString('en-IN')})`,
       hasMedicalAlert,
     });
 
     await newBooking.save();
 
-    // Increment coupon used count if valid coupon applied
-    if (couponCode) {
-      try {
-        await Coupon.findOneAndUpdate(
-          { code: couponCode.trim().toUpperCase() },
-          { $inc: { usedCount: 1 } }
-        );
-      } catch (couponErr) {
-        console.warn('[createBooking - Online] Could not increment coupon usedCount:', couponErr.message);
-      }
-    }
-
-    // Also mirror into Lead collection for backwards compatibility & inquiries log
-    try {
-      await Lead.create({
-        name: primaryContact.name,
-        email: primaryContact.email || 'guest@weekendescapes.com',
-        phone: primaryContact.phone,
-        company: `${personsCount} Traveler(s) [${bookingRef}]`,
-        subject: `Tour Booking: ${packageName} (Ref: ${bookingRef})`,
-        message: `Booking Ref: ${bookingRef}\nPackage: ${packageName}\nTravel Date: ${friendlyTravelDate || travelDate}\nTotal Persons: ${personsCount}\nPayment Choice: ${chosenOption.toUpperCase()}\nPaid Now: ₹${amountPaidNow}\nBalance Due: ₹${remainingBalance}\nMedical Alert: ${hasMedicalAlert ? 'YES' : 'No'}`,
-        source: 'package_booking',
-      });
-    } catch (leadErr) {
-      console.warn('[createBooking] Could not mirror to Leads collection:', leadErr.message);
-    }
-
-    // Trigger Duplicate-Safe FCM Push Notifications (Customer + Admins)
-    const visitorId = req.body.visitorId || null;
-    notifyCustomer({
-      email: primaryContact.email,
-      visitorId,
-      title: '🎉 Booking Confirmed!',
-      body: `Your expedition to ${packageName} is confirmed (Ref: ${bookingRef}). Travel date: ${friendlyTravelDate || travelDate}.`,
-      data: {
-        type: 'booking',
-        id: bookingRef,
-        link: '/destinations',
-      },
-      notificationId: `booking_${bookingRef}_customer`,
-    }).catch((fcmErr) => console.error('[FCM Customer Booking Push Error]:', fcmErr.message));
-
-    notifyAdmins({
-      title: '🛎️ New Tour Booking Alert!',
-      body: `${primaryContact.name} booked ${packageName} (${personsCount} travelers) - Ref: ${bookingRef}`,
-      data: {
-        type: 'admin_booking',
-        id: bookingRef,
-        link: '/admin',
-      },
-      notificationId: `booking_${bookingRef}_admin`,
-    }).catch((fcmErr) => console.error('[FCM Admin Booking Push Error]:', fcmErr.message));
-
+    // NOTE: Notifications, Lead record creation, and coupon usedCount increments
+    // are strictly performed upon VERIFIED PAYMENT SUCCESS in paymentController.js
     res.status(201).json({
       success: true,
-      message: 'Booking confirmed successfully',
+      message: 'Booking initiated. Please complete payment to confirm your booking.',
       booking: newBooking,
     });
   } catch (error) {
@@ -207,7 +157,19 @@ export const getBookings = async (req, res) => {
     const query = {};
 
     if (status && status !== 'all') {
-      query.bookingStatus = status;
+      if (status === 'pending') {
+        query.$or = [{ bookingStatus: 'pending' }, { paymentStatus: 'unpaid' }];
+      } else if (status === 'confirmed') {
+        query.bookingStatus = 'confirmed';
+        query.paymentStatus = { $ne: 'unpaid' };
+      } else {
+        query.bookingStatus = status;
+      }
+    } else {
+      // By default ('all'), only show confirmed, completed, or cancelled bookings
+      // Abandoned/unpaid checkout attempts do NOT clutter the admin dashboard
+      query.bookingStatus = { $ne: 'pending' };
+      query.paymentStatus = { $ne: 'unpaid' };
     }
 
     if (medicalOnly === 'true') {
@@ -232,17 +194,17 @@ export const getBookings = async (req, res) => {
       Booking.countDocuments(query),
     ]);
 
-    // Aggregate overall metrics for top summary cards
+    // Aggregate overall metrics for top summary cards (only from verified paid/confirmed bookings)
     const [allCount, confirmedCount, pendingCount, completedCount, cancelledCount, medicalCount, revenueAgg] =
       await Promise.all([
-        Booking.countDocuments(),
-        Booking.countDocuments({ bookingStatus: 'confirmed' }),
-        Booking.countDocuments({ bookingStatus: 'pending' }),
+        Booking.countDocuments({ bookingStatus: { $in: ['confirmed', 'completed', 'cancelled'] }, paymentStatus: { $ne: 'unpaid' } }),
+        Booking.countDocuments({ bookingStatus: 'confirmed', paymentStatus: { $ne: 'unpaid' } }),
+        Booking.countDocuments({ $or: [{ bookingStatus: 'pending' }, { paymentStatus: 'unpaid' }] }),
         Booking.countDocuments({ bookingStatus: 'completed' }),
         Booking.countDocuments({ bookingStatus: 'cancelled' }),
-        Booking.countDocuments({ hasMedicalAlert: true }),
+        Booking.countDocuments({ hasMedicalAlert: true, paymentStatus: { $ne: 'unpaid' } }),
         Booking.aggregate([
-          { $match: { bookingStatus: { $ne: 'cancelled' } } },
+          { $match: { bookingStatus: { $in: ['confirmed', 'completed'] }, paymentStatus: { $ne: 'unpaid' } } },
           {
             $group: {
               _id: null,
@@ -719,12 +681,15 @@ export const getMyBookingsByPhone = async (req, res) => {
     }
 
     // Search in primaryContact.phone OR travelers.phone
+    // Only return confirmed/paid bookings (exclude abandoned/unpaid checkout attempts)
     const phoneRegex = new RegExp(last10, 'i');
     const bookings = await Booking.find({
       $or: [
         { 'primaryContact.phone': phoneRegex },
         { 'travelers.phone': phoneRegex },
       ],
+      bookingStatus: { $ne: 'pending' },
+      paymentStatus: { $ne: 'unpaid' },
     }).sort({ createdAt: -1 });
 
     if (!bookings || bookings.length === 0) {

@@ -75,7 +75,7 @@ export default function GalleryPage() {
 
   const scrollFilmstrip = (direction) => {
     if (filmstripScrollRef.current) {
-      const scrollAmount = direction === 'left' ? -380 : 380;
+      const scrollAmount = direction === 'left' ? -270 : 270;
       filmstripScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
       setTimeout(updateScrollState, 350);
     }
@@ -218,11 +218,11 @@ export default function GalleryPage() {
   const heroBg = getImageUrl(galleryData.hero?.bgImage || DEFAULT_GALLERY_DATA.hero.bgImage);
 
   return (
-    <div className="bg-[#F7F7F5] text-[#111111] font-sans overflow-x-hidden pt-20 md:pt-24">
+    <div className="bg-[#F7F7F5] text-[#111111] font-sans overflow-x-hidden pt-16 md:pt-20">
       {/* ============================================================== */}
       {/* ── SECTION 1: CINEMATIC LIGHT HERO (Reference 3 Aesthetic) ── */}
       {/* ============================================================== */}
-      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden py-24 bg-gradient-to-b from-white via-[#F7F7F5] to-[#F7F7F5]">
+      <section className="relative min-h-[55vh] sm:min-h-[62vh] flex items-center justify-center overflow-hidden py-14 sm:py-18 bg-gradient-to-b from-white via-[#F7F7F5] to-[#F7F7F5]">
         {/* Subtle Himalayan Landscape Backdrop */}
         <div className="absolute inset-0 z-0 opacity-25 pointer-events-none">
           <img
@@ -237,23 +237,11 @@ export default function GalleryPage() {
 
         {/* Center Typography */}
         <Container className="relative z-10 text-center flex flex-col items-center select-none">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-neutral-200/90 shadow-sm mb-4"
-          >
-            <Camera className="w-3.5 h-3.5 text-[#FF6B16]" />
-            <span className="text-[11px] font-black tracking-[0.25em] uppercase text-neutral-600">
-              {galleryData.hero.badge}
-            </span>
-          </motion.div>
-
           <motion.p
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.15 }}
-            className="text-xs sm:text-sm font-bold tracking-[0.35em] uppercase text-neutral-500 mb-2 sm:mb-3"
+            className="text-[11px] sm:text-xs font-bold tracking-[0.3em] uppercase text-neutral-500 mb-2"
           >
             {galleryData.hero.preHeading}
           </motion.p>
@@ -262,7 +250,7 @@ export default function GalleryPage() {
             initial={{ opacity: 0, scale: 0.96, y: 25 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-serif italic text-[#111111] tracking-tight leading-none drop-shadow-sm"
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif italic text-[#111111] tracking-tight leading-none drop-shadow-sm"
             style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
           >
             {galleryData.hero.heading}
@@ -272,7 +260,7 @@ export default function GalleryPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.45 }}
-            className="text-xs sm:text-sm md:text-base text-neutral-600 max-w-xl mt-6 font-medium leading-relaxed"
+            className="text-xs sm:text-sm text-neutral-600 max-w-lg mt-4 font-medium leading-relaxed"
           >
             {galleryData.hero.description}
           </motion.p>
@@ -282,17 +270,17 @@ export default function GalleryPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 bg-white border border-neutral-200/90 rounded-3xl p-5 sm:p-6 shadow-sm max-w-2xl w-full"
+            className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 bg-white border border-neutral-200/90 rounded-2xl p-4 sm:p-5 shadow-xs max-w-xl w-full"
           >
             {galleryData.hero.metrics?.map((metric, idx) => (
               <div key={idx}>
                 <p
-                  className="text-2xl sm:text-3xl font-black"
+                  className="text-xl sm:text-2xl font-black"
                   style={{ color: metric.highlightColor || (idx % 2 === 0 ? '#FF6B16' : '#111111') }}
                 >
                   {metric.value}
                 </p>
-                <p className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider mt-0.5">
+                <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mt-0.5">
                   {metric.label}
                 </p>
               </div>
@@ -304,10 +292,10 @@ export default function GalleryPage() {
       {/* ============================================================== */}
       {/* ── SECTION 2: "MORE THAN A TOUR" & EXPEDITION SHOWCASE ── */}
       {/* ============================================================== */}
-      <section className="py-20 bg-white border-t border-neutral-200/80">
+      <section className="py-12 sm:py-16 bg-white border-t border-neutral-200/80">
         <Container>
           {/* Asymmetrical Layout matching Reference 2 */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center mb-10 sm:mb-12">
             {/* Left Photo with hotspot circle */}
             <motion.div
               initial={{ opacity: 0, x: -35 }}
@@ -323,7 +311,7 @@ export default function GalleryPage() {
                 })
               }
             >
-              <div className="relative rounded-3xl overflow-hidden aspect-[4/3] sm:aspect-[16/11] border border-neutral-200 shadow-md group-hover:shadow-xl transition-all duration-300">
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden aspect-[4/3] sm:aspect-[16/11] border border-neutral-200 shadow-md group-hover:shadow-xl transition-all duration-300">
                 <img
                   src={getImageUrl(galleryData.philosophy.leftCard?.image)}
                   alt={galleryData.philosophy.leftCard?.title}
@@ -336,8 +324,8 @@ export default function GalleryPage() {
 
                 {/* Hotspot Ring */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-12 h-12 rounded-full border-2 border-white flex items-center justify-center bg-[#FF6B16]/80 backdrop-blur-sm group-hover:scale-110 transition-transform shadow-lg">
-                    <div className="w-2.5 h-2.5 rounded-full bg-white" />
+                  <div className="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center bg-[#FF6B16]/80 backdrop-blur-sm group-hover:scale-110 transition-transform shadow-lg">
+                    <div className="w-2 h-2 rounded-full bg-white" />
                   </div>
                 </div>
               </div>
@@ -351,16 +339,16 @@ export default function GalleryPage() {
               transition={{ duration: 0.7, delay: 0.1 }}
               className="lg:col-span-5 text-center lg:text-left px-2"
             >
-              <span className="text-[11px] font-black uppercase tracking-[0.25em] text-[#FF6B16] block mb-2">
+              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#FF6B16] block mb-1.5">
                 {galleryData.philosophy.badge}
               </span>
               <h2
-                className="text-4xl sm:text-5xl md:text-6xl font-serif text-[#111111] tracking-tight leading-[1.1]"
+                className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#111111] tracking-tight leading-[1.15]"
                 style={{ fontFamily: 'Georgia, serif' }}
               >
                 {galleryData.philosophy.title}
               </h2>
-              <p className="text-xs sm:text-sm text-neutral-600 mt-4 leading-relaxed font-normal">
+              <p className="text-xs sm:text-sm text-neutral-600 mt-3 leading-relaxed font-normal">
                 {galleryData.philosophy.description}
               </p>
             </motion.div>
@@ -380,7 +368,7 @@ export default function GalleryPage() {
                 })
               }
             >
-              <div className="relative rounded-3xl overflow-hidden aspect-[4/3] border border-neutral-200 shadow-md group-hover:shadow-xl transition-all duration-300">
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden aspect-[4/3] border border-neutral-200 shadow-md group-hover:shadow-xl transition-all duration-300">
                 <img
                   src={getImageUrl(galleryData.philosophy.rightCard?.image)}
                   alt={galleryData.philosophy.rightCard?.title}
@@ -400,15 +388,15 @@ export default function GalleryPage() {
           </div>
 
           {/* ── 3-Column Staggered Grid ── */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-end">
             {galleryData.philosophy.bottomCards?.map((card, cIdx) => (
               <motion.div
                 key={card.id || cIdx}
-                initial={{ opacity: 0, y: 40 + cIdx * 10 }}
+                initial={{ opacity: 0, y: 30 + cIdx * 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.7, delay: cIdx * 0.15 }}
-                className={`relative group rounded-3xl overflow-hidden border border-neutral-200 shadow-md hover:shadow-xl transition-all cursor-pointer bg-neutral-100 ${
+                className={`relative group rounded-2xl sm:rounded-3xl overflow-hidden border border-neutral-200 shadow-md hover:shadow-xl transition-all cursor-pointer bg-neutral-100 ${
                   cIdx === 0 ? 'aspect-[3/4]' : cIdx === 1 ? 'aspect-square' : 'aspect-[4/3]'
                 }`}
                 onClick={() =>
@@ -428,11 +416,11 @@ export default function GalleryPage() {
                   }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute bottom-5 left-5 right-5 text-white">
+                <div className="absolute bottom-4 left-4 right-4 text-white">
                   <span className="text-[10px] font-bold text-[#FF6B16] tracking-widest uppercase">
                     {card.tag}
                   </span>
-                  <h4 className="text-base font-bold mt-0.5">{card.title}</h4>
+                  <h4 className="text-sm sm:text-base font-bold mt-0.5">{card.title}</h4>
                 </div>
               </motion.div>
             ))}
@@ -443,18 +431,18 @@ export default function GalleryPage() {
       {/* ============================================================== */}
       {/* ── SECTION 3: PANORAMIC ACCORDION & DINING (Reference 1) ── */}
       {/* ============================================================== */}
-      <section className="py-20 bg-[#F2F2EF] border-t border-neutral-300/70">
+      <section className="py-10 sm:py-14 bg-[#F2F2EF] border-t border-neutral-300/70">
         {/* Category Navigation Bar + Scroll Arrows matching Reference 1 top */}
-        <div className="max-w-6xl mx-auto px-4 mb-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-neutral-300 pb-4">
+        <div className="max-w-6xl mx-auto px-4 mb-4 sm:mb-5">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-neutral-300 pb-3">
             {/* Category tabs */}
-            <div className="flex items-center justify-center flex-wrap gap-4 sm:gap-8">
+            <div className="flex items-center justify-center flex-wrap gap-3 sm:gap-6">
               {filmstripTabs.map((cat) => (
                 <button
                   key={cat}
                   type="button"
                   onClick={() => setActiveSplitTab(cat)}
-                  className={`text-xs sm:text-sm tracking-widest uppercase font-black transition-all cursor-pointer pb-1 relative ${
+                  className={`text-[11px] sm:text-xs tracking-wider uppercase font-extrabold transition-all cursor-pointer pb-1 relative ${
                     activeSplitTab.toUpperCase() === cat.toUpperCase()
                       ? 'text-[#111111]'
                       : 'text-neutral-500 hover:text-neutral-900'
@@ -464,7 +452,7 @@ export default function GalleryPage() {
                   {activeSplitTab.toUpperCase() === cat.toUpperCase() && (
                     <motion.div
                       layoutId="activeCategoryUnderlineLight"
-                      className="absolute -bottom-4 left-0 right-0 h-1 bg-[#FF6B16] rounded-full"
+                      className="absolute -bottom-3 left-0 right-0 h-0.5 bg-[#FF6B16] rounded-full"
                     />
                   )}
                 </button>
@@ -473,32 +461,32 @@ export default function GalleryPage() {
 
             {/* Left / Right Scroll Buttons in Header */}
             {filteredPanels.length > 2 && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => scrollFilmstrip('left')}
                   disabled={!canScrollLeft}
-                  className={`w-9 h-9 rounded-full border shadow-xs flex items-center justify-center transition-all ${
+                  className={`w-8 h-8 rounded-full border shadow-xs flex items-center justify-center transition-all ${
                     canScrollLeft
                       ? 'bg-white hover:bg-neutral-100 text-[#111111] hover:border-[#FF6B16] cursor-pointer'
                       : 'bg-neutral-100 text-neutral-300 border-neutral-200 cursor-not-allowed opacity-50'
                   }`}
                   title="Scroll left"
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="w-4 h-4" />
                 </button>
                 <button
                   type="button"
                   onClick={() => scrollFilmstrip('right')}
                   disabled={!canScrollRight}
-                  className={`w-9 h-9 rounded-full border shadow-xs flex items-center justify-center transition-all ${
+                  className={`w-8 h-8 rounded-full border shadow-xs flex items-center justify-center transition-all ${
                     canScrollRight
                       ? 'bg-[#111111] hover:bg-[#FF6B16] text-white border-[#111111] cursor-pointer'
                       : 'bg-neutral-200 text-neutral-400 border-neutral-200 cursor-not-allowed opacity-50'
                   }`}
                   title="Scroll right"
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             )}
@@ -510,15 +498,15 @@ export default function GalleryPage() {
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-16 px-4 bg-white/70 rounded-3xl border border-dashed border-neutral-300 max-w-lg mx-auto my-4 shadow-xs"
+            className="text-center py-12 px-4 bg-white/70 rounded-2xl border border-dashed border-neutral-300 max-w-lg mx-auto my-3 shadow-xs"
           >
-            <div className="w-12 h-12 rounded-2xl bg-[#FF6B16]/10 text-[#FF6B16] flex items-center justify-center mx-auto mb-3">
-              <Compass className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-xl bg-[#FF6B16]/10 text-[#FF6B16] flex items-center justify-center mx-auto mb-2.5">
+              <Compass className="w-5 h-5" />
             </div>
-            <h4 className="text-base font-bold text-[#111111]">
+            <h4 className="text-sm font-bold text-[#111111]">
               No moments added in "{activeSplitTab}" yet
             </h4>
-            <p className="text-xs text-neutral-500 mt-1 max-w-sm mx-auto">
+            <p className="text-[11px] text-neutral-500 mt-1 max-w-sm mx-auto">
               Admin panel se jakar kisi panel ki category <span className="font-bold text-[#FF6B16]">"{activeSplitTab}"</span> select karein ya naya moment panel add karein.
             </p>
           </motion.div>
@@ -529,10 +517,10 @@ export default function GalleryPage() {
               <button
                 type="button"
                 onClick={() => scrollFilmstrip('left')}
-                className="absolute left-3 top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/95 hover:bg-[#FF6B16] text-[#111111] hover:text-white border border-neutral-300 shadow-xl flex items-center justify-center transition-all cursor-pointer backdrop-blur-md"
+                className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 hover:bg-[#FF6B16] text-[#111111] hover:text-white border border-neutral-300 shadow-lg flex items-center justify-center transition-all cursor-pointer backdrop-blur-md"
                 title="Scroll left"
               >
-                <ChevronLeft className="w-6 h-6" />
+                <ChevronLeft className="w-5 h-5" />
               </button>
             )}
 
@@ -541,19 +529,19 @@ export default function GalleryPage() {
               <button
                 type="button"
                 onClick={() => scrollFilmstrip('right')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/95 hover:bg-[#FF6B16] text-[#111111] hover:text-white border border-neutral-300 shadow-xl flex items-center justify-center transition-all cursor-pointer backdrop-blur-md animate-pulse hover:animate-none"
+                className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 hover:bg-[#FF6B16] text-[#111111] hover:text-white border border-neutral-300 shadow-lg flex items-center justify-center transition-all cursor-pointer backdrop-blur-md animate-pulse hover:animate-none"
                 title="Scroll right"
               >
-                <ChevronRight className="w-6 h-6" />
+                <ChevronRight className="w-5 h-5" />
               </button>
             )}
 
             <div
               ref={filmstripScrollRef}
-              className="w-full overflow-x-auto pb-4 px-4 sm:px-8 scroll-smooth select-none [scrollbar-width:thin] [scrollbar-color:#d4d4d4_transparent]"
+              className="w-full overflow-x-auto pb-3 px-3 sm:px-6 scroll-smooth select-none [scrollbar-width:thin] [scrollbar-color:#d4d4d4_transparent]"
             >
               <div
-                className={`flex gap-3.5 w-max ${
+                className={`flex gap-3 w-max ${
                   filteredPanels.length <= 2 ? 'mx-auto justify-center min-w-full' : ''
                 }`}
               >
@@ -565,7 +553,7 @@ export default function GalleryPage() {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.4, delay: idx * 0.05 }}
-                      className="relative group overflow-hidden cursor-pointer h-[420px] sm:h-[480px] w-[280px] sm:w-[320px] md:w-[350px] shrink-0 rounded-3xl border border-neutral-300/80 shadow-md hover:shadow-2xl transition-all"
+                      className="relative group overflow-hidden cursor-pointer h-[290px] sm:h-[330px] md:h-[350px] w-[205px] sm:w-[235px] md:w-[255px] shrink-0 rounded-2xl border border-neutral-300/80 shadow-sm hover:shadow-xl transition-all"
                       onClick={() =>
                         setLightboxImage({
                           url: getImageUrl(panel.image),
@@ -587,33 +575,33 @@ export default function GalleryPage() {
                       {/* Hotspot Ring on Centerpiece */}
                       {panel.isCenter && (
                         <div className="absolute top-[36%] right-[22%]">
-                          <div className="w-12 h-12 rounded-full border-2 border-white flex items-center justify-center bg-[#FF6B16]/80 backdrop-blur-sm animate-pulse shadow-lg">
-                            <div className="w-2.5 h-2.5 rounded-full bg-white" />
+                          <div className="w-9 h-9 rounded-full border-2 border-white flex items-center justify-center bg-[#FF6B16]/80 backdrop-blur-sm animate-pulse shadow-md">
+                            <div className="w-2 h-2 rounded-full bg-white" />
                           </div>
                         </div>
                       )}
 
                       {/* Panel Footer */}
-                      <div className="absolute bottom-6 left-6 right-6 text-white">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <span className="text-[10px] font-bold tracking-widest uppercase text-[#FF6B16]">
+                      <div className="absolute bottom-4 left-4 right-4 text-white">
+                        <div className="flex items-end justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[9px] font-bold tracking-wider uppercase text-[#FF6B16] block truncate">
                               {panel.tag}
                             </span>
                             <h3
-                              className="text-lg sm:text-xl font-serif tracking-wide mt-0.5 uppercase"
+                              className="text-sm sm:text-base font-serif tracking-wide mt-0.5 uppercase truncate"
                               style={{ fontFamily: 'Georgia, serif' }}
                             >
                               {panel.title}
                             </h3>
-                            <p className="text-xs text-neutral-300 mt-1 line-clamp-1">
+                            <p className="text-[11px] text-neutral-300 mt-0.5 line-clamp-1">
                               {panel.subtitle}
                             </p>
                           </div>
 
-                          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-white group-hover:text-[#FF6B16] transition-colors shrink-0 pl-3">
+                          <div className="inline-flex items-center gap-1 text-[10px] font-bold text-white group-hover:text-[#FF6B16] transition-colors shrink-0 pb-0.5">
                             <span>VIEW</span>
-                            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                            <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
                           </div>
                         </div>
                       </div>
@@ -625,11 +613,11 @@ export default function GalleryPage() {
 
             {/* Scroll Indicator & Progress */}
             {(canScrollLeft || canScrollRight) && (
-              <div className="flex items-center justify-center gap-3 mt-4">
-                <span className="text-[11px] font-bold tracking-wider text-neutral-500 uppercase">
+              <div className="flex items-center justify-center gap-3 mt-3">
+                <span className="text-[10px] sm:text-[11px] font-bold tracking-wider text-neutral-500 uppercase">
                   Swipe or use arrows to view all {filteredPanels.length} moments
                 </span>
-                <div className="w-24 sm:w-36 h-1 bg-neutral-300/80 rounded-full overflow-hidden">
+                <div className="w-20 sm:w-28 h-1 bg-neutral-300/80 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-[#FF6B16] rounded-full transition-all duration-150"
                     style={{ width: `${Math.max(20, scrollProgress)}%` }}
@@ -644,18 +632,18 @@ export default function GalleryPage() {
       {/* ============================================================== */}
       {/* ── SECTION 4: LUXURY SUMMIT CHALET & STAYS (Reference 4) ── */}
       {/* ============================================================== */}
-      <section className="py-24 bg-white border-t border-neutral-200 relative">
+      <section className="py-12 sm:py-16 bg-white border-t border-neutral-200 relative">
         <Container>
           {/* Section Sub-Navigation Tabs in Light Theme */}
-          <div className="flex items-center gap-3 overflow-x-auto pb-4 mb-10 border-b border-neutral-200">
+          <div className="flex items-center gap-2.5 overflow-x-auto pb-3 mb-8 border-b border-neutral-200">
             {galleryData.accommodations?.map((item) => (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => setActiveShowcaseId(item.id)}
-                className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
                   activeShowcase.id === item.id
-                    ? 'bg-[#111111] text-white shadow-md'
+                    ? 'bg-[#111111] text-white shadow-sm'
                     : 'text-neutral-600 hover:text-[#111111] bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200'
                 }`}
               >
@@ -665,32 +653,32 @@ export default function GalleryPage() {
           </div>
 
           {/* Active Stay Split Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
             {/* Left Column: Details & Floating Bathroom Inset */}
             <motion.div
               key={`left-${activeShowcase.id}`}
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
-              className="lg:col-span-5 flex flex-col justify-between py-2"
+              className="lg:col-span-5 flex flex-col justify-between py-1"
             >
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-widest text-[#FF6B16]">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#FF6B16]">
                   {activeShowcase.tripName} • {activeShowcase.location}
                 </span>
                 <h3
-                  className="text-3xl sm:text-4xl font-serif text-[#111111] tracking-tight mt-1.5 mb-4"
+                  className="text-2xl sm:text-3xl font-serif text-[#111111] tracking-tight mt-1 mb-3"
                   style={{ fontFamily: 'Georgia, serif' }}
                 >
                   {activeShowcase.title}
                 </h3>
-                <p className="text-xs sm:text-sm text-neutral-600 font-medium leading-relaxed mb-6">
+                <p className="text-xs sm:text-sm text-neutral-600 font-medium leading-relaxed mb-5">
                   {activeShowcase.desc}
                 </p>
 
                 {/* Floating Inset Bathroom Photo with Backlit Mirror */}
                 <div
-                  className="relative rounded-2xl overflow-hidden aspect-[16/10] max-w-sm border border-neutral-300 shadow-md group cursor-pointer mb-8"
+                  className="relative rounded-xl overflow-hidden aspect-[16/10] max-w-xs border border-neutral-300 shadow-sm group cursor-pointer mb-6"
                   onClick={() =>
                     setLightboxImage({
                       url: getImageUrl(activeShowcase.bathroomImg),
@@ -708,26 +696,26 @@ export default function GalleryPage() {
                     }}
                   />
                   <div className="absolute inset-0 bg-black/15 group-hover:bg-transparent transition-colors" />
-                  <span className="absolute bottom-2.5 left-3 text-[10px] font-bold uppercase tracking-wider bg-white/90 text-[#111111] px-2.5 py-1 rounded-md shadow-sm">
+                  <span className="absolute bottom-2 left-2.5 text-[9px] font-bold uppercase tracking-wider bg-white/90 text-[#111111] px-2 py-0.5 rounded shadow-xs">
                     En-Suite Bath
                   </span>
                 </div>
               </div>
 
               {/* DETAILS List matching Reference 4 bottom left */}
-              <div className="pt-6 border-t border-neutral-200">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 block mb-3">
+              <div className="pt-4 border-t border-neutral-200">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 block mb-2.5">
                   EXPEDITION AMENITIES & SPECS
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {activeShowcase.details?.map((detail, dIdx) => {
                     const IconComp = getDetailIcon(detail.icon);
                     return (
-                      <div key={dIdx} className="flex items-center gap-2.5 text-xs text-neutral-700 font-semibold">
-                        <div className="w-7 h-7 rounded-lg bg-[#FF6B16]/10 flex items-center justify-center text-[#FF6B16] shrink-0">
-                          <IconComp className="w-3.5 h-3.5" />
+                      <div key={dIdx} className="flex items-center gap-2 text-xs text-neutral-700 font-semibold">
+                        <div className="w-6 h-6 rounded-md bg-[#FF6B16]/10 flex items-center justify-center text-[#FF6B16] shrink-0">
+                          <IconComp className="w-3 h-3" />
                         </div>
-                        <span>{detail.label}</span>
+                        <span className="text-[11px] sm:text-xs">{detail.label}</span>
                       </div>
                     );
                   })}
@@ -750,7 +738,7 @@ export default function GalleryPage() {
                 })
               }
             >
-              <div className="relative rounded-3xl overflow-hidden h-[450px] sm:h-[580px] border border-neutral-200 shadow-xl">
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden h-[360px] sm:h-[460px] border border-neutral-200 shadow-lg">
                 <img
                   src={getImageUrl(activeShowcase.mainImg)}
                   alt={activeShowcase.title}
@@ -763,21 +751,21 @@ export default function GalleryPage() {
 
                 {/* Hotspot circle on ceiling wood/rock */}
                 <div className="absolute top-[28%] right-[32%]">
-                  <div className="w-12 h-12 rounded-full border-2 border-white flex items-center justify-center bg-[#FF6B16]/80 backdrop-blur-sm animate-pulse shadow-lg">
-                    <div className="w-2.5 h-2.5 rounded-full bg-white" />
+                  <div className="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center bg-[#FF6B16]/80 backdrop-blur-sm animate-pulse shadow-md">
+                    <div className="w-2 h-2 rounded-full bg-white" />
                   </div>
                 </div>
 
-                <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between text-white">
+                <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between text-white">
                   <div>
-                    <span className="text-xs font-bold text-[#FF6B16] tracking-widest uppercase">
+                    <span className="text-[10px] font-bold text-[#FF6B16] tracking-widest uppercase">
                       HIMALAYAN LIVING & CAMPS
                     </span>
-                    <h4 className="text-xl font-serif mt-1">
+                    <h4 className="text-lg sm:text-xl font-serif mt-0.5">
                       {activeShowcase.tripName}
                     </h4>
                   </div>
-                  <span className="px-3.5 py-1.5 rounded-full bg-white text-[#111111] text-xs font-bold shadow-md">
+                  <span className="px-3 py-1 rounded-full bg-white text-[#111111] text-[11px] font-bold shadow-sm">
                     Click to Zoom
                   </span>
                 </div>
@@ -790,15 +778,15 @@ export default function GalleryPage() {
       {/* ============================================================== */}
       {/* ── SECTION 5: ALL-TRIP CURATED MASONRY GRID (White Theme) ── */}
       {/* ============================================================== */}
-      <section id="masonry-gallery" className="py-24 bg-[#F7F7F5] border-t border-neutral-200/90">
+      <section id="masonry-gallery" className="py-12 sm:py-16 bg-[#F7F7F5] border-t border-neutral-200/90">
         <Container>
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 sm:mb-10">
             <div>
-              <span className="text-xs font-bold text-[#FF6B16] tracking-widest uppercase">
+              <span className="text-[10px] font-bold text-[#FF6B16] tracking-widest uppercase">
                 {galleryData.masonry.eyebrow}
               </span>
               <h2
-                className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#111111] tracking-tight mt-1"
+                className="text-2xl sm:text-3xl md:text-4xl font-serif text-[#111111] tracking-tight mt-0.5"
                 style={{ fontFamily: 'Georgia, serif' }}
               >
                 {galleryData.masonry.title}
@@ -815,10 +803,10 @@ export default function GalleryPage() {
                   key={filter}
                   type="button"
                   onClick={() => setGridFilter(filter)}
-                  className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                     gridFilter === filter
-                      ? 'bg-[#FF6B16] text-white shadow-md shadow-[#FF6B16]/25'
-                      : 'bg-white text-neutral-600 hover:text-black border border-neutral-300/80 shadow-sm'
+                      ? 'bg-[#FF6B16] text-white shadow-sm shadow-[#FF6B16]/25'
+                      : 'bg-white text-neutral-600 hover:text-black border border-neutral-300/80 shadow-xs'
                   }`}
                 >
                   {filter}
@@ -828,7 +816,7 @@ export default function GalleryPage() {
           </div>
 
           {/* Masonry-Style Photo Grid with Light Theme cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[220px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 auto-rows-[170px] sm:auto-rows-[190px]">
             {filteredGrid.map((item, index) => (
               <motion.div
                 key={item.id || index}
@@ -836,7 +824,7 @@ export default function GalleryPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.15 }}
                 transition={{ duration: 0.6, delay: (index % 4) * 0.1 }}
-                className={`relative group rounded-3xl overflow-hidden border border-neutral-200/90 shadow-sm hover:shadow-xl transition-all cursor-pointer bg-white ${
+                className={`relative group rounded-2xl overflow-hidden border border-neutral-200/90 shadow-xs hover:shadow-lg transition-all cursor-pointer bg-white ${
                   item.span || 'col-span-1 row-span-1'
                 }`}
                 onClick={() =>
@@ -858,20 +846,20 @@ export default function GalleryPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-75 group-hover:opacity-90 transition-opacity" />
 
                 {/* Hover overlay icon */}
-                <div className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/90 text-[#111111] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md">
-                  <Maximize2 className="w-4 h-4" />
+                <div className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-white/90 text-[#111111] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-xs">
+                  <Maximize2 className="w-3.5 h-3.5" />
                 </div>
 
                 {/* Card Title & Info */}
-                <div className="absolute bottom-4 left-4 right-4 text-white">
-                  <span className="text-[10px] font-bold text-[#FF6B16] uppercase tracking-widest">
+                <div className="absolute bottom-3.5 left-3.5 right-3.5 text-white">
+                  <span className="text-[9px] font-bold text-[#FF6B16] uppercase tracking-widest">
                     {item.trip}
                   </span>
-                  <h4 className="text-sm font-bold leading-tight mt-0.5">
+                  <h4 className="text-xs sm:text-sm font-bold leading-tight mt-0.5">
                     {item.title}
                   </h4>
-                  <p className="text-[11px] text-neutral-300 flex items-center gap-1 mt-1">
-                    <MapPin className="w-3 h-3 text-[#FF6B16] shrink-0" />
+                  <p className="text-[10px] text-neutral-300 flex items-center gap-1 mt-0.5">
+                    <MapPin className="w-2.5 h-2.5 text-[#FF6B16] shrink-0" />
                     <span>{item.location}</span>
                   </p>
                 </div>

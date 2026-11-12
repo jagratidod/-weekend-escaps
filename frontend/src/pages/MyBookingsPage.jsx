@@ -228,11 +228,6 @@ export default function MyBookingsPage() {
         <div className="relative max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* ── LEFT COLUMN: MY BOOKINGS TITLE & EXPEDITION PERKS ── */}
           <div className="lg:col-span-7 space-y-4 sm:space-y-5 text-left">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-xs font-bold text-white shadow-lg">
-              <span className="w-2 h-2 rounded-full bg-[#FF6B16] animate-pulse" />
-              <span className="tracking-wide">TRACK YOUR EXPEDITION</span>
-            </div>
-
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.7)] leading-[1.1]">
               My Bookings
             </h1>
@@ -240,30 +235,6 @@ export default function MyBookingsPage() {
             <p className="text-neutral-200 text-sm sm:text-base lg:text-lg max-w-xl font-medium leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
               Enter your registered mobile number to check your upcoming adventures, live expedition stage, payment receipts, and day-wise itineraries.
             </p>
-
-            {/* Feature Highlight Pills */}
-            <div className="pt-2 grid grid-cols-1 sm:grid-cols-3 gap-2.5 max-w-xl">
-              <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-black/40 backdrop-blur-md border border-white/15 text-white text-xs font-semibold shadow-xs">
-                <span className="w-7 h-7 rounded-lg bg-[#FF6B16]/20 text-[#FF6B16] flex items-center justify-center shrink-0 border border-[#FF6B16]/30">
-                  <Sparkles className="w-4 h-4" />
-                </span>
-                <span>Live Stage Tracking</span>
-              </div>
-
-              <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-black/40 backdrop-blur-md border border-white/15 text-white text-xs font-semibold shadow-xs">
-                <span className="w-7 h-7 rounded-lg bg-[#FF6B16]/20 text-[#FF6B16] flex items-center justify-center shrink-0 border border-[#FF6B16]/30">
-                  <Compass className="w-4 h-4" />
-                </span>
-                <span>Day-Wise Plan</span>
-              </div>
-
-              <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-black/40 backdrop-blur-md border border-white/15 text-white text-xs font-semibold shadow-xs">
-                <span className="w-7 h-7 rounded-lg bg-[#FF6B16]/20 text-[#FF6B16] flex items-center justify-center shrink-0 border border-[#FF6B16]/30">
-                  <ShieldCheck className="w-4 h-4" />
-                </span>
-                <span>Verified Passes</span>
-              </div>
-            </div>
           </div>
 
           {/* ── RIGHT COLUMN: ENHANCED INPUT DIV (CARD) ── */}
@@ -288,11 +259,6 @@ export default function MyBookingsPage() {
                       </p>
                     </div>
                   </div>
-
-                  <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Live Sync
-                  </span>
                 </div>
 
                 {/* Search Form */}
@@ -374,19 +340,6 @@ export default function MyBookingsPage() {
                       </>
                     )}
                   </button>
-
-                  {/* Micro Trust & Privacy Footer */}
-                  <div className="pt-1 flex items-center justify-between text-[11px] text-neutral-500 font-medium">
-                    <span className="flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>100% Secure & Private</span>
-                    </span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-blue-600" />
-                      <span>Real-Time Updates</span>
-                    </span>
-                  </div>
                 </form>
               </div>
             </div>
@@ -533,10 +486,7 @@ export default function MyBookingsPage() {
                     >
                       {/* Top Brand & Package Name */}
                       <div className="mb-6 relative z-10">
-                        <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/95 bg-white/20 px-3 py-1 rounded-full border border-white/20 inline-block backdrop-blur-xs">
-                          Expedition Pass
-                        </span>
-                        <h2 className="text-xl sm:text-2xl font-black text-white mt-2.5 tracking-tight uppercase leading-snug drop-shadow-sm">
+                        <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight uppercase leading-snug drop-shadow-sm">
                           {booking.packageName}
                         </h2>
                         <p className="text-xs text-white/80 mt-1 font-medium">
@@ -594,16 +544,6 @@ export default function MyBookingsPage() {
                           );
                         })}
                       </div>
-
-                      {/* Bottom Sidebar Note */}
-                      <div className="pt-5 border-t border-white/15 text-[11px] text-white/80 relative z-10 flex items-center justify-between">
-                        <span className="font-mono text-white/90 font-bold">
-                          Ref: {booking.bookingRef}
-                        </span>
-                        <span className="uppercase text-[10px] font-black px-2 py-0.5 rounded-full bg-white/20 text-white">
-                          {booking.financials?.statusLabel || 'CONFIRMED'}
-                        </span>
-                      </div>
                     </div>
 
                     {/* ========================================================================= */}
@@ -640,10 +580,6 @@ export default function MyBookingsPage() {
                                 );
                               })}
                             </div>
-
-                            <span className="text-[11px] font-mono text-neutral-400 font-semibold hidden sm:inline-block">
-                              Pass Status: Verified
-                            </span>
                           </div>
                         </div>
 
@@ -896,23 +832,7 @@ export default function MyBookingsPage() {
                       {/* ========================================================================= */}
                       {/* BOTTOM NAVIGATION FOOTER (Matching Reference Screenshot) */}
                       {/* ========================================================================= */}
-                      <div className="pt-6 border-t border-neutral-150 flex items-center justify-between gap-4 mt-6">
-                        {/* Progress Bar (Matching Screenshot) */}
-                        <div className="flex items-center gap-3">
-                          <div className="w-28 sm:w-36 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                            <div
-                              className="h-full rounded-full transition-all duration-500"
-                              style={{
-                                backgroundColor: themeColor,
-                                width: `${currentStep * 25}%`,
-                              }}
-                            />
-                          </div>
-                          <span className="text-xs font-bold text-neutral-500 whitespace-nowrap">
-                            Stage {currentStep} of 4 ({currentStep * 25}%)
-                          </span>
-                        </div>
-
+                      <div className="pt-6 border-t border-neutral-150 flex items-center justify-end gap-2 mt-6">
                         {/* Action Buttons: Next Tab or WhatsApp */}
                         <div className="flex items-center gap-2">
                           <a

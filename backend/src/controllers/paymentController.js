@@ -1,5 +1,7 @@
 import Booking from '../models/Booking.js';
 import Payment from '../models/Payment.js';
+import Coupon from '../models/Coupon.js';
+import Lead from '../models/Lead.js';
 import {
   phonePeClient,
   clientInitialized,
@@ -12,6 +14,89 @@ import { notifyAdmins, notifyCustomer } from '../services/firebaseNotificationSe
 
 // Helper to calculate paise from rupees safely
 const toPaise = (rupees) => Math.round(Number(rupees) * 100);
+
+/**
+ * Reusable helper: Confirm booking and trigger customer & admin alerts ONLY upon verified payment
+ */
+const confirmBookingPayment = async (booking, payment, transactionId = '', paymentRail = 'UPI', gatewayResponse = null) => {
+  // Prevent duplicate execution if already confirmed
+  if (payment.paymentStatus === 'SUCCESS' && booking.bookingStatus === 'confirmed') {
+    return;
+  }
+
+  // 1. Mark payment as SUCCESS
+  payment.paymentStatus = 'SUCCESS';
+  payment.phonePeTransactionId = transactionId || payment.phonePeTransactionId || '';
+  payment.paymentRail = paymentRail || 'UPI';
+  payment.paymentDate = new Date();
+  if (gatewayResponse) payment.gatewayResponse = gatewayResponse;
+  await payment.save();
+
+  // 2. Mark booking as CONFIRMED with actual amount paid
+  booking.bookingStatus = 'confirmed';
+  booking.paymentStatus = payment.paymentType === 'FULL' ? 'paid' : 'advance_paid';
+  booking.paymentVerifiedAt = new Date();
+  booking.pricing.amountPaidNow = payment.amount;
+  booking.pricing.remainingBalance = Math.max(0, (Number(booking.pricing?.totalPayable) || payment.amount) - payment.amount);
+  await booking.save();
+
+  // 3. Increment coupon usage count (only now that payment succeeded)
+  if (booking.pricing?.couponCode) {
+    try {
+      await Coupon.findOneAndUpdate(
+        { code: booking.pricing.couponCode.trim().toUpperCase() },
+        { $inc: { usedCount: 1 } }
+      );
+    } catch (couponErr) {
+      console.warn('[Payment Confirmation] Could not increment coupon usedCount:', couponErr.message);
+    }
+  }
+
+  // 4. Mirror confirmed booking into Leads collection for CRM records
+  try {
+    await Lead.create({
+      name: booking.primaryContact?.name,
+      email: booking.primaryContact?.email || 'guest@weekendescapes.com',
+      phone: booking.primaryContact?.phone,
+      company: `${booking.totalPersons} Traveler(s) [${booking.bookingRef}]`,
+      subject: `Tour Booking Confirmed: ${booking.packageName} (Ref: ${booking.bookingRef})`,
+      message: `CONFIRMED BOOKING!\nRef: ${booking.bookingRef}\nPackage: ${booking.packageName}\nTravel Date: ${booking.friendlyTravelDate || booking.travelDate}\nTravelers: ${booking.totalPersons}\nPaid: ₹${payment.amount}\nBalance Due: ₹${booking.pricing?.remainingBalance || 0}\nMedical Alert: ${booking.hasMedicalAlert ? 'YES' : 'No'}`,
+      source: 'package_booking',
+    });
+  } catch (leadErr) {
+    console.warn('[Payment Confirmation] Lead mirror warning:', leadErr.message);
+  }
+
+  // 5. Send booking confirmation email to customer
+  sendBookingConfirmationEmail(booking, payment).catch((err) =>
+    console.error('Confirmation email trigger error:', err)
+  );
+
+  // 6. Push Notification to Customer: Booking Confirmed & Payment Received
+  notifyCustomer({
+    email: booking.primaryContact?.email,
+    title: '🎉 Booking Confirmed & Payment Received!',
+    body: `Payment of ₹${payment.amount.toLocaleString('en-IN')} confirmed for ${booking.packageName} (Ref: ${booking.bookingRef}).`,
+    data: {
+      type: 'booking_confirmed',
+      id: booking.bookingRef,
+      link: '/my-bookings',
+    },
+    notificationId: `confirmed_${booking.bookingRef}_customer`,
+  }).catch((err) => console.error('[FCM Customer Payment Push Error]:', err.message));
+
+  // 7. Push Notification to Admin: Alert admin ONLY after payment is verified!
+  notifyAdmins({
+    title: '🛎️ New Confirmed Tour Booking!',
+    body: `${booking.primaryContact?.name} paid ₹${payment.amount.toLocaleString('en-IN')} for ${booking.packageName} (${booking.totalPersons} travelers) - Ref: ${booking.bookingRef}`,
+    data: {
+      type: 'admin_booking',
+      id: booking.bookingRef,
+      link: '/admin',
+    },
+    notificationId: `confirmed_${booking.bookingRef}_admin`,
+  }).catch((err) => console.error('[FCM Admin Payment Push Error]:', err.message));
+};
 
 /**
  * POST /api/payments/phonepe/create-order
@@ -216,66 +301,26 @@ export const getPaymentStatus = async (req, res) => {
           }
         }
       } else {
-        // Fallback for offline dev/sandbox simulation
-        orderState = 'COMPLETED';
-        transactionId = `SIM_TXN_${Date.now()}`;
+        orderState = 'PENDING';
       }
     } catch (sdkError) {
       console.warn('[PhonePe SDK status inquiry]:', sdkError.message || sdkError);
-      // For sandbox verification fallback when dummy credentials are used
-      orderState = 'COMPLETED';
-      transactionId = `SANDBOX_TXN_${Date.now().toString().slice(-6)}`;
+      orderState = 'FAILED';
+      payment.errorMessage = sdkError.message;
+      await payment.save();
     }
 
     // Process State
     if (orderState === 'COMPLETED') {
-      payment.paymentStatus = 'SUCCESS';
-      payment.phonePeTransactionId = transactionId || payment.phonePeTransactionId;
-      payment.paymentRail = paymentRail || 'UPI';
-      payment.paymentDate = new Date();
-      payment.gatewayResponse = rawResponse || { simulated: true };
-      await payment.save();
-
-      // Confirm Booking
-      booking.bookingStatus = 'confirmed';
-      booking.paymentStatus = payment.paymentType === 'FULL' ? 'paid' : 'advance_paid';
-      booking.paymentVerifiedAt = new Date();
-      booking.pricing.amountPaidNow = payment.amount;
-      booking.pricing.remainingBalance = Math.max(0, booking.pricing.totalPayable - payment.amount);
-      await booking.save();
-
-      // Trigger asynchronous confirmation email
-      sendBookingConfirmationEmail(booking, payment).catch((err) =>
-        console.error('Email trigger error:', err)
-      );
-
-      // Trigger Duplicate-Safe FCM Push Notifications (Customer + Admins)
-      notifyCustomer({
-        email: booking.primaryContact.email,
-        title: '💳 Payment Received!',
-        body: `Payment of ₹${payment.amount.toLocaleString('en-IN')} confirmed for ${booking.packageName} (Ref: ${booking.bookingRef}).`,
-        data: {
-          type: 'payment_success',
-          id: booking.bookingRef,
-          link: '/destinations',
-        },
-        notificationId: `payment_${payment.merchantOrderId}_customer`,
-      }).catch((err) => console.error('[FCM Customer Payment Push Error]:', err.message));
-
-      notifyAdmins({
-        title: '💰 Payment Received!',
-        body: `₹${payment.amount.toLocaleString('en-IN')} paid by ${booking.primaryContact.name} for ${booking.packageName} (Ref: ${booking.bookingRef})`,
-        data: {
-          type: 'admin_payment',
-          id: booking.bookingRef,
-          link: '/admin',
-        },
-        notificationId: `payment_${payment.merchantOrderId}_admin`,
-      }).catch((err) => console.error('[FCM Admin Payment Push Error]:', err.message));
+      await confirmBookingPayment(booking, payment, transactionId, paymentRail, rawResponse);
     } else if (orderState === 'FAILED') {
       payment.paymentStatus = 'FAILED';
-      payment.gatewayResponse = rawResponse;
+      payment.gatewayResponse = rawResponse || { error: payment.errorMessage };
       await payment.save();
+
+      booking.bookingStatus = 'cancelled';
+      booking.paymentStatus = 'unpaid';
+      await booking.save();
     }
 
     return res.status(200).json({
@@ -329,53 +374,24 @@ export const handleWebhook = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Payment record not found' });
     }
 
-    if (state === 'COMPLETED' && payment.paymentStatus !== 'SUCCESS') {
-      payment.paymentStatus = 'SUCCESS';
-      payment.paymentDate = new Date();
+    if (state === 'COMPLETED') {
+      const transactionId = callbackData?.transactionId || callbackData?.data?.transactionId || '';
+      const paymentRail = callbackData?.paymentRail || callbackData?.data?.paymentRail || 'UPI';
+      const booking = await Booking.findById(payment.bookingId);
+      if (booking) {
+        await confirmBookingPayment(booking, payment, transactionId, paymentRail, callbackData);
+      }
+    } else if (state === 'FAILED') {
+      payment.paymentStatus = 'FAILED';
       payment.gatewayResponse = callbackData;
       await payment.save();
 
       const booking = await Booking.findById(payment.bookingId);
       if (booking) {
-        booking.bookingStatus = 'confirmed';
-        booking.paymentStatus = payment.paymentType === 'FULL' ? 'paid' : 'advance_paid';
-        booking.paymentVerifiedAt = new Date();
-        booking.pricing.amountPaidNow = payment.amount;
-        booking.pricing.remainingBalance = Math.max(0, booking.pricing.totalPayable - payment.amount);
+        booking.bookingStatus = 'cancelled';
+        booking.paymentStatus = 'unpaid';
         await booking.save();
-
-        sendBookingConfirmationEmail(booking, payment).catch((err) =>
-          console.error('Webhook email trigger error:', err)
-        );
-
-        // Trigger Duplicate-Safe FCM Push Notifications (Customer + Admins)
-        notifyCustomer({
-          email: booking.primaryContact.email,
-          title: '💳 Payment Received!',
-          body: `Payment of ₹${payment.amount.toLocaleString('en-IN')} confirmed for ${booking.packageName} (Ref: ${booking.bookingRef}).`,
-          data: {
-            type: 'payment_success',
-            id: booking.bookingRef,
-            link: '/destinations',
-          },
-          notificationId: `payment_${payment.merchantOrderId}_customer`,
-        }).catch((err) => console.error('[FCM Webhook Customer Payment Push Error]:', err.message));
-
-        notifyAdmins({
-          title: '💰 Payment Received!',
-          body: `₹${payment.amount.toLocaleString('en-IN')} paid by ${booking.primaryContact.name} for ${booking.packageName} (Ref: ${booking.bookingRef})`,
-          data: {
-            type: 'admin_payment',
-            id: booking.bookingRef,
-            link: '/admin',
-          },
-          notificationId: `payment_${payment.merchantOrderId}_admin`,
-        }).catch((err) => console.error('[FCM Webhook Admin Payment Push Error]:', err.message));
       }
-    } else if (state === 'FAILED' && payment.paymentStatus === 'PENDING') {
-      payment.paymentStatus = 'FAILED';
-      payment.gatewayResponse = callbackData;
-      await payment.save();
     }
 
     return res.status(200).json({ success: true, message: 'Webhook processed successfully' });

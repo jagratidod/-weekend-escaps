@@ -55,7 +55,7 @@ export default function BookingManager() {
 
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('confirmed');
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [copiedRef, setCopiedRef] = useState('');
@@ -274,7 +274,7 @@ export default function BookingManager() {
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
             <Clock className="w-3 h-3" />
-            <span>Pending</span>
+            <span>Payment Pending</span>
           </span>
         );
       case 'completed':
@@ -380,9 +380,9 @@ export default function BookingManager() {
         {/* Status Filter Tabs */}
         <div className="flex flex-wrap items-center gap-1.5">
           {[
-            { id: 'all', label: `All (${stats.total})` },
             { id: 'confirmed', label: `Confirmed (${stats.confirmed})` },
-            { id: 'pending', label: `Pending (${stats.pending})` },
+            { id: 'all', label: `All Verified (${stats.total})` },
+            { id: 'pending', label: `Pending Payment (${stats.pending})` },
             { id: 'completed', label: `Completed (${stats.completed})` },
             { id: 'cancelled', label: `Cancelled (${stats.cancelled})` },
           ].map((tab) => (
@@ -529,9 +529,15 @@ export default function BookingManager() {
 
                       {/* Payment & Balance */}
                       <td className="py-3 px-4">
-                        <p className="font-black text-[#1A384C]">
-                          Paid: {formatCurrency(pricing.amountPaidNow || 0)}
-                        </p>
+                        {booking.paymentStatus === 'unpaid' ? (
+                          <span className="inline-block text-[11px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-200">
+                            Unpaid (₹0)
+                          </span>
+                        ) : (
+                          <p className="font-black text-[#1A384C]">
+                            Paid: {formatCurrency(pricing.amountPaidNow || 0)}
+                          </p>
+                        )}
                         {booking.paymentDetails?.utrNumber && (
                           <p className="text-[10px] font-mono text-sky-700 font-bold truncate max-w-[140px]" title={`UTR: ${booking.paymentDetails.utrNumber}`}>
                             UTR: {booking.paymentDetails.utrNumber}
