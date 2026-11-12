@@ -36,6 +36,7 @@ import {
   ChevronRight,
   Star,
   Layers,
+  Building2,
 } from 'lucide-react';
 import ReelManager from './ReelManager';
 import { useSettings } from '../../context/SettingsContext';
@@ -53,6 +54,7 @@ const SECTION_METADATA = {
   testimonials: { id: 'testimonials', label: 'Traveler Reviews', icon: Star, editable: false, managerLink: '/admin/testimonials' },
   gallery: { id: 'gallery', label: 'Memories Gallery', icon: ImageIcon, editable: true },
   blogs: { id: 'blogs', label: 'Travel Blogs', icon: ExternalLink, editable: false, managerLink: '/admin/blogs' },
+  trustedCompanies: { id: 'trustedCompanies', label: 'Trusted Companies', icon: Building2, editable: true },
   finalCta: { id: 'finalCta', label: 'Ready For Adventure (CTA)', icon: Flame, editable: true },
 };
 
@@ -151,11 +153,26 @@ export default function HomeSectionsManager() {
         ...(cloned.gallery || {}),
         items: ensureSixGalleryItems(cloned.gallery?.items),
       };
+      cloned.trustedCompanies = {
+        ...DEFAULT_HOME_SECTIONS.trustedCompanies,
+        ...(cloned.trustedCompanies || {}),
+        items: Array.isArray(cloned.trustedCompanies?.items) && cloned.trustedCompanies.items.length > 0
+          ? cloned.trustedCompanies.items
+          : DEFAULT_HOME_SECTIONS.trustedCompanies.items,
+      };
       setFormData(cloned);
       if (Array.isArray(homeSections.sectionOrder) && homeSections.sectionOrder.length > 0) {
         const merged = [...homeSections.sectionOrder];
         DEFAULT_SECTION_ORDER.forEach((secId) => {
-          if (!merged.includes(secId)) merged.push(secId);
+          if (!merged.includes(secId)) {
+            if (secId === 'trustedCompanies') {
+              const ctaIdx = merged.indexOf('finalCta');
+              if (ctaIdx !== -1) merged.splice(ctaIdx, 0, 'trustedCompanies');
+              else merged.push('trustedCompanies');
+            } else {
+              merged.push(secId);
+            }
+          }
         });
         setSectionOrder(merged);
       } else {
@@ -750,7 +767,8 @@ export default function HomeSectionsManager() {
             { id: 'whyChooseUs', label: '4. Why Choose Us', icon: ShieldCheck },
             { id: 'bookingProcess', label: '5. Process & Welfare', icon: Handshake },
             { id: 'gallery', label: '6. Memories Gallery', icon: ImageIcon },
-            { id: 'finalCta', label: '7. Ready For Adventure (CTA)', icon: Flame },
+            { id: 'trustedCompanies', label: '7. Trusted Companies', icon: Building2 },
+            { id: 'finalCta', label: '8. Ready For Adventure (CTA)', icon: Flame },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -1992,6 +2010,355 @@ export default function HomeSectionsManager() {
                 <span>Save Process & Welfare</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB 7: TRUSTED COMPANIES MARQUEE ── */}
+      {activeTab === 'trustedCompanies' && (
+        <div className="bg-white rounded-2xl p-5 sm:p-7 border border-neutral-200/80 shadow-xs space-y-6">
+          {/* Header & Reset / Save */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-neutral-150">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#FF6B16] bg-orange-50 px-2.5 py-0.5 rounded-full border border-orange-200/60">
+                  Homepage Section
+                </span>
+                <span className="text-xs text-neutral-400">
+                  Position #{sectionOrder.indexOf('trustedCompanies') + 1}
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-[#1A384C] mt-1">
+                Trusted Companies & Partners Marquee
+              </h2>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Manage corporate client logos, brand names, and website links running continuously above the Final CTA section.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleReset('trustedCompanies')}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-neutral-200 hover:border-rose-300 text-neutral-600 hover:text-rose-600 text-xs font-bold transition-all cursor-pointer"
+                title="Reset to default company logos"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset Defaults</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSave('trustedCompanies')}
+                disabled={saving || uploadingImage}
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-[#FF6B16] hover:bg-[#e05809] text-white text-xs font-bold transition-all shadow-md shadow-[#FF6B16]/25 cursor-pointer disabled:opacity-50"
+              >
+                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                <span>Save Companies</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Section Headers Inputs */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-black text-[#1A384C] uppercase tracking-wider text-neutral-400">
+              1. Section Header & Copy
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-neutral-700 mb-1">
+                  Eyebrow Badge Text
+                </label>
+                <input
+                  type="text"
+                  value={formData.trustedCompanies?.badge || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      trustedCompanies: {
+                        ...formData.trustedCompanies,
+                        badge: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="TRUSTED BY GLOBAL TEAMS"
+                  className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:border-[#FF6B16]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-neutral-700 mb-1">
+                  Section Main Heading
+                </label>
+                <input
+                  type="text"
+                  value={formData.trustedCompanies?.title || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      trustedCompanies: {
+                        ...formData.trustedCompanies,
+                        title: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="Trusted by Leading Companies & Travelers"
+                  className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:border-[#FF6B16]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-neutral-700 mb-1">
+                Subtitle Description
+              </label>
+              <textarea
+                rows={2}
+                value={formData.trustedCompanies?.subtitle || ''}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    trustedCompanies: {
+                      ...formData.trustedCompanies,
+                      subtitle: e.target.value,
+                    },
+                  })
+                }
+                placeholder="From fast-growing startups to enterprise leaders, top teams trust Weekend Escapes for their offsites & expeditions."
+                className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:border-[#FF6B16]"
+              />
+            </div>
+          </div>
+
+          {/* Partner Companies Cards Editor */}
+          <div className="space-y-4 pt-3 border-t border-neutral-150">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-black text-[#1A384C]">
+                    Partner Company Logos ({formData.trustedCompanies?.items?.length || 0})
+                  </h3>
+                  <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-orange-100 text-[#FF6B16]">
+                    Continuous Running Marquee
+                  </span>
+                </div>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Upload company logo image (SVG, PNG, WebP) or change names and website links. Use arrows to reorder.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const currentItems = formData.trustedCompanies?.items || [];
+                  const newItem = {
+                    id: `c_${Date.now()}`,
+                    name: `Company ${currentItems.length + 1}`,
+                    logo: '',
+                    website: '',
+                  };
+                  setFormData({
+                    ...formData,
+                    trustedCompanies: {
+                      ...formData.trustedCompanies,
+                      items: [...currentItems, newItem],
+                    },
+                  });
+                }}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1A384C] hover:bg-[#254d66] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Company</span>
+              </button>
+            </div>
+
+            {/* List of Company Cards */}
+            <div className="space-y-3.5">
+              {(formData.trustedCompanies?.items || []).map((comp, idx) => (
+                <div
+                  key={comp.id || idx}
+                  className="p-4 bg-neutral-50 rounded-2xl border border-neutral-200/80 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between"
+                >
+                  {/* Left: Position & Logo Preview + Upload */}
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="w-7 h-7 rounded-xl bg-orange-100 text-[#FF6B16] font-black text-xs flex items-center justify-center shrink-0 border border-orange-200">
+                      #{idx + 1}
+                    </div>
+
+                    <div className="relative w-28 sm:w-36 h-14 rounded-xl overflow-hidden bg-white border border-neutral-300 shrink-0 flex items-center justify-center p-2 group">
+                      {comp.logo ? (
+                        <img
+                          src={formatImageUrl(comp.logo)}
+                          alt={comp.name}
+                          className="max-h-full max-w-full object-contain filter grayscale group-hover:grayscale-0 transition-all"
+                        />
+                      ) : (
+                        <div className="text-center text-[10px] text-neutral-400 font-bold flex flex-col items-center">
+                          <Building2 className="w-4 h-4 mb-0.5 text-neutral-300" />
+                          <span>No Logo</span>
+                        </div>
+                      )}
+
+                      <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer text-white text-[10px] font-bold p-1 text-center">
+                        <Upload className="w-3.5 h-3.5 mb-0.5 text-[#FF6B16]" />
+                        <span>Upload Logo</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              handleUploadImage(file, (url) => {
+                                const list = [...(formData.trustedCompanies?.items || [])];
+                                list[idx] = { ...list[idx], logo: url };
+                                setFormData({
+                                  ...formData,
+                                  trustedCompanies: {
+                                    ...formData.trustedCompanies,
+                                    items: list,
+                                  },
+                                });
+                              });
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Middle: Inputs (Name, Website URL) */}
+                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+                    <div>
+                      <label className="block text-[11px] font-bold text-neutral-600 mb-1">
+                        Company Name
+                      </label>
+                      <input
+                        type="text"
+                        value={comp.name || ''}
+                        onChange={(e) => {
+                          const list = [...(formData.trustedCompanies?.items || [])];
+                          list[idx] = { ...list[idx], name: e.target.value };
+                          setFormData({
+                            ...formData,
+                            trustedCompanies: {
+                              ...formData.trustedCompanies,
+                              items: list,
+                            },
+                          });
+                        }}
+                        placeholder="e.g. Google, Microsoft"
+                        className="w-full px-3 py-1.5 text-xs border border-neutral-200 rounded-xl focus:outline-none focus:border-[#FF6B16] bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-neutral-600 mb-1">
+                        Website URL (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={comp.website || ''}
+                        onChange={(e) => {
+                          const list = [...(formData.trustedCompanies?.items || [])];
+                          list[idx] = { ...list[idx], website: e.target.value };
+                          setFormData({
+                            ...formData,
+                            trustedCompanies: {
+                              ...formData.trustedCompanies,
+                              items: list,
+                            },
+                          });
+                        }}
+                        placeholder="https://example.com"
+                        className="w-full px-3 py-1.5 text-xs border border-neutral-200 rounded-xl focus:outline-none focus:border-[#FF6B16] bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Right: Actions (Move Up, Move Down, Delete) */}
+                  <div className="flex items-center gap-1.5 shrink-0 self-end md:self-center">
+                    <button
+                      type="button"
+                      disabled={idx === 0}
+                      onClick={() => {
+                        const list = [...(formData.trustedCompanies?.items || [])];
+                        const temp = list[idx];
+                        list[idx] = list[idx - 1];
+                        list[idx - 1] = temp;
+                        setFormData({
+                          ...formData,
+                          trustedCompanies: {
+                            ...formData.trustedCompanies,
+                            items: list,
+                          },
+                        });
+                      }}
+                      className="p-1.5 rounded-lg border border-neutral-200 bg-white hover:bg-neutral-100 text-neutral-600 disabled:opacity-30 cursor-pointer"
+                      title="Move Left"
+                    >
+                      <ArrowUp className="w-3.5 h-3.5 -rotate-90 md:rotate-0" />
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={idx === (formData.trustedCompanies?.items?.length || 0) - 1}
+                      onClick={() => {
+                        const list = [...(formData.trustedCompanies?.items || [])];
+                        const temp = list[idx];
+                        list[idx] = list[idx + 1];
+                        list[idx + 1] = temp;
+                        setFormData({
+                          ...formData,
+                          trustedCompanies: {
+                            ...formData.trustedCompanies,
+                            items: list,
+                          },
+                        });
+                      }}
+                      className="p-1.5 rounded-lg border border-neutral-200 bg-white hover:bg-neutral-100 text-neutral-600 disabled:opacity-30 cursor-pointer"
+                      title="Move Right"
+                    >
+                      <ArrowDown className="w-3.5 h-3.5 -rotate-90 md:rotate-0" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const list = (formData.trustedCompanies?.items || []).filter((_, i) => i !== idx);
+                        setFormData({
+                          ...formData,
+                          trustedCompanies: {
+                            ...formData.trustedCompanies,
+                            items: list,
+                          },
+                        });
+                      }}
+                      className="p-1.5 rounded-lg border border-rose-200 bg-white hover:bg-rose-50 text-rose-500 cursor-pointer ml-1"
+                      title="Delete Company"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom Save Bar */}
+          <div className="pt-4 border-t border-neutral-150 flex items-center justify-between">
+            <span className="text-xs text-neutral-500">
+              Changes will immediately reflect on the live homepage marquee.
+            </span>
+            <button
+              type="button"
+              onClick={() => handleSave('trustedCompanies')}
+              disabled={saving || uploadingImage}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#FF6B16] hover:bg-[#e05809] text-white text-xs font-bold transition-all shadow-md shadow-[#FF6B16]/30 cursor-pointer disabled:opacity-50"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              <span>Save Trusted Companies</span>
+            </button>
           </div>
         </div>
       )}

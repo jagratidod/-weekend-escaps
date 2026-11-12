@@ -8,6 +8,7 @@ import BookingProcess from '../components/home/BookingProcess';
 import Testimonials from '../components/home/Testimonials';
 import Gallery from '../components/home/Gallery';
 import TravelBlogs from '../components/home/TravelBlogs';
+import TrustedCompanies from '../components/home/TrustedCompanies';
 import FinalCTA from '../components/home/FinalCTA';
 import { useSettings } from '../context/SettingsContext';
 import { DEFAULT_SECTION_ORDER, DEFAULT_SECTION_VISIBILITY } from '../utils/defaultHomeSections';
@@ -26,13 +27,29 @@ const SECTION_COMPONENTS = {
   testimonials: <Testimonials key="testimonials" />,
   gallery: <Gallery key="gallery" />,
   blogs: <TravelBlogs key="blogs" />,
+  trustedCompanies: <TrustedCompanies key="trustedCompanies" />,
   finalCta: <FinalCTA key="finalCta" />,
 };
 
 export function Home() {
   const { homeSections } = useSettings();
   const rawOrder = homeSections?.sectionOrder;
-  const sectionOrder = Array.isArray(rawOrder) && rawOrder.length > 0 ? rawOrder : DEFAULT_SECTION_ORDER;
+  let sectionOrder = Array.isArray(rawOrder) && rawOrder.length > 0 ? rawOrder : DEFAULT_SECTION_ORDER;
+
+  // Gracefully ensure trustedCompanies is rendered directly above finalCta
+  if (!sectionOrder.includes('trustedCompanies')) {
+    const finalCtaIndex = sectionOrder.indexOf('finalCta');
+    if (finalCtaIndex !== -1) {
+      sectionOrder = [
+        ...sectionOrder.slice(0, finalCtaIndex),
+        'trustedCompanies',
+        ...sectionOrder.slice(finalCtaIndex),
+      ];
+    } else {
+      sectionOrder = [...sectionOrder, 'trustedCompanies'];
+    }
+  }
+
   const visibility = homeSections?.sectionVisibility || DEFAULT_SECTION_VISIBILITY;
 
   return (

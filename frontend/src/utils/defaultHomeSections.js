@@ -8,6 +8,7 @@ export const DEFAULT_SECTION_VISIBILITY = {
   testimonials: true,
   gallery: true,
   blogs: true,
+  trustedCompanies: true,
   finalCta: true,
 };
 
@@ -196,6 +197,22 @@ export const DEFAULT_HOME_SECTIONS = {
       },
     ],
   },
+  trustedCompanies: {
+    badge: 'TRUSTED BY GLOBAL TEAMS',
+    title: 'Trusted by Leading Companies & Travelers',
+    subtitle:
+      'From fast-growing startups to enterprise leaders, top teams trust Weekend Escapes for their offsites & expeditions.',
+    items: [
+      { id: 'c1', name: 'Google', logo: '/images/partners/google.svg', website: 'https://google.com' },
+      { id: 'c2', name: 'Microsoft', logo: '/images/partners/microsoft.svg', website: 'https://microsoft.com' },
+      { id: 'c3', name: 'Amazon', logo: '/images/partners/amazon.svg', website: 'https://amazon.com' },
+      { id: 'c4', name: 'Tata', logo: '/images/partners/tata.svg', website: 'https://tata.com' },
+      { id: 'c5', name: 'Infosys', logo: '/images/partners/infosys.svg', website: 'https://infosys.com' },
+      { id: 'c6', name: 'Deloitte', logo: '/images/partners/deloitte.svg', website: 'https://deloitte.com' },
+      { id: 'c7', name: 'Uber', logo: '/images/partners/uber.svg', website: 'https://uber.com' },
+      { id: 'c8', name: 'Spotify', logo: '/images/partners/spotify.svg', website: 'https://spotify.com' },
+    ],
+  },
   finalCta: {
     heading: 'Ready for Your Next Adventure?',
     subtitle:
@@ -216,6 +233,7 @@ export const DEFAULT_HOME_SECTIONS = {
     'testimonials',
     'gallery',
     'blogs',
+    'trustedCompanies',
     'finalCta',
   ],
   sectionVisibility: {
@@ -228,6 +246,7 @@ export const DEFAULT_HOME_SECTIONS = {
     testimonials: true,
     gallery: true,
     blogs: true,
+    trustedCompanies: true,
     finalCta: true,
   },
 };

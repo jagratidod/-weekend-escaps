@@ -193,6 +193,22 @@ export const DEFAULT_HOME_SECTIONS = {
       },
     ],
   },
+  trustedCompanies: {
+    badge: 'TRUSTED BY GLOBAL TEAMS',
+    title: 'Trusted by Leading Companies & Travelers',
+    subtitle:
+      'From fast-growing startups to enterprise leaders, top teams trust Weekend Escapes for their offsites & expeditions.',
+    items: [
+      { id: 'c1', name: 'Google', logo: '/images/partners/google.svg', website: 'https://google.com' },
+      { id: 'c2', name: 'Microsoft', logo: '/images/partners/microsoft.svg', website: 'https://microsoft.com' },
+      { id: 'c3', name: 'Amazon', logo: '/images/partners/amazon.svg', website: 'https://amazon.com' },
+      { id: 'c4', name: 'Tata', logo: '/images/partners/tata.svg', website: 'https://tata.com' },
+      { id: 'c5', name: 'Infosys', logo: '/images/partners/infosys.svg', website: 'https://infosys.com' },
+      { id: 'c6', name: 'Deloitte', logo: '/images/partners/deloitte.svg', website: 'https://deloitte.com' },
+      { id: 'c7', name: 'Uber', logo: '/images/partners/uber.svg', website: 'https://uber.com' },
+      { id: 'c8', name: 'Spotify', logo: '/images/partners/spotify.svg', website: 'https://spotify.com' },
+    ],
+  },
   finalCta: {
     heading: 'Ready for Your Next Adventure?',
     subtitle:
@@ -213,6 +229,7 @@ export const DEFAULT_HOME_SECTIONS = {
     'testimonials',
     'gallery',
     'blogs',
+    'trustedCompanies',
     'finalCta',
   ],
   sectionVisibility: {
@@ -225,6 +242,7 @@ export const DEFAULT_HOME_SECTIONS = {
     testimonials: true,
     gallery: true,
     blogs: true,
+    trustedCompanies: true,
     finalCta: true,
   },
 };
@@ -240,6 +258,7 @@ export const DEFAULT_SECTION_VISIBILITY = {
   testimonials: true,
   gallery: true,
   blogs: true,
+  trustedCompanies: true,
   finalCta: true,
 };
 
@@ -304,7 +323,7 @@ const getOrCreateDefaultSettings = async () => {
       settings.homeSections = DEFAULT_HOME_SECTIONS;
       needsSave = true;
     } else {
-      ['hero', 'experiences', 'whyChooseUs', 'bookingProcess', 'gallery', 'finalCta'].forEach((sec) => {
+      ['hero', 'experiences', 'whyChooseUs', 'bookingProcess', 'gallery', 'trustedCompanies', 'finalCta'].forEach((sec) => {
         if (!settings.homeSections[sec]) {
           settings.homeSections[sec] = DEFAULT_HOME_SECTIONS[sec];
           needsSave = true;
@@ -339,6 +358,18 @@ const getOrCreateDefaultSettings = async () => {
         settings.homeSections.sectionOrder.length === 0
       ) {
         settings.homeSections.sectionOrder = [...DEFAULT_SECTION_ORDER];
+        needsSave = true;
+      } else if (!settings.homeSections.sectionOrder.includes('trustedCompanies')) {
+        const ctaIdx = settings.homeSections.sectionOrder.indexOf('finalCta');
+        if (ctaIdx !== -1) {
+          settings.homeSections.sectionOrder.splice(ctaIdx, 0, 'trustedCompanies');
+        } else {
+          settings.homeSections.sectionOrder.push('trustedCompanies');
+        }
+        needsSave = true;
+      }
+      if (settings.homeSections.sectionVisibility && settings.homeSections.sectionVisibility.trustedCompanies === undefined) {
+        settings.homeSections.sectionVisibility.trustedCompanies = true;
         needsSave = true;
       }
     }
@@ -863,6 +894,18 @@ export const updateHomeSections = async (req, res) => {
       };
     }
 
+    // Trusted Companies Section update
+    if (updates.trustedCompanies) {
+      settings.homeSections.trustedCompanies = {
+        ...settings.homeSections.trustedCompanies,
+        ...updates.trustedCompanies,
+        items: Array.isArray(updates.trustedCompanies.items)
+          ? updates.trustedCompanies.items
+          : settings.homeSections.trustedCompanies?.items || [],
+      };
+      settings.markModified('homeSections.trustedCompanies');
+    }
+
     // 5. Final CTA Section update
     if (updates.finalCta) {
       settings.homeSections.finalCta = {
@@ -903,12 +946,21 @@ export const updateHomeSections = async (req, res) => {
     if (updates.gallery) {
       settings.markModified('homeSections.gallery');
     }
+    if (updates.trustedCompanies) {
+      settings.markModified('homeSections.trustedCompanies');
+    }
     await settings.save();
 
     if (updates.gallery) {
       await Setting.updateOne(
         { key: 'site_settings' },
         { $set: { 'homeSections.gallery': settings.homeSections.gallery } }
+      );
+    }
+    if (updates.trustedCompanies) {
+      await Setting.updateOne(
+        { key: 'site_settings' },
+        { $set: { 'homeSections.trustedCompanies': settings.homeSections.trustedCompanies } }
       );
     }
 

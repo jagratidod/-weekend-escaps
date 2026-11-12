@@ -364,6 +364,29 @@ const settingSchema = new mongoose.Schema(
           },
         ],
       },
+      trustedCompanies: {
+        badge: {
+          type: String,
+          default: 'TRUSTED BY GLOBAL TEAMS',
+        },
+        title: {
+          type: String,
+          default: 'Trusted by Leading Companies & Travelers',
+        },
+        subtitle: {
+          type: String,
+          default:
+            'From fast-growing startups to enterprise leaders, top teams trust Weekend Escapes for their offsites & expeditions.',
+        },
+        items: [
+          {
+            id: { type: String, default: '' },
+            name: { type: String, default: '' },
+            logo: { type: String, default: '' },
+            website: { type: String, default: '' },
+          },
+        ],
+      },
       sectionOrder: {
         type: [String],
         default: [
@@ -376,6 +399,7 @@ const settingSchema = new mongoose.Schema(
           'testimonials',
           'gallery',
           'blogs',
+          'trustedCompanies',
           'finalCta',
         ],
       },
@@ -389,6 +413,7 @@ const settingSchema = new mongoose.Schema(
         testimonials: { type: Boolean, default: true },
         gallery: { type: Boolean, default: true },
         blogs: { type: Boolean, default: true },
+        trustedCompanies: { type: Boolean, default: true },
         finalCta: { type: Boolean, default: true },
       },
     },

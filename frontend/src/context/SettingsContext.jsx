@@ -135,12 +135,28 @@ export const mergeServerSettings = (serverSettings = {}) => {
             ? serverHome.gallery.items
             : DEFAULT_HOME_SECTIONS.gallery.items,
       },
+      trustedCompanies: {
+        ...DEFAULT_HOME_SECTIONS.trustedCompanies,
+        ...(serverHome.trustedCompanies || {}),
+        items:
+          Array.isArray(serverHome.trustedCompanies?.items) && serverHome.trustedCompanies.items.length > 0
+            ? serverHome.trustedCompanies.items
+            : DEFAULT_HOME_SECTIONS.trustedCompanies.items,
+      },
       finalCta: { ...DEFAULT_HOME_SECTIONS.finalCta, ...(serverHome.finalCta || {}) },
       sectionOrder: (() => {
         if (Array.isArray(serverHome.sectionOrder) && serverHome.sectionOrder.length > 0) {
           const merged = [...serverHome.sectionOrder];
           DEFAULT_HOME_SECTIONS.sectionOrder.forEach((sec) => {
-            if (!merged.includes(sec)) merged.push(sec);
+            if (!merged.includes(sec)) {
+              if (sec === 'trustedCompanies') {
+                const ctaIdx = merged.indexOf('finalCta');
+                if (ctaIdx !== -1) merged.splice(ctaIdx, 0, 'trustedCompanies');
+                else merged.push('trustedCompanies');
+              } else {
+                merged.push(sec);
+              }
+            }
           });
           return merged;
         }

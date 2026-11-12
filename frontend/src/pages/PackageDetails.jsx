@@ -58,13 +58,13 @@ export function PackageDetails() {
     : packageWaUrl || whatsappUrl || 'https://wa.me/919876543210';
 
   const NAV_SECTIONS = [
-    { id: 'section-dates', label: 'Available Dates' },
     { id: 'section-itinerary', label: 'Day-by-Day Itinerary' },
+    { id: 'section-dates', label: 'Available Dates' },
     { id: 'section-inclusions', label: "What's Included" },
     { id: 'section-policy', label: 'Important Guidelines' },
   ];
 
-  const [activeSection, setActiveSection] = useState('section-dates');
+  const [activeSection, setActiveSection] = useState('section-itinerary');
 
   // Scrollspy effect: highlight active tab as user scrolls down the page
   useEffect(() => {
@@ -375,24 +375,7 @@ export function PackageDetails() {
 
             {/* Continuous Sections Stream (All sections rendered with smooth scrollspy) */}
             <div className="space-y-10">
-              {/* Section 1: Available Dates */}
-              <div id="section-dates" className="scroll-mt-32 bg-white rounded-3xl p-6 sm:p-8 border border-neutral-100 shadow-sm">
-                <AvailableDatesSection
-                  pkg={pkg}
-                  selectedDate={selectedDate}
-                  selectedCity={selectedCity}
-                  onSelectCity={(city) => setSelectedCity(city)}
-                  onSelectDate={(date, batch) => {
-                    setSelectedDate(date);
-                    if (window.innerWidth < 1024) {
-                      const el = document.getElementById('booking-card-form');
-                      if (el) el.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
-                />
-              </div>
-
-              {/* Section 2: Day-by-Day Itinerary */}
+              {/* Section 1: Day-by-Day Itinerary */}
               <div id="section-itinerary" className="scroll-mt-32 bg-white rounded-3xl p-6 sm:p-10 border border-neutral-100 shadow-sm">
                 <div className="mb-6 pb-4 border-b border-neutral-100 flex items-center justify-between">
                   <div>
@@ -409,6 +392,23 @@ export function PackageDetails() {
                 </div>
 
                 <ItineraryTimeline itinerary={pkg.itinerary} packageId={pkg.id || pkg._id} />
+              </div>
+
+              {/* Section 2: Available Dates */}
+              <div id="section-dates" className="scroll-mt-32 bg-white rounded-3xl p-6 sm:p-8 border border-neutral-100 shadow-sm">
+                <AvailableDatesSection
+                  pkg={pkg}
+                  selectedDate={selectedDate}
+                  selectedCity={selectedCity}
+                  onSelectCity={(city) => setSelectedCity(city)}
+                  onSelectDate={(date, batch) => {
+                    setSelectedDate(date);
+                    if (window.innerWidth < 1024) {
+                      const el = document.getElementById('booking-card-form');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                />
               </div>
 
               {/* Section 3: What's Included */}
