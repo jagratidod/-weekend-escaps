@@ -2,13 +2,12 @@ import React, { useState, useMemo } from 'react';
 import Container from '../common/Container';
 import { useSettings } from '../../context/SettingsContext';
 import { DEFAULT_HOME_SECTIONS } from '../../utils/defaultHomeSections';
-import { Building2, Sparkles } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 
 export function TrustedCompanies() {
   const { homeSections, formatImageUrl } = useSettings();
   const data = homeSections?.trustedCompanies || DEFAULT_HOME_SECTIONS.trustedCompanies;
 
-  const badgeText = data?.badge || 'TRUSTED BY GLOBAL TEAMS';
   const titleText = data?.title || 'Trusted by Leading Companies & Travelers';
   const subtitleText =
     data?.subtitle ||
@@ -41,14 +40,6 @@ export function TrustedCompanies() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-orange-100/30 via-amber-50/20 to-sky-100/20 blur-3xl pointer-events-none -z-10 rounded-full" />
 
       <Container className="relative z-10 mb-8 sm:mb-12 text-center">
-        {/* Eyebrow Badge */}
-        {badgeText && (
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-orange-50 border border-orange-200/60 text-[#FF6B16] text-[11px] font-black uppercase tracking-widest mb-3 shadow-2xs">
-            <Sparkles className="w-3.5 h-3.5 text-[#FF6B16]" />
-            <span>{badgeText}</span>
-          </div>
-        )}
-
         {/* Section Title */}
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#111111] tracking-tight">
           {titleText}
